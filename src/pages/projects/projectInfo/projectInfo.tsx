@@ -62,7 +62,6 @@ export const ProjectInfo = () => {
                 </div>
             </div>
 
-            {/* Content Section */}
             <div className=" py-3 dark:bg-[#191919] ">
                 <Outlet context={{ userId, projectId: Number(projectId) }} />
             </div>

@@ -6,12 +6,20 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Fragment } from "react";
-import { Link, Outlet, useLocation } from "react-router";
-import { Sidebar } from "../layout";
+import { Button } from "@/components/ui/button";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
+import { useGetUserByIdQuery } from "@/features/auth/authApi";
+import { LogOut } from "lucide-react";
+import { Fragment, useEffect, useState } from "react";
+import { Link, Outlet, useLocation, useNavigate } from "react-router";
+import { CommonDialog } from "../common/commonDialog";
+import { CommonDialogFooter } from "../common/commonDialogFooter";
 import { Header } from "./Header";
 
-// Define breadcrumb labels for your routes
 const breadcrumbLabels: Record<string, string> = {
     "/": "Home",
     "/projects": "Projects",
@@ -26,8 +34,42 @@ const breadcrumbLabels: Record<string, string> = {
 
 export const GlobalLayout = () => {
     const location = useLocation();
+    const navigate = useNavigate();
+    const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+    const [, setUserName] = useState("");
+    const [initials, setInitials] = useState("");
 
-    // Generate breadcrumb items from current path
+    const userId = localStorage.getItem("userId");
+    const { data: user } = useGetUserByIdQuery(Number(userId), {
+        skip: !userId,
+    });
+
+    useEffect(() => {
+        if (user) {
+            setUserName(user.name);
+            const userInitials = user.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .toUpperCase();
+            setInitials(userInitials);
+        }
+    }, [user]);
+
+    const handleLogoutClick = () => {
+        setShowLogoutDialog(true);
+    };
+
+    const handleLogoutConfirm = () => {
+        localStorage.clear();
+        setShowLogoutDialog(false);
+        navigate("/login", { replace: true });
+    };
+
+    const handleLogoutCancel = () => {
+        setShowLogoutDialog(false);
+    };
+
     const pathnames = location.pathname.split("/").filter((x) => x);
 
     return (
@@ -43,7 +85,6 @@ export const GlobalLayout = () => {
                                             <Link to="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                                                 Home
                                             </Link>
-
                                         </BreadcrumbLink>
                                     </BreadcrumbItem>
 
@@ -85,21 +126,59 @@ export const GlobalLayout = () => {
                                         minute: "2-digit",
                                     })}
                                 </div>
-                                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white text-xs font-semibold shrink-0">
-                                    AS
-                                </div>
-                            </div>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white text-xs font-semibold shrink-0 cursor-pointer">
+                                            {initials}
+                                        </div>
+                                    </PopoverTrigger>
 
+                                    <PopoverContent className="w-40 p-2">
+                                        <Button
+                                            variant="ghost"
+                                            className="w-full justify-start text-sm"
+                                            onClick={handleLogoutClick}
+                                        >
+                                            Logout
+                                        </Button>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
                         </div>
                     </div>
                     <Header />
-                    <main className=" overflow-auto max-w-6xl m-auto  w-full dark:bg-[#191919]   h-full ">
+                    <main className=" overflow-auto max-w-7xl m-auto  w-full dark:bg-[#191919]   h-full ">
                         <div className="py-10 px-6 overflow-auto ">
                             <Outlet />
                         </div>
                     </main>
                 </div>
             </div>
+
+            <CommonDialog
+                className="min-w-[400px]"
+                open={showLogoutDialog}
+                onOpenChange={setShowLogoutDialog}
+                title="Confirm Logout"
+                icon={<LogOut className="text-primary" size={20} />}
+                size="sm"
+                footer={
+                    <CommonDialogFooter
+                        info="You will need to sign in again to access your account."
+                        onCancel={handleLogoutCancel}
+                        onConfirm={handleLogoutConfirm}
+                        cancelText="Cancel"
+                        confirmText="Logout"
+                    />
+                }
+            >
+                <div className="text-sm text-muted-foreground">
+                    Are you sure you want to logout? Logging out will end your current session, and you will need to sign in again to continue using your account.
+                </div>
+            </CommonDialog>
+
+
+
         </div>
     );
 };

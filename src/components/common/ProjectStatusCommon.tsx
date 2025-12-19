@@ -1,78 +1,42 @@
+import { ActivityIcon, CircleCheck, TrendingDown, TrendingUp } from 'lucide-react';
 import React from 'react';
-import { Clock, AlertTriangle, CheckCircle, Search, CheckCircle2, XCircle, Clock4 } from 'lucide-react';
 
-export type StatusType =
-    | 'In progress'
-    | 'Pending'
-    | 'Submitted'
-    | 'In review'
-    | 'Success'
-    | 'Failed'
-    | 'Expired';
+export type StatusType = 'On track' | 'Off track' | 'At risk' | "Completed";
 
 interface StatusBadgeProps {
     status: StatusType;
     className?: string;
-    width?: string
+    size?: boolean;
+    padding?: boolean;
 }
 
-export const ProjectStatusCommon: React.FC<StatusBadgeProps> = ({ status, className = '', width = 'min-w-22' }) => {
+export const ProjectStatusCommon: React.FC<StatusBadgeProps> = ({
+    status,
+    className = '',
+    padding = true,
+}) => {
     const statusConfig = {
-        'In progress': {
-            bgColor: 'bg-blue-100 ',
-            textColor: 'text-blue-700',
-            icon: Clock,
-            iconColor: 'text-blue-600',
-            borderColor: 'border border-blue-200'
+        'On track': {
+            text: 'text-blue-400',
+            iconBg: 'bg-blue-500/20',
+            icon: TrendingUp,
         },
-        'Pending': {
-            bgColor: 'bg-orange-100',
-            textColor: 'text-orange-700',
-            icon: AlertTriangle,
-            iconColor: 'text-orange-600',
-            borderColor: 'border border-orange-200'
-
+        'Off track': {
+            text: 'text-yellow-400',
+            iconBg: 'bg-yellow-500/20',
+            icon: TrendingDown,
         },
-        'Submitted': {
-            bgColor: 'bg-purple-100',
-            textColor: 'text-purple-700',
-            icon: CheckCircle,
-            iconColor: 'text-purple-600',
-            borderColor: 'border border-purple-200'
+        'At risk': {
 
+            text: 'text-red-400',
+            iconBg: 'bg-red-500/20',
+            icon: ActivityIcon,
         },
-        'In review': {
-            bgColor: 'bg-yellow-100',
-            textColor: 'text-yellow-700',
-            icon: Search,
-            iconColor: 'text-yellow-600',
-            borderColor: 'border border-yellow-200'
-
+        'Completed': {
+            text: 'text-green-400',
+            iconBg: 'bg-green-500/20',
+            icon: CircleCheck,
         },
-        'Success': {
-            bgColor: 'bg-green-100',
-            textColor: 'text-green-700',
-            icon: CheckCircle2,
-            iconColor: 'text-green-600',
-            borderColor: 'border border-green-200'
-
-        },
-        'Failed': {
-            bgColor: 'bg-red-100',
-            textColor: 'text-red-700',
-            icon: XCircle,
-            iconColor: 'text-red-600',
-            borderColor: 'border border-red-200'
-
-        },
-        'Expired': {
-            bgColor: 'bg-gray-100',
-            textColor: 'text-gray-700',
-            icon: Clock4,
-            iconColor: 'text-gray-600',
-            borderColor: 'border border-gray-200'
-
-        }
     };
 
     const config = statusConfig[status];
@@ -80,11 +44,29 @@ export const ProjectStatusCommon: React.FC<StatusBadgeProps> = ({ status, classN
 
     return (
         <span
-            className={`dark:bg-[#3d3d3d] dark:shadow-2xl  inline-flex items-center gap-1.5 px-2 rounded-sm py-1 text-[11px] border shadow-xs font-medium    ${width}  ${className}`}
+            className={`
+        inline-flex items-center gap-2
+            ${padding ? 'px-3 py-1' : 'py-1'}
+        text-xs font-semibold   
+        rounded-full
+        ${config.text}
+
+        ${className}
+      `}
         >
-            <Icon className={`w-3 h-3 text-xs ${config.iconColor} `} />
+            <span
+                className={`
+          flex items-center justify-center
+          w-5 h-5 rounded-full
+          ${config.iconBg}
+          border border-${config.iconBg}
+
+        `}
+            >
+                <Icon strokeWidth={3} size={10} className={config.text} />
+            </span>
+
             {status}
         </span>
     );
 };
-

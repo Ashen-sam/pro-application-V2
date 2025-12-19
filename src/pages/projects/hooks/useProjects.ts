@@ -1,419 +1,702 @@
-import { useState } from "react";
+import { showToast } from "@/components/common/commonToast";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import { toast } from "sonner";
-import { format } from "date-fns";
 import type { PriorityType, StatusType } from "@/components";
+import { initialFormData } from "@/components/common/projectForm";
+import {
+  useCreateProjectMutation,
+  useDeleteProjectMutation,
+  useListProjectsQuery,
+  useSendProjectInvitesMutation,
+  useUpdateProjectMutation,
+  type Project as ApiProject,
+} from "../../../features/projectsApi";
 
-interface Member {
-  id: number;
-  name: string;
-  image?: string;
+interface ApiErrorResponse {
+  data?: {
+    error?: {
+      message?: string;
+    };
+    message?: string;
+  };
+  message?: string;
 }
 
-interface Project extends Record<string, unknown> {
-  id: number;
-  name: string;
+const getErrorMessage = (error: unknown): string => {
+  const apiError = error as ApiErrorResponse;
+  return (
+    apiError?.data?.error?.message ||
+    apiError?.data?.message ||
+    apiError?.message ||
+    "An unexpected error occurred"
+  );
+};
+
+export interface Project extends ApiProject {
   status: StatusType;
   priority: PriorityType;
   progress: number;
   dueDate: string;
-  startDate?: string;
-  members: Member[];
-}
-
-interface FormData {
-  name: string;
-  status: StatusType;
-  priority: PriorityType;
-  progress: number;
+  members?: unknown[];
+  teamMembers: string;
+  memeberEmails: string[];
   dateRange: {
-    from: Date | undefined;
-    to: Date | undefined;
+    from: Date;
+    to: Date;
   };
-  members: Member[];
-  description: string;
 }
 
-const initialProjects: Project[] = [
-  {
-    id: 1,
-    name: "Website Redesign",
-    status: "In progress",
-    priority: "High",
-    progress: 65,
-    startDate: "2025-11-01",
-    dueDate: "2025-11-15",
-    members: [
-      {
-        id: 1,
-        name: "John Doe",
-        image: "public/WhatsApp Image 2025-11-01 at 09.00.26_486015ae.jpg",
-      },
-      {
-        id: 2,
-        name: "Jane Smith",
-        image: "public/WhatsApp Image 2025-11-01 at 09.00.06_3f2744f6.jpg",
-      },
-      {
-        id: 3,
-        name: "Mark Taylor",
-        image: "public/WhatsApp Image 2025-11-01 at 08.59.01_457f64bf.jpg",
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "Mobile App Development",
-    status: "In review",
-    priority: "Medium",
-    progress: 20,
-    startDate: "2025-11-05",
-    dueDate: "2025-12-30",
-    members: [
-      {
-        id: 1,
-        name: "Emily Carter",
-        image: "public/WhatsApp Image 2025-11-01 at 09.00.47_4ae373f6.jpg",
-      },
-      {
-        id: 2,
-        name: "Daniel Lee",
-        image: "public/WhatsApp Image 2025-11-01 at 09.01.01_91a45634.jpg",
-      },
-      {
-        id: 3,
-        name: "Sophia Patel",
-        image: "public/WhatsApp Image 2025-11-01 at 09.01.25_35918156.jpg",
-      },
-    ],
-  },
-  {
-    id: 3,
-    name: "API Documentation Setup",
-    status: "Pending",
-    priority: "High",
-    progress: 85,
-    startDate: "2025-11-10",
-    dueDate: "2025-11-25",
-    members: [
-      {
-        id: 1,
-        name: "Michael Brown",
-        image: "public/WhatsApp Image 2025-11-01 at 09.02.05_46b7e5dc.jpg",
-      },
-      {
-        id: 2,
-        name: "Olivia Wilson",
-        image: "public/WhatsApp Image 2025-11-01 at 09.02.17_ce61baf0.jpg",
-      },
-      {
-        id: 3,
-        name: "Ethan Davis",
-        image: "public/WhatsApp Image 2025-11-01 at 09.02.50_9470257f.jpg",
-      },
-      {
-        id: 4,
-        name: "Ava Martinez",
-        image: "public/WhatsApp Image 2025-11-01 at 09.03.26_a38ca278.jpg",
-      },
-    ],
-  },
-  {
-    id: 4,
-    name: "UI Component Library",
-    status: "Submitted",
-    priority: "Low",
-    progress: 50,
-    startDate: "2025-11-15",
-    dueDate: "2025-12-10",
-    members: [
-      {
-        id: 1,
-        name: "Lucas Nguyen",
-        image: "public/WhatsApp Image 2025-11-01 at 09.04.04_eada67d7.jpg",
-      },
-      {
-        id: 2,
-        name: "Sophia White",
-        image: "public/WhatsApp Image 2025-11-01 at 09.04.20_0d674ca2.jpg",
-      },
-    ],
-  },
-  {
-    id: 5,
-    name: "Marketing Campaign Launch",
-    status: "Success",
-    priority: "Critical",
-    progress: 10,
-    startDate: "2025-12-01",
-    dueDate: "2026-01-15",
-    members: [
-      {
-        id: 1,
-        name: "Isabella Green",
-        image: "public/WhatsApp Image 2025-11-01 at 09.08.01_5e9bb2fd.jpg",
-      },
-      {
-        id: 2,
-        name: "James Hall",
-        image: "public/WhatsApp Image 2025-11-01 at 09.08.34_21d4eb3f.jpg",
-      },
-    ],
-  },
-  {
-    id: 6,
-    name: "Internal Dashboard Revamp",
-    status: "In progress",
-    priority: "Medium",
-    progress: 45,
-    startDate: "2025-11-20",
-    dueDate: "2025-12-20",
-    members: [
-      {
-        id: 1,
-        name: "Noah Adams",
-        image: "public/WhatsApp Image 2025-11-01 at 09.09.24_e5fdd616.jpg",
-      },
-      {
-        id: 2,
-        name: "Grace Miller",
-        image: "public/WhatsApp Image 2025-11-01 at 09.09.41_97579695.jpg",
-      },
-      {
-        id: 3,
-        name: "Henry Clark",
-        image: "public/WhatsApp Image 2025-11-01 at 09.10.42_df685104.jpg",
-      },
-    ],
-  },
-  {
-    id: 5,
-    name: "Marketing Campaign Launch",
-    status: "Success",
-    priority: "Critical",
-    progress: 10,
-    startDate: "2025-12-01",
-    dueDate: "2026-01-15",
-    members: [
-      {
-        id: 1,
-        name: "Isabella Green",
-        image: "public/WhatsApp Image 2025-11-01 at 09.08.01_5e9bb2fd.jpg",
-      },
-      {
-        id: 2,
-        name: "James Hall",
-        image: "public/WhatsApp Image 2025-11-01 at 09.08.34_21d4eb3f.jpg",
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "Mobile App Development",
-    status: "In review",
-    priority: "Medium",
-    progress: 20,
-    startDate: "2025-11-05",
-    dueDate: "2025-12-30",
-    members: [
-      {
-        id: 1,
-        name: "Emily Carter",
-        image: "public/WhatsApp Image 2025-11-01 at 09.00.47_4ae373f6.jpg",
-      },
-      {
-        id: 2,
-        name: "Daniel Lee",
-        image: "public/WhatsApp Image 2025-11-01 at 09.01.01_91a45634.jpg",
-      },
-      {
-        id: 3,
-        name: "Sophia Patel",
-        image: "public/WhatsApp Image 2025-11-01 at 09.01.25_35918156.jpg",
-      },
-    ],
-  },
-  {
-    id: 3,
-    name: "API Documentation Setup",
-    status: "Pending",
-    priority: "High",
-    progress: 85,
-    startDate: "2025-11-10",
-    dueDate: "2025-11-25",
-    members: [
-      {
-        id: 1,
-        name: "Michael Brown",
-        image: "public/WhatsApp Image 2025-11-01 at 09.02.05_46b7e5dc.jpg",
-      },
-      {
-        id: 2,
-        name: "Olivia Wilson",
-        image: "public/WhatsApp Image 2025-11-01 at 09.02.17_ce61baf0.jpg",
-      },
-      {
-        id: 3,
-        name: "Ethan Davis",
-        image: "public/WhatsApp Image 2025-11-01 at 09.02.50_9470257f.jpg",
-      },
-      {
-        id: 4,
-        name: "Ava Martinez",
-        image: "public/WhatsApp Image 2025-11-01 at 09.03.26_a38ca278.jpg",
-      },
-    ],
-  },
-];
+const getCurrentUserId = (): number | null => {
+  try {
+    const userId = localStorage.getItem("userId");
+    return userId ? Number(userId) : null;
+  } catch (error) {
+    console.error("Error reading userId from localStorage:", error);
+    return null;
+  }
+};
 
-const initialFormData: FormData = {
-  name: "",
-  status: "Planning" as StatusType,
-  priority: "Medium" as PriorityType,
-  progress: 0,
-  dateRange: {
-    from: undefined,
-    to: undefined,
-  },
-  members: [] as Member[],
-  description: "",
+const formatDate = (date: Date): string => {
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
+const calculateProgress = (startDate: Date, endDate: Date): number => {
+  const start = startDate.getTime();
+  const end = endDate.getTime();
+  const now = Date.now();
+
+  if (now < start) return 0;
+  if (now > end) return 100;
+
+  const total = end - start;
+  const elapsed = now - start;
+  return Math.round((elapsed / total) * 100);
+};
+
+const mapApiStatusToUi = (apiStatus?: string): StatusType => {
+  const map: Record<string, StatusType> = {
+    "On track": "On track",
+    "Off track": "Off track",
+    "At risk": "At risk",
+    Completed: "Completed",
+  };
+  return map[apiStatus || "On track"] || "On track";
+};
+
+const mapApiPriorityToUi = (apiPriority?: string): PriorityType => {
+  const map: Record<string, PriorityType> = {
+    Low: "Low",
+    Medium: "Medium",
+    High: "High",
+    Critical: "Critical",
+  };
+  return map[apiPriority || "Medium"] || "Medium";
+};
+
+const transformApiProject = (apiProject: ApiProject): Project => {
+  const startDate = apiProject.start_date
+    ? new Date(apiProject.start_date)
+    : new Date();
+  const endDate = apiProject.end_date
+    ? new Date(apiProject.end_date)
+    : (() => {
+        const date = new Date();
+        date.setMonth(date.getMonth() + 1);
+        return date;
+      })();
+
+  const transformed: Project = {
+    ...apiProject,
+    status: mapApiStatusToUi(apiProject.status),
+    priority: mapApiPriorityToUi(apiProject.priority),
+    progress: calculateProgress(startDate, endDate),
+    dueDate: formatDate(endDate),
+    members: [],
+    memeberEmails: apiProject.memberEmails || [],
+    teamMembers: "",
+    dateRange: {
+      from: startDate,
+      to: endDate,
+    },
+  };
+
+  return transformed;
+};
+
+const mapStatusToApi = (uiStatus: StatusType): string => {
+  return uiStatus;
 };
 
 export const useProjects = () => {
-  const [projects, setProjects] = useState<Project[]>(initialProjects);
+  const navigate = useNavigate();
+  const isSubmittingRef = useRef(false);
+  const [currentUserId] = useState<number | null>(() => getCurrentUserId());
+
+  const {
+    data: projectsData,
+    isFetching,
+    refetch,
+    isError,
+    error,
+  } = useListProjectsQuery(undefined, {
+    skip: !currentUserId,
+  });
+
+  const [createProject] = useCreateProjectMutation();
+  const [updateProject] = useUpdateProjectMutation();
+  const [deleteProject] = useDeleteProjectMutation();
+  const [sendProjectInvites] = useSendProjectInvitesMutation();
+  const [projects, setProjects] = useState<Project[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [formData, setFormData] = useState<FormData>(initialFormData);
-  const navigate = useNavigate();
+  const [formData, setFormData] = useState(initialFormData);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [selectedRows, setSelectedRows] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
 
-  const resetForm = () => {
+  useEffect(() => {
+    if (projectsData && Array.isArray(projectsData)) {
+      const transformedProjects = projectsData.map(transformApiProject);
+      setProjects(transformedProjects);
+    } else {
+      setProjects([]);
+    }
+  }, [projectsData]);
+
+  const resetForm = useCallback(() => {
     setFormData(initialFormData);
-  };
+    setSelectedProject(null);
+    setIsCalendarOpen(false);
+  }, []);
 
-  const handleAddProject = () => {
-    if (!formData.name.trim()) {
-      toast.error("Project name is required");
+  const closeAllDialogs = useCallback(() => {
+    setIsAddDialogOpen(false);
+    setIsEditDialogOpen(false);
+    setIsDeleteDialogOpen(false);
+    setTimeout(() => {
+      resetForm();
+      isSubmittingRef.current = false;
+    }, 300);
+  }, [resetForm]);
+
+  const handleAddProjectAndCreateAnother = useCallback(async () => {
+    if (!currentUserId) {
+      showToast.error("User not authenticated", "auth-error");
       return;
     }
 
-    const newProject: Project = {
-      id: Math.max(...projects.map((p) => p.id), 0) + 1,
-      name: formData.name,
+    if (isSubmittingRef.current) return;
+
+    if (!formData.name.trim()) {
+      showToast.error("Project name is required", "validation-error");
+      return;
+    }
+
+    if (!formData.dateRange.from || !formData.dateRange.to) {
+      showToast.error(
+        "Please select project duration (start and end dates)",
+        "date-error"
+      );
+      return;
+    }
+
+    isSubmittingRef.current = true;
+    setIsLoading(true);
+
+    // Optimistic update: Create temporary project immediately
+    const tempId = Date.now();
+    const optimisticProject: Project = {
+      project_id: tempId,
+      name: formData.name.trim(),
+      description: formData.description.trim(),
       status: formData.status,
       priority: formData.priority,
-      progress: formData.progress,
-      startDate: formData.dateRange.from
-        ? format(formData.dateRange.from, "yyyy-MM-dd")
-        : "",
-      dueDate: formData.dateRange.to
-        ? format(formData.dateRange.to, "yyyy-MM-dd")
-        : "",
-      members: formData.members,
-      description: "",
-    };
-    setProjects([...projects, newProject]);
-    setIsAddDialogOpen(false);
-    resetForm();
-    toast.success("Project created successfully", {
-      description: `${formData.name} has been added to your projects`,
-    });
-  };
-
-  const handleEditClick = (project: Project) => {
-    setSelectedProject(project);
-    setFormData({
-      name: project.name,
-      status: project.status,
-      priority: project.priority,
-      progress: project.progress,
+      progress: calculateProgress(
+        formData.dateRange.from!,
+        formData.dateRange.to!
+      ),
+      dueDate: formatDate(formData.dateRange.to!),
+      members: [],
+      teamMembers: "",
+      memeberEmails: formData.memeberEmails.filter(
+        (email) => email.trim() !== ""
+      ),
       dateRange: {
-        from: project.startDate ? new Date(project.startDate) : undefined,
-        to: project.dueDate ? new Date(project.dueDate) : undefined,
+        from: formData.dateRange.from!,
+        to: formData.dateRange.to!,
       },
-      members: project.members,
-      description: "",
-    });
-    setIsEditDialogOpen(true);
-  };
+      owner_id: currentUserId,
+      start_date: formData.dateRange.from!.toISOString(),
+      end_date: formData.dateRange.to!.toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      memberEmails: formData.memeberEmails.filter(
+        (email) => email.trim() !== ""
+      ),
+    };
 
-  const handleRowClick = (project: Project) => {
-    navigate(`/projects/${project.id}/`);
-  };
+    // Add to local state immediately
+    setProjects((prev) => [optimisticProject, ...prev]);
 
-  const handleUpdateProject = () => {
-    if (!formData.name.trim()) {
-      toast.error("Project name is required");
+    // Show instant success toast
+    showToast.success("Project created successfully", "create-success");
+
+    const createPayload = {
+      name: formData.name.trim(),
+      description: formData.description.trim(),
+      start_date: formData.dateRange.from.toISOString(),
+      end_date: formData.dateRange.to.toISOString(),
+      status: mapStatusToApi(formData.status),
+      priority: formData.priority,
+      owner_id: currentUserId,
+      memberEmails: formData.memeberEmails.filter(
+        (email) => email.trim() !== ""
+      ),
+    };
+
+    try {
+      const result = await createProject(createPayload).unwrap();
+
+      // Replace optimistic project with real one
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.project_id === tempId ? transformApiProject(result) : p
+        )
+      );
+
+      if (formData.memeberEmails.length > 0) {
+        sendProjectInvites({
+          projectId: result.project_id,
+          memberEmails: formData.memeberEmails,
+        })
+          .unwrap()
+          .then(() => {
+            showToast.success(
+              `Invitations sent to ${formData.memeberEmails.length} member(s)`,
+              "invite-success"
+            );
+          })
+          .catch((emailError) => {
+            console.error("Failed to send invitations:", emailError);
+            showToast.warning(
+              "Project created but failed to send some invitations",
+              "invite-partial"
+            );
+          });
+      }
+
+      resetForm();
+    } catch (error: unknown) {
+      // Rollback: Remove optimistic project on error
+      setProjects((prev) => prev.filter((p) => p.project_id !== tempId));
+      const errorMessage = getErrorMessage(error) || "Failed to create project";
+      showToast.error(errorMessage, "create-error");
+    } finally {
+      isSubmittingRef.current = false;
+      setIsLoading(false);
+    }
+  }, [formData, currentUserId, createProject, sendProjectInvites, resetForm]);
+
+  const handleAddProject = useCallback(async () => {
+    if (!currentUserId) {
+      showToast.error("User not authenticated", "auth-error");
       return;
     }
 
-    if (selectedProject) {
-      setProjects(
-        projects.map((p) =>
-          p.id === selectedProject.id
-            ? {
-                ...selectedProject,
-                name: formData.name,
-                status: formData.status,
-                priority: formData.priority,
-                progress: formData.progress,
-                startDate: formData.dateRange.from
-                  ? format(formData.dateRange.from, "yyyy-MM-dd")
-                  : "",
-                dueDate: formData.dateRange.to
-                  ? format(formData.dateRange.to, "yyyy-MM-dd")
-                  : "",
-                members: formData.members,
-              }
+    if (isSubmittingRef.current) return;
+
+    if (!formData.name.trim()) {
+      showToast.error("Project name is required", "validation-error");
+      return;
+    }
+
+    if (!formData.dateRange.from || !formData.dateRange.to) {
+      showToast.error(
+        "Please select project duration (start and end dates)",
+        "date-error"
+      );
+      return;
+    }
+
+    isSubmittingRef.current = true;
+    setIsLoading(true);
+
+    // Optimistic update: Create temporary project immediately
+    const tempId = Date.now();
+    const optimisticProject: Project = {
+      project_id: tempId,
+      name: formData.name.trim(),
+      description: formData.description.trim(),
+      status: formData.status,
+      priority: formData.priority,
+      progress: calculateProgress(
+        formData.dateRange.from,
+        formData.dateRange.to
+      ),
+      dueDate: formatDate(formData.dateRange.to),
+      members: [],
+      teamMembers: "",
+      memeberEmails: formData.memeberEmails.filter(
+        (email) => email.trim() !== ""
+      ),
+      dateRange: {
+        from: formData.dateRange.from!,
+        to: formData.dateRange.to!,
+      },
+      owner_id: currentUserId,
+      start_date: formData.dateRange.from!.toISOString(),
+      end_date: formData.dateRange.to!.toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      memberEmails: formData.memeberEmails.filter(
+        (email) => email.trim() !== ""
+      ),
+    };
+
+    // Add to local state immediately
+    setProjects((prev) => [optimisticProject, ...prev]);
+
+    // Close dialog immediately for better UX
+    closeAllDialogs();
+
+    // Show instant success toast
+    showToast.success("Project created successfully", "create-success");
+
+    const createPayload = {
+      name: formData.name.trim(),
+      description: formData.description.trim(),
+      start_date: formData.dateRange.from.toISOString(),
+      end_date: formData.dateRange.to.toISOString(),
+      status: mapStatusToApi(formData.status),
+      priority: formData.priority,
+      owner_id: currentUserId,
+      memberEmails: formData.memeberEmails.filter(
+        (email) => email.trim() !== ""
+      ),
+    };
+
+    try {
+      const result = await createProject(createPayload).unwrap();
+
+      // Replace optimistic project with real one
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.project_id === tempId ? transformApiProject(result) : p
+        )
+      );
+
+      if (formData.memeberEmails.length > 0) {
+        sendProjectInvites({
+          projectId: result.project_id,
+          memberEmails: formData.memeberEmails,
+        })
+          .unwrap()
+          .then(() => {
+            showToast.info(
+              `Invitations sent to ${formData.memeberEmails.length} member(s)`,
+              "invite-success"
+            );
+          })
+          .catch((emailError: unknown) => {
+            console.error("Failed to send invitations:", emailError);
+            const inviteErrorMessage =
+              getErrorMessage(emailError) || "Invitation service unavailable";
+
+            showToast.warning(
+              `Project created, but ${inviteErrorMessage.toLowerCase()}. You can invite members later.`,
+              "invite-warning"
+            );
+          });
+      }
+    } catch (error: unknown) {
+      // Rollback: Remove optimistic project on error
+      setProjects((prev) => prev.filter((p) => p.project_id !== tempId));
+      console.error("Failed to create project:", error);
+      const errorMessage = getErrorMessage(error) || "Failed to create project";
+      showToast.error(errorMessage, "create-error");
+    } finally {
+      isSubmittingRef.current = false;
+      setIsLoading(false);
+    }
+  }, [
+    formData,
+    currentUserId,
+    createProject,
+    sendProjectInvites,
+    closeAllDialogs,
+  ]);
+
+  const handleBulkDeleteClick = useCallback(() => {
+    if (selectedRows.length === 0) return;
+    setIsBulkDeleteDialogOpen(true);
+  }, [selectedRows]);
+
+  const handleBulkDeleteProject = useCallback(async () => {
+    if (isSubmittingRef.current || selectedRows.length === 0) return;
+    isSubmittingRef.current = true;
+    setIsLoading(true);
+
+    const projectIds = selectedRows.map((p) => p.project_id);
+
+    // Store original projects for rollback
+    const deletedProjects = [...selectedRows];
+
+    // Optimistic update: Remove from local state immediately
+    setProjects((prev) =>
+      prev.filter((p) => !projectIds.includes(p.project_id))
+    );
+
+    // Close dialog and clear selection immediately
+    setIsBulkDeleteDialogOpen(false);
+    setSelectedRows([]);
+    setTimeout(() => {
+      resetForm();
+      isSubmittingRef.current = false;
+    }, 300);
+
+    // Show instant success toast
+    showToast.success(
+      `Successfully deleted ${projectIds.length} project(s)`,
+      "bulk-delete-success"
+    );
+
+    try {
+      await deleteProject(projectIds).unwrap();
+    } catch (error: unknown) {
+      // Rollback: Restore deleted projects on error
+      setProjects((prev) => [...deletedProjects, ...prev]);
+      const errorMessage =
+        getErrorMessage(error) || "Failed to delete projects";
+      showToast.error(errorMessage, "bulk-delete-error");
+    } finally {
+      isSubmittingRef.current = false;
+      setIsLoading(false);
+    }
+  }, [selectedRows, deleteProject, resetForm]);
+
+  const handleEditClick = useCallback((project: Project) => {
+    setSelectedProject(project);
+    setFormData({
+      name: project.name || "",
+      description: project.description || "",
+      status: project.status,
+      priority: project.priority,
+      teamMembers: [],
+      memeberEmails: project.memberEmails || [],
+      dateRange: {
+        from: project.dateRange?.from,
+        to: project.dateRange?.to,
+      },
+    });
+    setIsEditDialogOpen(true);
+  }, []);
+
+  const handleUpdateProject = useCallback(async () => {
+    if (isSubmittingRef.current || !selectedProject) return;
+    if (!formData.name.trim()) {
+      showToast.error("Project name is required", "validation-error");
+      return;
+    }
+    if (!formData.dateRange.from || !formData.dateRange.to) {
+      showToast.error(
+        "Please select project duration (start and end dates)",
+        "date-error"
+      );
+      return;
+    }
+    isSubmittingRef.current = true;
+    setIsLoading(true);
+
+    // Store original project for rollback
+    const originalProject = selectedProject;
+
+    // Optimistic update: Update local state immediately
+    const updatedProject: Project = {
+      ...selectedProject,
+      name: formData.name.trim(),
+      description: formData.description.trim(),
+      status: formData.status,
+      priority: formData.priority,
+      start_date: formData.dateRange.from!.toISOString(),
+      end_date: formData.dateRange.to!.toISOString(),
+      progress: calculateProgress(
+        formData.dateRange.from!,
+        formData.dateRange.to!
+      ),
+      dueDate: formatDate(formData.dateRange.to!),
+      memeberEmails: formData.memeberEmails.filter(
+        (email) => email.trim() !== ""
+      ),
+      memberEmails: formData.memeberEmails.filter(
+        (email) => email.trim() !== ""
+      ),
+      dateRange: {
+        from: formData.dateRange.from!,
+        to: formData.dateRange.to!,
+      },
+      updated_at: new Date().toISOString(),
+    };
+
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.project_id === selectedProject.project_id ? updatedProject : p
+      )
+    );
+
+    // Close dialog immediately
+    closeAllDialogs();
+
+    // Show instant success toast
+    showToast.success("Project updated successfully", "update-success");
+
+    const updatePayload = {
+      name: formData.name.trim(),
+      description: formData.description.trim(),
+      start_date: formData.dateRange.from!.toISOString(),
+      end_date: formData.dateRange.to!.toISOString(),
+      status: mapStatusToApi(formData.status),
+      priority: formData.priority,
+      memberEmails: formData.memeberEmails.filter(
+        (email) => email.trim() !== ""
+      ),
+    };
+
+    try {
+      const result = await updateProject({
+        projectId: selectedProject.project_id,
+        data: updatePayload,
+      }).unwrap();
+
+      // Replace with server response
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.project_id === selectedProject.project_id
+            ? transformApiProject(result)
             : p
         )
       );
-      setIsEditDialogOpen(false);
-      setSelectedProject(null);
-      resetForm();
-      toast.success("Project updated successfully", {
-        description: `${formData.name} has been updated`,
-      });
+    } catch (error: unknown) {
+      // Rollback: Restore original project on error
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.project_id === selectedProject.project_id ? originalProject : p
+        )
+      );
+      const errorMessage = getErrorMessage(error) || "Failed to update project";
+      showToast.error(errorMessage, "update-error");
+    } finally {
+      isSubmittingRef.current = false;
+      setIsLoading(false);
     }
-  };
+  }, [formData, selectedProject, updateProject, closeAllDialogs]);
 
-  const handleDeleteClick = (project: Project) => {
+  const handleDeleteClick = useCallback((project: Project) => {
     setSelectedProject(project);
     setIsDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const handleDeleteProject = () => {
-    if (selectedProject) {
-      setProjects(projects.filter((p) => p.id !== selectedProject.id));
-      const projectName = selectedProject.name;
-      setIsDeleteDialogOpen(false);
-      setSelectedProject(null);
-      toast.success("Project deleted", {
-        description: `${projectName} has been permanently deleted`,
-      });
+  const handleDeleteProject = useCallback(async () => {
+    if (isSubmittingRef.current || !selectedProject) return;
+    isSubmittingRef.current = true;
+    setIsLoading(true);
+    const projectName = selectedProject.name;
+    const projectId = selectedProject.project_id;
+
+    // Store original project for rollback
+    const deletedProject = selectedProject;
+
+    // Optimistic update: Remove from local state immediately
+    setProjects((prev) => prev.filter((p) => p.project_id !== projectId));
+
+    // Close dialog immediately
+    closeAllDialogs();
+
+    // Show instant success toast
+    showToast.success(
+      `Project "${projectName}" deleted successfully`,
+      "delete-success"
+    );
+
+    try {
+      await deleteProject(projectId).unwrap();
+    } catch (error: unknown) {
+      // Rollback: Restore deleted project on error
+      setProjects((prev) => [deletedProject, ...prev]);
+      const errorMessage = getErrorMessage(error) || "Failed to delete project";
+      showToast.error(errorMessage, "delete-error");
+    } finally {
+      isSubmittingRef.current = false;
+      setIsLoading(false);
     }
-  };
+  }, [selectedProject, deleteProject, closeAllDialogs]);
+
+  const handleDialogOpenChange = useCallback(
+    (dialogType: "add" | "edit" | "delete" | "bulkDelete", open: boolean) => {
+      if (!open && isSubmittingRef.current) return;
+      switch (dialogType) {
+        case "add":
+          setIsAddDialogOpen(open);
+          break;
+        case "edit":
+          setIsEditDialogOpen(open);
+          break;
+        case "delete":
+          setIsDeleteDialogOpen(open);
+          break;
+        case "bulkDelete":
+          setIsBulkDeleteDialogOpen(open);
+          break;
+      }
+      if (!open) {
+        setTimeout(resetForm, 300);
+      }
+    },
+    [resetForm]
+  );
+
+  const handleNavigateToProject = useCallback(
+    (projectId: number) => {
+      navigate(`/projects/${projectId}`);
+    },
+    [navigate]
+  );
 
   return {
     projects,
+    currentUserId,
+    isFetching,
+    isError,
+    error,
     isAddDialogOpen,
     isEditDialogOpen,
     isDeleteDialogOpen,
     selectedProject,
     formData,
+    isCalendarOpen,
+    isLoading,
+    selectedRows,
+    setSelectedRows,
     setIsAddDialogOpen,
-    setIsEditDialogOpen,
-    setIsDeleteDialogOpen,
     setFormData,
+    setIsCalendarOpen,
     handleAddProject,
+    handleAddProjectAndCreateAnother,
     handleEditClick,
-    handleRowClick,
     handleUpdateProject,
     handleDeleteClick,
     handleDeleteProject,
-    resetForm,
+    handleDialogOpenChange,
+    handleNavigateToProject,
+    refetch,
+    isBulkDeleteDialogOpen,
+    handleBulkDeleteClick,
+    handleBulkDeleteProject,
   };
 };
-
-export type { Project, Member, FormData };

@@ -30,4 +30,8 @@ export interface DialogFooterProps {
   showCancel?: boolean;
   showConfirm?: boolean;
   info?: string;
+  onConfirmAndCreateAnother?: () => void;
+  createAnotherText?: string;
+  enableCreateAnother?: boolean;
+  formMode?: "add" | "edit" | "view";
 }

@@ -1,5 +1,5 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Package, X } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { X } from "lucide-react";
 
 interface CommonDialogProps {
     open: boolean;
@@ -14,12 +14,6 @@ interface CommonDialogProps {
     minWidth?: number;
 }
 
-const sizeClasses = {
-    sm: "max-w-sm",
-    md: "max-w-md",
-    lg: "max-w-lg",
-};
-
 export function CommonDialog({
     open,
     onOpenChange,
@@ -31,7 +25,11 @@ export function CommonDialog({
     note
 }: CommonDialogProps) {
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={(val) => {
+            // Only allow closing via button, ignore outside clicks
+            if (!val) return; // Prevent closing from outside click
+            onOpenChange(val)
+        }} >
             <DialogContent
                 className={`
                         ${className}
@@ -63,16 +61,18 @@ export function CommonDialog({
                         "
                 >
 
-                    <div className="flex flex-col gap-1 pt-3">
-                        <div>
+                    <div className=" flex gap-3 items-center pt-3">
+                        <div className="border bg-primary/10 rounded-sm p-2">
                             {icon}
                         </div>
-                        <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200">
-                            {title}
-                        </h3>
-                        <h6 className="text-xs font-medium text-gray-800 dark:text-gray-400">
-                            {note}
-                        </h6>
+                        <div className="flex flex-col gap-[3px]">
+                            <DialogTitle className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                                {title}
+                            </DialogTitle>
+                            <div className="text-xs font-medium text-gray-800 dark:text-gray-400">
+                                {note}
+                            </div>
+                        </div>
                     </div>
                     <button
                         onClick={() => onOpenChange(false)}
@@ -86,7 +86,6 @@ export function CommonDialog({
                     </button>
                 </div>
 
-                {/* Content */}
                 <div
                     className="
                             px-4 py-4 
@@ -112,6 +111,6 @@ export function CommonDialog({
                     </div>
                 )}
             </DialogContent>
-        </Dialog>
+        </Dialog >
     );
 }

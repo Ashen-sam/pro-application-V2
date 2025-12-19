@@ -7,7 +7,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router";
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
-import { useSignUpMutation } from "@/features/auth/authApi";
+import { useRegisterMutation } from "@/features/auth/authApi";
 
 export const Register = () => {
     const [fullName, setFullName] = useState("");
@@ -19,7 +19,7 @@ export const Register = () => {
     const [error, setError] = useState("");
 
     const navigate = useNavigate();
-    const [signUp, { isLoading }] = useSignUpMutation();
+    const [register, { isLoading }] = useRegisterMutation();
 
     const validateForm = () => {
         if (!fullName.trim()) {
@@ -65,26 +65,35 @@ export const Register = () => {
         }
 
         try {
-            const result = await signUp({
+            const result = await register({
+                name: fullName.trim(),
                 email: email.trim(),
                 password,
-                name: fullName.trim(),
             }).unwrap();
 
-            if (result && result.user_id) {
-                navigate("/login");
-            } else {
-                setError("Account created but profile setup failed. Please contact support.");
+            // Store the token in localStorage
+            if (result.token) {
+                localStorage.setItem("authToken", result.token);
             }
+
+            // Store user info if needed
+            if (result.user) {
+                localStorage.setItem("user", JSON.stringify(result.user));
+            }
+
+            // Navigate to login or dashboard
+            navigate("/login");
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             console.error("Registration error:", err);
 
-            if (err.message) {
-                setError(err.message);
-            } else if (err.error?.message) {
-                setError(err.error.message);
-            } else if (err.data?.message) {
+            if (err.data?.message) {
                 setError(err.data.message);
+            } else if (err.message) {
+                setError(err.message);
+            } else if (err.error) {
+                setError(typeof err.error === "string" ? err.error : "Failed to create account");
             } else {
                 setError("Failed to create account. Please try again.");
             }

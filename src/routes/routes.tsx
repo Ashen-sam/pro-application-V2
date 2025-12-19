@@ -1,5 +1,5 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
 import { GlobalLayout } from "@/components";
+import TitleProvider from "@/components/common/TitleProvider";
 import {
     Calendar as CalendarNew,
     Home,
@@ -11,35 +11,36 @@ import {
     Task,
 } from "@/pages";
 import { AuthLayout, Login, Register } from "@/pages/auth";
-import { ProtectedRoute } from "@/pages/auth/ProtectedRoute";
-import { CalendarPage } from "@/pages/calendar/calendar";
+import { ClerkCallback } from "@/pages/auth/ClerkCallback";
+import CalendarPage from "@/pages/calendar/calendar";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 
 export const router = createBrowserRouter([
-    // 🔐 Public pages
+    // 🔐 Public pages (authentication routes)
     {
         element: <AuthLayout />,
         children: [
             { path: "/login", element: <Login /> },
             { path: "/register", element: <Register /> },
+            { path: "/auth/callback", element: <ClerkCallback /> },
         ],
     },
 
-    // 🏠 Protected after login
+    // 🏠 Protected routes (require authentication)
     {
         element: (
-            <ProtectedRoute>
+            <>
+                <TitleProvider />
                 <GlobalLayout />
-            </ProtectedRoute>
+            </>
         ),
         children: [
             { index: true, element: <Navigate to="/home" replace /> },
-            { path: "/home", element: <Home /> },
-            { path: "/projects", element: <Projects /> },
-            { path: "/calendar", element: <CalendarPage /> },
-            { path: "/settings", element: <Settings /> },
-            { path: "/project-flow", element: <ProjectFlow /> },
-
-            // Nested project routes
+            { path: "/home", element: <Home />, handle: { title: "Home" } },
+            { path: "/projects", element: <Projects />, handle: { title: "Projects" } },
+            { path: "/calendar", element: <CalendarPage />, handle: { title: "Calendar" } },
+            { path: "/settings", element: <Settings />, handle: { title: "Settings" } },
+            { path: "/project-flow", element: <ProjectFlow />, handle: { title: "Project Flow" } },
             {
                 path: "/projects/:projectId",
                 element: <ProjectInfo />,

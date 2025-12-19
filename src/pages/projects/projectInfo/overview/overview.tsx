@@ -1,66 +1,62 @@
+import { ProjectStatusCommon, type StatusType } from "@/components";
 import { UserAvatar } from "@/components/common/avatar";
 import { AvatarGroup } from "@/components/common/avatarCommon";
 import { CircularProgress } from "@/components/common/cicularProgress";
+import { LinearLoader } from "@/components/common/CommonLoader";
 import { ProjectPriorityCommon, type PriorityType } from "@/components/common/projectPriorityCommon";
-import { ProjectStatusCommon, type StatusType } from "@/components/common/projectStatusCommon";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Calendar, Check, Package, Loader2 } from "lucide-react";
-import { useGetProjectByIdQuery, useGetProjectMembersQuery } from "../../../../features/projectsApi";
+import { useGetProjectByIdQuery, useListProjectMembersQuery } from "@/features/projectsApi";
+import { Check, Loader2, Package } from "lucide-react";
 import { useMemo } from "react";
 import { useOutletContext } from "react-router";
 
-// Props interface
-interface OverviewProps {
-    projectId: number;
+interface OverviewContext {
+    projectId: string;
 }
 
+
 export const Overview = () => {
-    const { userId, projectId } = useOutletContext<OverviewContext>();
-    // Fetch project data
-    const {
-        data: project,
-        isFetching: isProjectLoading,
-        error: projectError
-    } = useGetProjectByIdQuery(projectId, {
-        skip: !projectId
-    });
+    const { projectId } = useOutletContext<OverviewContext>();
 
-    // Fetch project members
-    const {
-        data: projectMembers,
-        isFetching: isMembersLoading
-    } = useGetProjectMembersQuery(projectId, {
-        skip: !projectId
-    });
+    const { data: projectData, isLoading: isProjectLoading, error: projectError } = useGetProjectByIdQuery(
+        Number(projectId),
+        { skip: !projectId }
+    );
 
-    // Calculate project progress
+    const { data: membersData, isLoading: isMembersLoading } = useListProjectMembersQuery(
+        Number(projectId),
+        { skip: !projectId }
+    );
+
+    const project = projectData;
+    const projectMembers = membersData || [];
+    const isLoading = isProjectLoading || isMembersLoading;
+
     const projectProgress = useMemo(() => {
         if (!project) return 0;
-        const statusProgress = {
+        const statusProgress: Record<string, number> = {
             'pending': 10,
             'in_review': 30,
             'in_progress': 60,
             'submitted': 80,
             'success': 100
         };
-        return statusProgress[project.status] || 0;
+        return statusProgress[project.status?.toLowerCase() || ''] || 0;
     }, [project]);
 
-    // Format members for AvatarGroup
     const formattedMembers = useMemo(() => {
-        if (!projectMembers) return [];
+        if (!projectMembers || projectMembers.length === 0) return [];
         return projectMembers.map((member) => ({
             id: member.user_id,
-            name: `User ${member.user_id}`,
+            name: member.users?.name || member.users?.email.split("@")[0] || "Unknown",
             image: ""
         }));
     }, [projectMembers]);
 
-    // Calculate days remaining
     const daysRemaining = useMemo(() => {
-        if (!project) return 0;
+        if (!project?.end_date) return 0;
         const today = new Date();
         const endDate = new Date(project.end_date);
         const diffTime = endDate.getTime() - today.getTime();
@@ -68,40 +64,38 @@ export const Overview = () => {
         return diffDays;
     }, [project]);
 
-    // Loading state
-    if (isProjectLoading || isMembersLoading) {
+    if (isLoading) {
         return (
-            <div className="flex items-center justify-center h-64">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="flex items-center justify-center h-96">
+                <LinearLoader />
             </div>
         );
     }
 
-    // Error state
     if (projectError || !project) {
         return (
             <div className="flex items-center justify-center h-64">
-                <div className="text-center space-y-2">
-                    <p className="text-lg font-semibold text-destructive">Error loading project</p>
-                    <p className="text-sm text-muted-foreground">
-                        {projectError ? 'Failed to fetch project details' : 'Project not found'}
-                    </p>
-                </div>
+                <p className="text-muted-foreground">Failed to load project data</p>
             </div>
         );
     }
 
-    // Map API status to component StatusType
-    const mappedStatus = project.status === 'in_progress' ? 'In progress' :
-        project.status === 'in_review' ? 'In review' :
-            project.status === 'pending' ? 'Pending' :
-                project.status === 'submitted' ? 'Submitted' : 'Success';
+    const mapApiStatusToUi = (apiStatus?: string): StatusType => {
+        const map: Record<string, StatusType> = {
+            "On track": "On track",
+            "Off track": "Off track",
+            "At risk": "At risk",
+            "Completed": "Completed"
+        };
+        return map[apiStatus || "On track"] || "On track";
+    };
 
-    // Map API priority to component PriorityType
-    const mappedPriority = (project.priority.charAt(0).toUpperCase() + project.priority.slice(1)) as PriorityType;
+    const mappedStatus: StatusType = project.status
+        ? mapApiStatusToUi(project.status)
+        : "On track";
 
-    // Count tasks (placeholder - you'll need to implement task counting)
-    const taskCount = 0; // TODO: Implement task counting from tasks API
+    const mappedPriority = (project.priority ? project.priority.charAt(0).toUpperCase() + project.priority.slice(1) : 'Medium') as PriorityType;
+    const taskCount = 0;
 
     return (
         <div className="space-y-6">
@@ -129,33 +123,34 @@ export const Overview = () => {
                             <Separator />
 
                             {/* Status, Priority, Due Date Grid */}
-                            <div className="flex items-center gap-6">
+                            <div className="flex items-center gap-6 ">
                                 <div>
                                     <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2.5 block">
                                         Status
                                     </label>
-                                    <ProjectStatusCommon status={mappedStatus as StatusType} />
+                                    <ProjectStatusCommon padding={false} status={mappedStatus} />
                                 </div>
                                 <div>
                                     <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2.5 block">
                                         Priority
                                     </label>
-                                    <ProjectPriorityCommon priority={mappedPriority} />
+                                    <ProjectPriorityCommon padding={false} priority={mappedPriority} />
                                 </div>
-                                <div>
-                                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2.5 block">
-                                        Due Date
-                                    </label>
-                                    <div className="flex items-center gap-2 text-xs font-medium bg-muted/50 px-3 py-1 rounded-sm border shadow-xs">
-                                        <Calendar className="h-3 w-3 text-muted-foreground" />
-                                        <span>{new Date(project.end_date).toLocaleDateString()}</span>
+                                {project.end_date && (
+                                    <div>
+                                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2.5 block">
+                                            Due Date
+                                        </label>
+                                        <div className="flex items-center gap-2  border shadow-xs px-2 text-xs font-medium   py-1 rounded-sm  ">
+                                            <span>{new Date(project.end_date).toLocaleDateString()}</span>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
                                 <div>
                                     <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2.5 block">
                                         tasks
                                     </label>
-                                    <div className="flex items-center gap-2 text-xs font-medium px-3 py-1 rounded-sm border shadow-xs">
+                                    <div className="flex items-center gap-2 justify-center text-xs font-medium  py-1 rounded-sm border shadow-xs">
                                         <span>{taskCount}</span>
                                     </div>
                                 </div>
@@ -169,7 +164,7 @@ export const Overview = () => {
                                     Description
                                 </label>
                                 <p className="text-sm text-foreground/80 leading-relaxed">
-                                    {project.description}
+                                    {project.description || 'No description available'}
                                 </p>
                             </div>
                         </CardContent>
@@ -204,7 +199,6 @@ export const Overview = () => {
                                 <CircularProgress
                                     className='bg-primary'
                                     value={projectProgress}
-                                    size="sm"
                                     showLabel={false}
                                 />
                             </div>
@@ -218,7 +212,7 @@ export const Overview = () => {
                                 </h4>
                                 <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
                                     This project focuses on delivering a streamlined and efficient solution to meet business needs.
-
+                                    {' '}
                                     {daysRemaining > 0 ? `${daysRemaining} days remaining until deadline.` :
                                         daysRemaining === 0 ? 'Due today!' :
                                             'Project deadline has passed.'}
@@ -248,19 +242,21 @@ export const Overview = () => {
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-4">
-                                <div className="flex items-start gap-3">
-                                    <div className="mt-1">
-                                        <div className="h-5 w-5 rounded-full bg-green-100 flex items-center justify-center">
-                                            <Check className="h-3 w-3 text-green-600" />
+                                {project.created_at && (
+                                    <div className="flex items-start gap-3">
+                                        <div className="mt-1">
+                                            <div className="h-5 w-5 rounded-full bg-green-100 flex items-center justify-center">
+                                                <Check className="h-3 w-3 text-green-600" />
+                                            </div>
+                                        </div>
+                                        <div className="flex-1 space-y-1">
+                                            <p className="text-sm">Project created</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {new Date(project.created_at).toLocaleDateString()}
+                                            </p>
                                         </div>
                                     </div>
-                                    <div className="flex-1 space-y-1">
-                                        <p className="text-sm">Project created</p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {new Date(project.created_at).toLocaleDateString()}
-                                        </p>
-                                    </div>
-                                </div>
+                                )}
 
                                 <div className="flex items-start gap-3">
                                     <div className="mt-1">

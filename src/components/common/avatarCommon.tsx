@@ -56,7 +56,7 @@ export const AvatarGroup = ({
                     key={member.id}
                     className={cn(
                         sizeClasses[size],
-                        "border-2 border-white ring-background",
+                        "border-2 border-slate ring-background",
                         "hover:z-10 hover:scale-110 transition-all duration-200 ease-out",
                         "animate-in fade-in slide-in-from-left-2"
                     )}

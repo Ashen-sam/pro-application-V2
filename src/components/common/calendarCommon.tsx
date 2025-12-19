@@ -1,7 +1,18 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, CalendarDays, CalendarPlus } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { Calendar, CalendarDays, CalendarPlus, ChevronLeft, ChevronRight, Clock, PackagePlus } from "lucide-react";
+import { useState } from "react";
+import { CommonDialog } from "./commonDialog";
+import { CommonDialogFooter } from "./commonDialogFooter";
 
 export interface CalendarEvent {
     id: string;
@@ -9,13 +20,14 @@ export interface CalendarEvent {
     date: Date;
     time: string;
     color: string;
+    description?: string;
 }
 
 export interface CalendarProps {
     events?: CalendarEvent[];
     initialDate?: Date;
     onEventClick?: (event: CalendarEvent) => void;
-    onAddEvent?: () => void;
+    onAddEvent?: (event: Omit<CalendarEvent, 'id'>) => void;
     onDateChange?: (date: Date) => void;
     showAddButton?: boolean;
     showTodayButton?: boolean;
@@ -46,6 +58,16 @@ export const CalendarCommon = ({
     showHeaderIcon = true,
 }: CalendarProps) => {
     const [currentDate, setCurrentDate] = useState(initialDate);
+    const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+    const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+    const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
+    // Form states
+    const [newEventTitle, setNewEventTitle] = useState("");
+    const [newEventDate, setNewEventDate] = useState("");
+    const [newEventTime, setNewEventTime] = useState("");
+    const [newEventColor, setNewEventColor] = useState("text-blue-600");
+    const [newEventDescription, setNewEventDescription] = useState("");
 
     const getDaysInMonth = (date: Date) => {
         const year = date.getFullYear();
@@ -103,6 +125,49 @@ export const CalendarCommon = ({
         );
     };
 
+    const handleEventClick = (event: CalendarEvent) => {
+        setSelectedEvent(event);
+        setIsViewDialogOpen(true);
+        onEventClick?.(event);
+    };
+
+    const handleOpenAddDialog = () => {
+        // Reset form
+        setNewEventTitle("");
+        setNewEventDate("");
+        setNewEventTime("");
+        setNewEventColor("text-blue-600");
+        setNewEventDescription("");
+        setIsAddDialogOpen(true);
+    };
+
+    const handleAddEventSubmit = () => {
+        if (!newEventTitle || !newEventDate || !newEventTime) {
+            alert("Please fill in all required fields");
+            return;
+        }
+
+        const newEvent = {
+            title: newEventTitle,
+            date: new Date(newEventDate),
+            time: newEventTime,
+            color: newEventColor,
+            description: newEventDescription,
+        };
+
+        onAddEvent?.(newEvent);
+        setIsAddDialogOpen(false);
+    };
+
+    const formatDate = (date: Date) => {
+        return date.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
     const renderCalendarDays = () => {
         const days = [];
         const totalCells = 35;
@@ -127,7 +192,7 @@ export const CalendarCommon = ({
                         {prevEvents.slice(0, maxEventsPerDay).map((event) => (
                             <div
                                 key={event.id}
-                                onClick={() => onEventClick?.(event)}
+                                onClick={() => handleEventClick(event)}
                                 className="text-xs px-2 py-1 rounded bg-white border truncate opacity-60 cursor-pointer"
                             >
                                 <span className={cn("font-medium", event.color)}>
@@ -170,13 +235,12 @@ export const CalendarCommon = ({
                         {dayEvents.slice(0, maxEventsPerDay).map((event) => (
                             <div
                                 key={event.id}
-                                onClick={() => onEventClick?.(event)}
+                                onClick={() => handleEventClick(event)}
                                 className="text-xs px-2 py-1 rounded bg-white dark:bg-[#282828] border truncate cursor-pointer hover:shadow-sm transition-shadow"
                             >
                                 <span className={cn("font-medium", event.color)}>
-                                    {event.title}
+                                    <PackagePlus className="w-3 h-3 mr-1 inline" />{event.title}
                                 </span>
-                                <span className="text-gray-500 ml-1">{event.time}</span>
                             </div>
                         ))}
                         {dayEvents.length > maxEventsPerDay && (
@@ -204,6 +268,15 @@ export const CalendarCommon = ({
         return days;
     };
 
+    const colorOptions = [
+        { value: "text-blue-600", label: "Blue", bgClass: "bg-blue-600" },
+        { value: "text-red-600", label: "Red", bgClass: "bg-red-600" },
+        { value: "text-green-600", label: "Green", bgClass: "bg-green-600" },
+        { value: "text-purple-600", label: "Purple", bgClass: "bg-purple-600" },
+        { value: "text-orange-600", label: "Orange", bgClass: "bg-orange-600" },
+        { value: "text-gray-600", label: "Gray", bgClass: "bg-gray-600" },
+    ];
+
     return (
         <div className={cn("flex flex-col ", className)}>
             {showHeader && (
@@ -223,7 +296,7 @@ export const CalendarCommon = ({
 
                         <div className="flex items-center justify-between gap-4">
                             {showAddButton && (
-                                <Button size="sm" className="h-9 text-sm" onClick={onAddEvent}>
+                                <Button size="sm" className="h-9 text-sm" onClick={handleOpenAddDialog}>
                                     <CalendarPlus className="h-4 w-4" />
                                     Event
                                 </Button>
@@ -277,6 +350,130 @@ export const CalendarCommon = ({
 
                 <div className="grid grid-cols-7">{renderCalendarDays()}</div>
             </div>
-        </div>
+
+
+            <CommonDialog
+                icon={<CalendarPlus className="text-primary" size={20} />}
+                open={isViewDialogOpen}
+                onOpenChange={setIsViewDialogOpen}
+                title={selectedEvent ? selectedEvent.title : "Event Details"}
+                size="sm"
+                footer={
+                    <CommonDialogFooter
+                        onCancel={() => setIsViewDialogOpen(false)}
+                        onConfirm={() => setIsViewDialogOpen(false)}
+                        cancelText="Close"
+                        confirmText="Edit Event"
+                    />
+                }
+            >
+                {selectedEvent && (
+                    <div className="space-y-4">
+                        <div className="flex items-start gap-3">
+                            <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
+                            <div>
+                                <p className="text-sm font-medium">Date</p>
+                                <p className="text-sm text-muted-foreground">
+                                    {formatDate(selectedEvent.date)}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                            <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
+                            <div>
+                                <p className="text-sm font-medium">Time</p>
+                                <p className="text-sm text-muted-foreground">
+                                    {selectedEvent.time}
+                                </p>
+                            </div>
+                        </div>
+                        {selectedEvent.description && (
+                            <div className="flex items-start gap-3">
+                                <div className="h-5 w-5 flex items-center justify-center">
+                                    <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium">Description</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        {selectedEvent.description}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </CommonDialog>
+
+
+            <CommonDialog
+                icon={<CalendarPlus className="text-primary" size={20} />}
+                open={isAddDialogOpen}
+                onOpenChange={setIsAddDialogOpen}
+                title="Add New Event"
+                size="sm"
+                note="Add calendar events"
+                footer={
+                    <CommonDialogFooter
+                        onCancel={() => setIsAddDialogOpen(false)}
+                        onConfirm={handleAddEventSubmit}
+                        cancelText="Cancel"
+                        confirmText="Add Event" />
+                }
+            >
+                <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="title">Event Title *</Label>
+                        <Input
+                            id="title"
+                            placeholder="Enter event title"
+                            value={newEventTitle}
+                            onChange={(e) => setNewEventTitle(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="date">Date *</Label>
+                            <Input
+                                id="date"
+                                type="date"
+                                value={newEventDate}
+                                onChange={(e) => setNewEventDate(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="time">Time *</Label>
+                            <Input
+                                id="time"
+                                type="time"
+                                value={newEventTime}
+                                onChange={(e) => setNewEventTime(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="color">Color</Label>
+                        <Select value={newEventColor} onValueChange={setNewEventColor}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select a color" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {colorOptions.map((color) => (
+                                    <SelectItem key={color.value} value={color.value}>
+                                        <div className="flex items-center gap-2">
+                                            <div className={cn("w-3 h-3 rounded-full", color.bgClass)} />
+                                            {color.label}
+                                        </div>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+
+                </div>
+            </CommonDialog>
+        </div >
     );
 };

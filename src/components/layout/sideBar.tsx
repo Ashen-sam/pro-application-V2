@@ -4,7 +4,6 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import {
     Calendar,
-    ChevronDown,
     ChevronLeft,
     ChevronRight,
     FolderArchive,
@@ -18,15 +17,12 @@ import { ModeToggle } from "../common/mode-toggle";
 import type { SidebarProps } from "./types";
 
 const topNavItems = [
-    { to: "/", icon: Inbox, label: "Home" },
-    // { to: "/tasks", icon: CheckSquare, label: "My Tasks" }
+    { to: "/home", icon: Inbox, label: "Home" },
 ];
 
 const workspaceItems = [
     { to: "/projects", icon: Package, label: "Projects" },
     { to: "/calendar", icon: Calendar, label: "Calendar" },
-    // { to: "/todo", icon: ListTodo, label: "Todo" },
-    // { to: "/goals", icon: Target, label: "Goals" },
     { to: '/project-flow', icon: FolderArchive, label: 'Flow' }
 ];
 

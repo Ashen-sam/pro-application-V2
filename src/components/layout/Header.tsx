@@ -23,7 +23,11 @@ const workspaceItems = [
 export const Header = () => {
     const location = useLocation();
 
-    const isActive = (path: string) => location.pathname === path;
+    const isActive = (path: string) =>
+        path === "/"
+            ? location.pathname === "/"
+            : location.pathname === path || location.pathname.startsWith(path + "/");
+
 
     return (
         <div className="w-full border-b bg-[#fcfcfc] dark:bg-[#282828]">

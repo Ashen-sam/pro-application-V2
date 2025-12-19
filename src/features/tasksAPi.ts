@@ -1,399 +1,218 @@
-import { supabase } from "@/lib/supabaseClient";
-import { baseApi } from "@/store/baseAPI";
+// src/services/api/taskApi.ts
 
+import type { StatusType } from "@/components";
+import baseApi from "@/store/baseAPI";
+
+/**
+ * Task Interface
+ */
 export interface Task {
   task_id: number;
   project_id: number;
-  name: string;
-  description: string | null;
-  status: "pending" | "in_review" | "in_progress" | "submitted" | "success";
-  priority: "low" | "medium" | "high" | "critical";
-  due_date: string | null;
-  created_by: number | null;
-  created_at: string;
+  title?: string;
+  description?: string;
+  status?: StatusType;
+  priority?: string;
+  due_date?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
+/**
+ * Task Assignment Interface
+ */
 export interface TaskAssignment {
   task_id: number;
   user_id: number;
-  assigned_at: string;
+  assigned_at?: string;
+  users?: {
+    name: string;
+    email: string;
+  };
 }
 
-interface CreateTaskParams {
+/**
+ * API Response Interfaces
+ */
+export interface TasksListResponse {
+  success: boolean;
+  tasks: Task[];
+}
+
+export interface TaskResponse {
+  success: boolean;
+  task: Task;
+}
+
+export interface TaskAssignmentsResponse {
+  success: boolean;
+  assignees: TaskAssignment[];
+}
+
+export interface TaskAssignmentResponse {
+  success: boolean;
+  assignment: TaskAssignment;
+}
+
+export interface DeleteTaskResponse {
+  success: boolean;
+}
+
+export interface ErrorResponse {
+  success: boolean;
+  error?: any;
+  message?: string;
+}
+
+/**
+ * Request Body Interfaces
+ */
+export interface CreateTaskRequest {
   project_id: number;
-  name: string;
+  title?: string;
   description?: string;
-  status: Task["status"];
-  priority: Task["priority"];
-  due_date?: string;
-  created_by?: number;
-  assignee_ids?: number[];
+  status?: string;
+  priority?: string;
+  due_date?: string | null;
 }
 
-interface UpdateTaskParams {
-  task_id: number;
-  name?: string;
+export interface UpdateTaskRequest {
+  title?: string;
   description?: string;
-  status?: Task["status"];
-  priority?: Task["priority"];
+  status?: string;
+  priority?: string;
   due_date?: string;
+  project_id?: number;
 }
 
-export const tasksApi = baseApi.injectEndpoints({
+export interface AssignUserRequest {
+  user_id: number;
+}
+
+/**
+ * Query Parameters Interfaces
+ */
+export interface ListTasksParams {
+  projectId?: number;
+}
+
+/**
+ * RTK Query API for Tasks
+ */
+export const taskApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    // Get all tasks
-    getAllTasks: builder.query<Task[], void>({
-      async queryFn() {
-        try {
-          const { data, error } = await supabase
-            .from("tasks")
-            .select("*")
-            .order("created_at", { ascending: false });
-
-          if (error) {
-            console.error("Get tasks error:", error);
-            return { error: { message: error.message } };
-          }
-
-          return { data: data || [] };
-        } catch (err: any) {
-          console.error("Unexpected error:", err);
-          return {
-            error: {
-              message:
-                err.message || "An unexpected error occurred fetching tasks",
-            },
-          };
-        }
-      },
+    /**
+     * Get list of tasks with optional project filter
+     */
+    listTasks: builder.query<TasksListResponse, ListTasksParams | void>({
+      query: (params) => ({
+        url: "/tasks",
+        params: params ? { projectId: params.projectId } : undefined,
+      }),
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ task_id }) => ({
-                type: "Tasks" as const,
+              ...result.tasks.map(({ task_id }) => ({
+                type: "Task" as const,
                 id: task_id,
               })),
-              { type: "Tasks", id: "LIST" },
+              { type: "Task", id: "LIST" },
             ]
-          : [{ type: "Tasks", id: "LIST" }],
+          : [{ type: "Task", id: "LIST" }],
     }),
 
-    // Get tasks by project
-    getProjectTasks: builder.query<Task[], number>({
-      async queryFn(projectId) {
-        try {
-          const { data, error } = await supabase
-            .from("tasks")
-            .select("*")
-            .eq("project_id", projectId)
-            .order("created_at", { ascending: false });
-
-          if (error) {
-            console.error("Get project tasks error:", error);
-            return { error: { message: error.message } };
-          }
-
-          return { data: data || [] };
-        } catch (err: any) {
-          console.error("Unexpected error:", err);
-          return {
-            error: {
-              message:
-                err.message ||
-                "An unexpected error occurred fetching project tasks",
-            },
-          };
-        }
-      },
-      providesTags: (result, error, projectId) =>
-        result
-          ? [
-              ...result.map(({ task_id }) => ({
-                type: "Tasks" as const,
-                id: task_id,
-              })),
-              { type: "Tasks", id: `PROJECT_${projectId}` },
-            ]
-          : [{ type: "Tasks", id: `PROJECT_${projectId}` }],
+    /**
+     * Get a single task by ID
+     */
+    getTaskById: builder.query<TaskResponse, number>({
+      query: (taskId) => `/tasks/${taskId}`,
+      providesTags: (result, error, taskId) => [{ type: "Task", id: taskId }],
     }),
 
-    // Get single task by ID
-    getTaskById: builder.query<Task, number>({
-      async queryFn(taskId) {
-        try {
-          const { data, error } = await supabase
-            .from("tasks")
-            .select("*")
-            .eq("task_id", taskId)
-            .single();
-
-          if (error) {
-            console.error("Get task error:", error);
-            return { error: { message: error.message } };
-          }
-
-          return { data };
-        } catch (err: any) {
-          console.error("Unexpected error:", err);
-          return {
-            error: {
-              message:
-                err.message || "An unexpected error occurred fetching task",
-            },
-          };
-        }
-      },
-      providesTags: (result, error, id) => [{ type: "Tasks", id }],
+    /**
+     * Create a new task
+     */
+    createTask: builder.mutation<TaskResponse, CreateTaskRequest>({
+      query: (body) => ({
+        url: "/tasks",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: [{ type: "Task", id: "LIST" }],
     }),
 
-    // Create new task
-    createTask: builder.mutation<Task, CreateTaskParams>({
-      async queryFn({
-        project_id,
-        name,
-        description,
-        status,
-        priority,
-        due_date,
-        created_by,
-        assignee_ids,
-      }) {
-        try {
-          const { data: taskData, error: taskError } = await supabase
-            .from("tasks")
-            .insert({
-              project_id,
-              name,
-              description,
-              status,
-              priority,
-              due_date,
-              created_by,
-            })
-            .select()
-            .single();
-
-          if (taskError) {
-            console.error("Create task error:", taskError);
-            return { error: { message: taskError.message } };
-          }
-
-          if (!taskData) {
-            return { error: { message: "Failed to create task" } };
-          }
-
-          // Add task assignments
-          if (assignee_ids && assignee_ids.length > 0) {
-            const assignmentInserts = assignee_ids.map((user_id) => ({
-              task_id: taskData.task_id,
-              user_id,
-            }));
-
-            const { error: assignmentsError } = await supabase
-              .from("task_assignments")
-              .insert(assignmentInserts);
-
-            if (assignmentsError) {
-              console.error("Add task assignments error:", assignmentsError);
-            }
-          }
-
-          return { data: taskData };
-        } catch (err: any) {
-          console.error("Unexpected error:", err);
-          return {
-            error: {
-              message:
-                err.message || "An unexpected error occurred creating task",
-            },
-          };
-        }
-      },
-      invalidatesTags: (result, error, { project_id }) => [
-        { type: "Tasks", id: `PROJECT_${project_id}` },
+    /**
+     * Update an existing task
+     */
+    updateTask: builder.mutation<
+      TaskResponse,
+      { taskId: number; body: UpdateTaskRequest }
+    >({
+      query: ({ taskId, body }) => ({
+        url: `/tasks/${taskId}`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: (result, error, { taskId }) => [
+        { type: "Task", id: taskId },
+        { type: "Task", id: "LIST" },
       ],
     }),
 
-    // Update task
-    updateTask: builder.mutation<Task, UpdateTaskParams>({
-      async queryFn({ task_id, ...updates }) {
-        try {
-          const { data, error } = await supabase
-            .from("tasks")
-            .update(updates)
-            .eq("task_id", task_id)
-            .select()
-            .single();
-
-          if (error) {
-            console.error("Update task error:", error);
-            return { error: { message: error.message } };
-          }
-
-          if (!data) {
-            return { error: { message: "Failed to update task" } };
-          }
-
-          return { data };
-        } catch (err: any) {
-          console.error("Unexpected error:", err);
-          return {
-            error: {
-              message:
-                err.message || "An unexpected error occurred updating task",
-            },
-          };
-        }
-      },
-      invalidatesTags: (result, error, { task_id }) => [
-        { type: "Tasks", id: task_id },
+    /**
+     * Delete a task
+     */
+    deleteTask: builder.mutation<DeleteTaskResponse, number>({
+      query: (taskId) => ({
+        url: `/tasks/${taskId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (result, error, taskId) => [
+        { type: "Task", id: taskId },
+        { type: "Task", id: "LIST" },
+        { type: "TaskAssignment", id: "LIST" },
       ],
     }),
 
-    // Delete task
-    deleteTask: builder.mutation<void, number>({
-      async queryFn(taskId) {
-        try {
-          const { error } = await supabase
-            .from("tasks")
-            .delete()
-            .eq("task_id", taskId);
-
-          if (error) {
-            console.error("Delete task error:", error);
-            return { error: { message: error.message } };
-          }
-
-          return { data: undefined };
-        } catch (err: any) {
-          console.error("Unexpected error:", err);
-          return {
-            error: {
-              message:
-                err.message || "An unexpected error occurred deleting task",
-            },
-          };
-        }
-      },
-      invalidatesTags: (result, error, id) => [
-        { type: "Tasks", id },
-        { type: "Tasks", id: "LIST" },
-      ],
-    }),
-
-    // Get task assignments
-    getTaskAssignments: builder.query<TaskAssignment[], number>({
-      async queryFn(taskId) {
-        try {
-          const { data, error } = await supabase
-            .from("task_assignments")
-            .select("*")
-            .eq("task_id", taskId);
-
-          if (error) {
-            console.error("Get task assignments error:", error);
-            return { error: { message: error.message } };
-          }
-
-          return { data: data || [] };
-        } catch (err: any) {
-          console.error("Unexpected error:", err);
-          return {
-            error: {
-              message:
-                err.message ||
-                "An unexpected error occurred fetching assignments",
-            },
-          };
-        }
-      },
+    /**
+     * Get list of users assigned to a task
+     */
+    listTaskAssignments: builder.query<TaskAssignmentsResponse, number>({
+      query: (taskId) => `/tasks/${taskId}/assignments`,
       providesTags: (result, error, taskId) => [
-        { type: "Tasks", id: `ASSIGNMENTS_${taskId}` },
+        { type: "TaskAssignment", id: taskId },
+        { type: "TaskAssignment", id: "LIST" },
       ],
     }),
 
-    // Assign user to task
-    assignTaskToUser: builder.mutation<
-      TaskAssignment,
-      { task_id: number; user_id: number }
+    /**
+     * Assign a user to a task
+     */
+    assignUserToTask: builder.mutation<
+      TaskAssignmentResponse,
+      { taskId: number; user_id: number }
     >({
-      async queryFn({ task_id, user_id }) {
-        try {
-          const { data, error } = await supabase
-            .from("task_assignments")
-            .insert({
-              task_id,
-              user_id,
-            })
-            .select()
-            .single();
-
-          if (error) {
-            console.error("Assign task error:", error);
-            return { error: { message: error.message } };
-          }
-
-          return { data };
-        } catch (err: any) {
-          console.error("Unexpected error:", err);
-          return {
-            error: {
-              message:
-                err.message || "An unexpected error occurred assigning task",
-            },
-          };
-        }
-      },
-      invalidatesTags: (result, error, { task_id }) => [
-        { type: "Tasks", id: `ASSIGNMENTS_${task_id}` },
-      ],
-    }),
-
-    // Unassign user from task
-    unassignTaskFromUser: builder.mutation<
-      void,
-      { task_id: number; user_id: number }
-    >({
-      async queryFn({ task_id, user_id }) {
-        try {
-          const { error } = await supabase
-            .from("task_assignments")
-            .delete()
-            .eq("task_id", task_id)
-            .eq("user_id", user_id);
-
-          if (error) {
-            console.error("Unassign task error:", error);
-            return { error: { message: error.message } };
-          }
-
-          return { data: undefined };
-        } catch (err: any) {
-          console.error("Unexpected error:", err);
-          return {
-            error: {
-              message:
-                err.message || "An unexpected error occurred unassigning task",
-            },
-          };
-        }
-      },
-      invalidatesTags: (result, error, { task_id }) => [
-        { type: "Tasks", id: `ASSIGNMENTS_${task_id}` },
+      query: ({ taskId, user_id }) => ({
+        url: `/tasks/${taskId}/assignments`,
+        method: "POST",
+        body: { user_id },
+      }),
+      invalidatesTags: (result, error, { taskId }) => [
+        { type: "TaskAssignment", id: taskId },
+        { type: "TaskAssignment", id: "LIST" },
       ],
     }),
   }),
   overrideExisting: false,
 });
 
+// Export hooks for usage in functional components
 export const {
-  useGetAllTasksQuery,
-  useGetProjectTasksQuery,
+  useListTasksQuery,
   useGetTaskByIdQuery,
   useCreateTaskMutation,
   useUpdateTaskMutation,
   useDeleteTaskMutation,
-  useGetTaskAssignmentsQuery,
-  useAssignTaskToUserMutation,
-  useUnassignTaskFromUserMutation,
-} = tasksApi;
+  useListTaskAssignmentsQuery,
+  useAssignUserToTaskMutation,
+} = taskApi;

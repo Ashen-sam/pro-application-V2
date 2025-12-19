@@ -1,4 +1,12 @@
-import * as React from "react";
+// TaskTable.tsx
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 import {
     Table,
     TableBody,
@@ -7,16 +15,8 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { Plus, Trash } from "lucide-react";
+import { CalendarPlus, Plus, Trash2, UserRoundPlus, X } from "lucide-react";
+import * as React from "react";
 import { ProjectStatusCommon, type StatusType } from "./ProjectStatusCommon";
 import { ProjectPriorityCommon, type PriorityType } from "./projectPriorityCommon";
 
@@ -25,8 +25,8 @@ export interface Task {
     name: string;
     assignee?: string;
     status?: StatusType;
-    dueDate?: string;
-    priority?: PriorityType;
+    dueDate?: string | null;
+    priority?: PriorityType | "Medium";
 }
 
 interface TaskTableProps {
@@ -45,6 +45,379 @@ interface TaskTableProps {
     };
 }
 
+interface TaskRowProps {
+    task: Task;
+    index: number;
+    showNumbering: boolean;
+    columns: Required<NonNullable<TaskTableProps['columns']>>;
+    onTaskChange?: (taskId: number, field: keyof Task, value: string) => void;
+    onTaskDelete?: (taskId: number) => void;
+    isLastRow: boolean;
+    newTaskRef: React.RefObject<HTMLInputElement>;
+}
+
+// Status Popover Component
+const StatusPopover = React.memo<{
+    value: StatusType;
+    onChange: (value: string) => void;
+}>(({ value, onChange }) => {
+    const [open, setOpen] = React.useState(false);
+    const statusOptions: StatusType[] = ["On track", "At risk", "Off track", "Completed"];
+
+    const handleSelect = React.useCallback((status: StatusType) => {
+        onChange(status);
+        setOpen(false);
+    }, [onChange]);
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <button
+                    className="text-xs rounded-sm hover:bg-accent"
+                >
+                    <ProjectStatusCommon status={value} />
+                </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[150px] p-1 rounded-sm" align="start">
+                <div className="flex flex-col">
+                    {statusOptions.map((status) => (
+                        <button
+                            key={status}
+                            className="flex border-b last:border-b-0 w-full items-center py-1 text-sm rounded-none hover:bg-accent hover:text-accent-foreground outline-none cursor-pointer"
+                            onClick={() => {
+                                handleSelect(status);
+                            }}
+                        >
+                            <ProjectStatusCommon status={status} />
+                        </button>
+                    ))}
+                </div>
+            </PopoverContent>
+        </Popover>
+    );
+});
+
+StatusPopover.displayName = 'StatusPopover';
+
+// Priority Popover Component
+const PriorityPopover = React.memo<{
+    value: PriorityType | "Medium";
+    onChange: (value: string) => void;
+}>(({ value, onChange }) => {
+    const [open, setOpen] = React.useState(false);
+    const priorityOptions: PriorityType[] = ["Low", "Medium", "High"];
+
+    const handleSelect = React.useCallback((priority: PriorityType) => {
+        onChange(priority);
+        setOpen(false);
+    }, [onChange]);
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <button
+                    className="text-xs rounded-sm hover:bg-accent"
+                >
+                    <ProjectPriorityCommon priority={value} />
+                </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[140px] p-1" align="start">
+                <div className="flex flex-col gap-1">
+                    {priorityOptions.map((priority) => (
+                        <button
+                            key={priority}
+                            className="flex border-b last:border-b-0 w-full items-center py-1 text-sm rounded-none hover:bg-accent hover:text-accent-foreground outline-none cursor-pointer"
+                            onClick={() => handleSelect(priority)}
+                        >
+                            <ProjectPriorityCommon priority={priority} />
+                        </button>
+                    ))}
+                </div>
+            </PopoverContent>
+        </Popover>
+    );
+});
+
+PriorityPopover.displayName = 'PriorityPopover';
+
+// Date Range Popover Component
+const DatePopover = React.memo<{
+    value: string | null | undefined;
+    onChange: (value: string) => void;
+}>(({ value, onChange }) => {
+    const [open, setOpen] = React.useState(false);
+    const [date, setDate] = React.useState<Date | undefined>(
+        value ? new Date(value) : undefined
+    );
+
+    const handleSelect = React.useCallback((selectedDate: Date | undefined) => {
+        setDate(selectedDate);
+        if (selectedDate) {
+            const formattedDate = selectedDate.toISOString().split('T')[0];
+            onChange(formattedDate);
+            setOpen(false);
+        }
+    }, [onChange]);
+
+    const handleClear = React.useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        setDate(undefined);
+        onChange('');
+        setOpen(false);
+    }, [onChange]);
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <button className="flex items-center gap-2 text-sm hover:bg-accent px-2 py-1 rounded-sm w-full justify-start">
+                    <CalendarPlus size={16} className="text-gray-400" />
+                    <span className="text-gray-600 dark:text-gray-400">
+                        {date ? date.toLocaleDateString() : 'Select date'}
+                    </span>
+                    {date && (
+                        <X
+                            size={14}
+                            className="ml-auto text-gray-400 hover:text-gray-600"
+                            onClick={handleClear}
+                        />
+                    )}
+                </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={handleSelect}
+                    initialFocus
+                />
+            </PopoverContent>
+        </Popover>
+    );
+});
+
+DatePopover.displayName = 'DatePopover';
+
+// Assignee Popover Component
+const AssigneePopover = React.memo<{
+    value: string | undefined;
+    onChange: (value: string) => void;
+}>(({ value, onChange }) => {
+    const [open, setOpen] = React.useState(false);
+    const [inputValue, setInputValue] = React.useState(value || '');
+
+    // Sample assignees list - you can replace with your own data
+    const assignees = ['John Doe', 'Jane Smith', 'Bob Johnson', 'Alice Williams', 'Charlie Brown'];
+
+    React.useEffect(() => {
+        setInputValue(value || '');
+    }, [value]);
+
+    const handleSelect = React.useCallback((assignee: string) => {
+        setInputValue(assignee);
+        onChange(assignee);
+        setOpen(false);
+    }, [onChange]);
+
+    const handleInputChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = e.target.value;
+        setInputValue(newValue);
+        onChange(newValue);
+    }, [onChange]);
+
+    const handleClear = React.useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        setInputValue('');
+        onChange('');
+    }, [onChange]);
+
+    const filteredAssignees = assignees.filter(assignee =>
+        assignee.toLowerCase().includes(inputValue.toLowerCase())
+    );
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <button className="flex items-center gap-2 text-sm hover:bg-accent px-2 py-1 rounded-sm w-full justify-start">
+                    <UserRoundPlus size={16} className="text-gray-400" />
+                    <span className="text-gray-600 dark:text-gray-400 truncate">
+                        {inputValue || 'Assign to'}
+                    </span>
+                    {inputValue && (
+                        <X
+                            size={14}
+                            className="ml-auto text-gray-400 hover:text-gray-600"
+                            onClick={handleClear}
+                        />
+                    )}
+                </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[220px] p-2" align="start">
+                <div className="space-y-2">
+                    <Input
+                        placeholder="Search or add assignee..."
+                        value={inputValue}
+                        onChange={handleInputChange}
+                        className="h-8"
+                    />
+                    {filteredAssignees.length > 0 && (
+                        <div className="flex flex-col">
+                            {filteredAssignees.map((assignee) => (
+                                <button
+                                    key={assignee}
+                                    className="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-accent rounded-sm text-left"
+                                    onClick={() => handleSelect(assignee)}
+                                >
+                                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium">
+                                        {assignee.split(' ').map(n => n[0]).join('')}
+                                    </div>
+                                    {assignee}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </PopoverContent>
+        </Popover>
+    );
+});
+
+AssigneePopover.displayName = 'AssigneePopover';
+
+// Optimized Input Component with debouncing
+const DebouncedInput = React.memo<{
+    defaultValue: string | undefined;
+    placeholder: string;
+    type?: string;
+    onChange: (value: string) => void;
+    inputRef?: React.RefObject<HTMLInputElement>;
+    className?: string;
+}>(({ defaultValue, placeholder, type = "text", onChange, inputRef, className }) => {
+    const [value, setValue] = React.useState(defaultValue || "");
+    const timeoutRef = React.useRef<ReturnType<typeof setTimeout>>();
+
+    React.useEffect(() => {
+        setValue(defaultValue || "");
+    }, [defaultValue]);
+
+    const handleChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = e.target.value;
+        setValue(newValue);
+
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+
+        const delay = type === "date" ? 0 : 300;
+        timeoutRef.current = setTimeout(() => {
+            onChange(newValue);
+        }, delay);
+    }, [onChange, type]);
+
+    React.useEffect(() => {
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, []);
+
+    return (
+        <Input
+            ref={inputRef}
+            type={type}
+            value={value}
+            placeholder={placeholder}
+            onChange={handleChange}
+            className={className}
+        />
+    );
+});
+
+DebouncedInput.displayName = 'DebouncedInput';
+
+// Memoized task row component
+const TaskRow = React.memo<TaskRowProps>(({
+    task,
+    index,
+    showNumbering,
+    columns,
+    onTaskChange,
+    onTaskDelete,
+    isLastRow,
+    newTaskRef
+}) => {
+    const handleInputChange = React.useCallback((field: keyof Task) => (value: string) => {
+        onTaskChange?.(task.id, field, value);
+    }, [task.id, onTaskChange]);
+
+    const handleDelete = React.useCallback(() => {
+        onTaskDelete?.(task.id);
+    }, [task.id, onTaskDelete]);
+
+    return (
+        <TableRow className="dark:hover:bg-zinc-900 cursor-pointer hover:bg-zinc-100 dark:bg-[#191919]">
+            {showNumbering && (
+                <TableCell className="text-center text-gray-400">
+                    {index + 1}
+                </TableCell>
+            )}
+            {columns.name && (
+                <TableCell>
+                    <DebouncedInput
+                        inputRef={isLastRow ? newTaskRef : undefined}
+                        defaultValue={task.name}
+                        placeholder="Enter task name..."
+                        onChange={handleInputChange('name')}
+                        className="border-0 shadow-none focus-visible:ring-1"
+                    />
+                </TableCell>
+            )}
+            {columns.assignee && (
+                <TableCell>
+                    <AssigneePopover
+                        value={task.assignee}
+                        onChange={handleInputChange('assignee')}
+                    />
+                </TableCell>
+            )}
+            {columns.status && (
+                <TableCell>
+                    <StatusPopover
+                        value={task.status ?? "At risk"}
+                        onChange={handleInputChange('status')}
+                    />
+                </TableCell>
+            )}
+            {columns.dueDate && (
+                <TableCell>
+                    <DatePopover
+                        value={task.dueDate}
+                        onChange={handleInputChange('dueDate')}
+                    />
+                </TableCell>
+            )}
+            {columns.priority && (
+                <TableCell>
+                    <PriorityPopover
+                        value={task.priority ?? "Medium"}
+                        onChange={handleInputChange('priority')}
+                    />
+                </TableCell>
+            )}
+            <TableCell className="text-center">
+                <button
+                    onClick={handleDelete}
+                    className="text-gray-400 hover:text-red-400"
+                >
+                    <Trash2 size={16} />
+                </button>
+            </TableCell>
+        </TableRow>
+    );
+});
+
+TaskRow.displayName = 'TaskRow';
+
 export const TaskTable: React.FC<TaskTableProps> = ({
     tasks,
     onTaskChange,
@@ -59,48 +432,75 @@ export const TaskTable: React.FC<TaskTableProps> = ({
         priority: true,
     },
 }) => {
-    const newTaskRef = React.useRef<HTMLInputElement | null>(null);
+    const newTaskRef = React.useRef<HTMLInputElement>(null);
 
-    const handleAddTask = () => {
+    const normalizedColumns = React.useMemo<Required<NonNullable<TaskTableProps['columns']>>>(() => ({
+        name: columns.name ?? true,
+        assignee: columns.assignee ?? true,
+        status: columns.status ?? true,
+        dueDate: columns.dueDate ?? true,
+        priority: columns.priority ?? true,
+    }), [columns]);
+
+    const handleAddTask = React.useCallback(() => {
         onTaskAdd?.();
-        setTimeout(() => {
+        requestAnimationFrame(() => {
             newTaskRef.current?.focus();
-        }, 50);
-    };
+        });
+    }, [onTaskAdd]);
 
-    const columnCount =
+    const columnCount = React.useMemo(() =>
         (showNumbering ? 1 : 0) +
-        (columns.name ? 1 : 0) +
-        (columns.assignee ? 1 : 0) +
-        (columns.status ? 1 : 0) +
-        (columns.dueDate ? 1 : 0) +
-        (columns.priority ? 1 : 0) +
-        1;
-
-    const statusOptions: StatusType[] = ["Expired", "In review", "In progress", "Submitted", "Success"];
-    const priorityOptions: PriorityType[] = ["Low", "Medium", "High", "Critical"];
+        (normalizedColumns.name ? 1 : 0) +
+        (normalizedColumns.assignee ? 1 : 0) +
+        (normalizedColumns.status ? 1 : 0) +
+        (normalizedColumns.dueDate ? 1 : 0) +
+        (normalizedColumns.priority ? 1 : 0) +
+        1,
+        [showNumbering, normalizedColumns]
+    );
 
     return (
         <div className="w-full mx-auto">
             <div className="border rounded-sm overflow-hidden">
-                <Table className="overflow-hidden [&>thead>tr>th]:border [&>thead>tr>th]:border-border [&>tbody>tr>td]:border [&>tbody>tr>td]:border-border">
+                <Table className="overflow-hidden">
                     <TableHeader>
                         <TableRow>
                             {showNumbering && <TableHead className="w-10"></TableHead>}
-                            {columns.name && (
-                                <TableHead className="w-[35%]">Name</TableHead>
+                            {normalizedColumns.name && (
+                                <TableHead className="w-[35%]">
+                                    <div className="flex items-center gap-2">
+                                        Name
+                                    </div>
+                                </TableHead>
                             )}
-                            {columns.assignee && (
-                                <TableHead className="w-[20%]">Assignee</TableHead>
+                            {normalizedColumns.assignee && (
+                                <TableHead className="w-[20%]">
+                                    <div className="flex items-center gap-2">
+                                        Assignee
+                                    </div>
+                                </TableHead>
                             )}
-                            {columns.status && (
-                                <TableHead className="w-[15%]">Status</TableHead>
+                            {normalizedColumns.status && (
+                                <TableHead className="w-[15%]">
+                                    <div className="flex items-center gap-2">
+                                        Status
+                                    </div>
+                                </TableHead>
                             )}
-                            {columns.dueDate && (
-                                <TableHead className="w-[12%]">Due date</TableHead>
+                            {normalizedColumns.dueDate && (
+                                <TableHead className="w-[12%]">
+                                    <div className="flex items-center gap-2">
+                                        Due date
+                                    </div>
+                                </TableHead>
                             )}
-                            {columns.priority && (
-                                <TableHead className="w-[10%]">Priority</TableHead>
+                            {normalizedColumns.priority && (
+                                <TableHead className="w-[10%]">
+                                    <div className="flex items-center gap-2">
+                                        Priority
+                                    </div>
+                                </TableHead>
                             )}
                             <TableHead className="w-[60px] text-right">Actions</TableHead>
                         </TableRow>
@@ -108,126 +508,28 @@ export const TaskTable: React.FC<TaskTableProps> = ({
 
                     <TableBody>
                         {tasks.map((task, index) => (
-                            <TableRow key={task.id} className="hover:bg-zinc-800">
-                                {showNumbering && (
-                                    <TableCell className="text-center text-gray-400">
-                                        {index + 1}
-                                    </TableCell>
-                                )}
-                                {columns.name && (
-                                    <TableCell>
-                                        <Input
-                                            ref={
-                                                index === tasks.length - 1
-                                                    ? newTaskRef
-                                                    : undefined
-                                            }
-                                            value={task.name}
-                                            placeholder="Enter task name..."
-                                            onChange={(e) =>
-                                                onTaskChange?.(task.id, "name", e.target.value)
-                                            }
-                                            className="border-0 shadow-none focus-visible:ring-1"
-                                        />
-                                    </TableCell>
-                                )}
-                                {columns.assignee && (
-                                    <TableCell>
-                                        <Input
-                                            value={task.assignee}
-                                            placeholder="Assignee"
-                                            onChange={(e) =>
-                                                onTaskChange?.(task.id, "assignee", e.target.value)
-                                            }
-                                            className="border-0 shadow-none focus-visible:ring-1"
-                                        />
-                                    </TableCell>
-                                )}
-                                {columns.status && (
-                                    <TableCell>
-                                        <Select
-                                            value={task.status}
-                                            onValueChange={(value) =>
-                                                onTaskChange?.(task.id, "status", value)
-                                            }
-                                        >
-                                            <SelectTrigger className="border-0 shadow-none focus:ring-1">
-                                                <SelectValue>
-                                                    <ProjectStatusCommon
-                                                        status={task.status ?? "Expired"}
-                                                    />
-                                                </SelectValue>
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {statusOptions.map((status) => (
-                                                    <SelectItem key={status} value={status}>
-                                                        <ProjectStatusCommon status={status} />
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </TableCell>
-                                )}
-                                {columns.dueDate && (
-                                    <TableCell>
-                                        <Input
-                                            type="date"
-                                            value={task.dueDate}
-                                            placeholder="Due date"
-                                            onChange={(e) =>
-                                                onTaskChange?.(task.id, "dueDate", e.target.value)
-                                            }
-                                            className="border-0 shadow-none focus-visible:ring-1 text-sm"
-                                        />
-                                    </TableCell>
-                                )}
-                                {columns.priority && (
-                                    <TableCell>
-                                        <Select
-                                            value={task.priority}
-                                            onValueChange={(value) =>
-                                                onTaskChange?.(task.id, "priority", value)
-                                            }
-                                        >
-                                            <SelectTrigger className="border-0 shadow-none focus:ring-1">
-                                                <SelectValue>
-                                                    <ProjectPriorityCommon
-                                                        priority={task.priority ?? "Medium"}
-                                                    />
-                                                </SelectValue>
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {priorityOptions.map((priority) => (
-                                                    <SelectItem key={priority} value={priority}>
-                                                        <ProjectPriorityCommon priority={priority} />
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </TableCell>
-                                )}
-                                <TableCell className="text-right">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => onTaskDelete?.(task.id)}
-                                        className="h-8 w-8 text-gray-400 hover:text-red-600"
-                                    >
-                                        <Trash className="h-4 w-4" />
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
+                            <TaskRow
+                                key={task.id}
+                                task={task}
+                                index={index}
+                                showNumbering={showNumbering}
+                                columns={normalizedColumns}
+                                onTaskChange={onTaskChange}
+                                onTaskDelete={onTaskDelete}
+                                isLastRow={index === tasks.length - 1}
+                                newTaskRef={newTaskRef}
+                            />
                         ))}
 
-                        {/* Add New Row Button */}
-                        <TableRow className="hover:bg-zinc-800">
-                            <TableCell colSpan={columnCount} className="p-0">
+                        <TableRow className="dark:hover:bg-zinc-900 hover:bg-zinc-100 border-none dark:bg-[#202020]">
+                            <TableCell colSpan={columnCount} className="p-0  ">
                                 <Button
                                     onClick={handleAddTask}
                                     variant="ghost"
-                                    className="w-full justify-start text-gray-400 hover:text-gray-600 rounded-none h-12"
+                                    size={'sm'}
+                                    className="w-full border-none justify-start text-gray-400 hover:text-gray-600 rounded-none h-12"
                                 >
-                                    <Plus className="h-4 w-4 mr-2" /> Add task
+                                    <Plus /> Add task
                                 </Button>
                             </TableCell>
                         </TableRow>
@@ -236,4 +538,4 @@ export const TaskTable: React.FC<TaskTableProps> = ({
             </div>
         </div>
     );
-}
+};

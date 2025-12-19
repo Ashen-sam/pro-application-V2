@@ -29,7 +29,7 @@ export function TableActions<T>({ row, actions }: TableActionsProps<T>) {
                 </Button>
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="dark:bg-[#282828] ">
                 {actions.map((action, index) => (
                     <div key={index}>
                         <DropdownMenuItem
@@ -43,7 +43,7 @@ export function TableActions<T>({ row, actions }: TableActionsProps<T>) {
                                     : ""
                             }
                         >
-                            {action.icon && <span className="mr-2">{action.icon}</span>}
+                            {action.icon && <span className="mr-2 ">{action.icon}</span>}
                             {action.label}
                         </DropdownMenuItem>
 

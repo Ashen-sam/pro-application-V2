@@ -11,7 +11,7 @@ function createWindow() {
   });
 
   // Load from Vite dev server
-  win.loadURL("http://localhost:5176");
+  win.loadURL("http://localhost:5178");
 }
 
 app.whenReady().then(createWindow);

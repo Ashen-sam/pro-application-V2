@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowDown, ArrowUp, FlagTriangleRight, Minus } from 'lucide-react';
+import { ArrowDown, ArrowUp, Minus } from 'lucide-react';
 import React from 'react';
 
 export type PriorityType = 'Low' | 'Medium' | 'High' | 'Critical';
@@ -6,51 +6,57 @@ export type PriorityType = 'Low' | 'Medium' | 'High' | 'Critical';
 export interface PriorityBadgeProps {
     priority: PriorityType;
     className?: string;
+    padding?: boolean;
 }
 
-export const ProjectPriorityCommon: React.FC<PriorityBadgeProps> = ({ priority, className = '' }) => {
+export const ProjectPriorityCommon: React.FC<PriorityBadgeProps> = ({
+    priority,
+    className = '',
+    padding = true,
+}) => {
     const priorityConfig = {
-        'Low': {
-            bgColor: 'bg-gray-100',
-            textColor: 'text-gray-700',
+        Low: {
+            text: 'text-blue-400',
+            iconBg: 'bg-blue-500/20',
             icon: ArrowDown,
-            iconColor: 'text-gray-600',
-            borderColor: 'border border-gray-400'
         },
-        'Medium': {
-            bgColor: 'bg-green-100',
-            textColor: 'text-green-700',
+        Medium: {
+            text: 'text-yellow-400',
+            iconBg: 'bg-yellow-500/20',
             icon: Minus,
-            iconColor: 'text-green-600',
-            borderColor: 'border border-green-300'
-
-
         },
-        'High': {
-            bgColor: 'bg-orange-100',
-            textColor: 'text-orange-700',
+        High: {
+            text: 'text-red-400',
+            iconBg: 'bg-red-500/20',
             icon: ArrowUp,
-            iconColor: 'text-orange-600',
-            borderColor: 'border border-orange-300'
-
         },
-        'Critical': {
-            bgColor: 'bg-red-100',
-            textColor: 'text-red-700',
-            icon: AlertTriangle,
-            iconColor: 'text-red-600',
-            borderColor: 'border border-red-300'
-
-        }
     };
 
     const config = priorityConfig[priority];
+    const Icon = config.icon;
 
     return (
         <span
-            className={`inline-flex dark:bg-[#3d3d3d]  items-center gap-1.5 px-2 rounded-sm py-1 text-[11px] min-w-20 border shadow-xs font-medium   ${className}`}
+            className={`
+        inline-flex items-center gap-2
+        ${padding ? 'px-3 py-1' : 'py-1'}
+        text-xs font-semibold
+        rounded-full
+        ${config.text}
+        ${className}
+      `}
         >
-            <FlagTriangleRight className={`w-3 h-3 ${config.iconColor}`} fill="currentColor" />
+            <span
+                className={`
+          flex items-center justify-center
+          w-5 h-5 rounded-full
+          ${config.iconBg}
+          border border-${config.iconBg}
+
+        `}
+            >
+                <Icon size={12} className={config.text} />
+            </span>
 
             {priority}
         </span>

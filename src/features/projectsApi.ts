@@ -1,297 +1,176 @@
-import { supabase } from "@/lib/supabaseClient";
-import { baseApi } from "@/store/baseAPI";
+import baseApi from "@/store/baseAPI";
+
+export interface User {
+  name: string;
+  email: string;
+}
 
 export interface Project {
   project_id: number;
-  name: string;
-  description: string;
-  status: "pending" | "in_review" | "in_progress" | "submitted" | "success";
-  priority: "low" | "medium" | "high" | "critical";
-  start_date: string;
-  end_date: string;
+  name?: string;
   owner_id: number;
-  created_at: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+  start_date?: string;
+  end_date?: string;
+  created_at?: string;
+  updated_at?: string;
+  memberEmails?: string[];
 }
 
 export interface ProjectMember {
   project_id: number;
   user_id: number;
-  role: "owner" | "admin" | "editor" | "viewer";
+  role: string;
   added_at: string;
+  users: User;
 }
 
-interface CreateProjectParams {
+export interface SearchUser {
+  user_id: number;
   name: string;
-  description: string;
-  status: Project["status"];
-  priority: Project["priority"];
-  start_date: string;
-  end_date: string;
-  owner_id: number;
-  member_ids?: number[];
+  email: string;
 }
 
-interface UpdateProjectParams {
-  project_id: number;
-  name?: string;
+export interface ApiResponse {
+  success: boolean;
+  error?: {
+    code?: string;
+    message?: string;
+    details?: string;
+    hint?: string | null;
+  };
+  message?: string;
+}
+
+export interface ListProjectsResponse extends ApiResponse {
+  projects: Project[];
+}
+
+export interface GetProjectResponse extends ApiResponse {
+  project: Project;
+}
+
+export interface CreateProjectResponse extends ApiResponse {
+  project: Project;
+  membersAdded?: number;
+}
+
+export interface UpdateProjectResponse extends ApiResponse {
+  project: Project;
+}
+
+export interface DeleteProjectResponse extends ApiResponse {
+  success: true;
+  deletedCount?: number;
+}
+
+export interface ListProjectMembersResponse extends ApiResponse {
+  members: ProjectMember[];
+}
+
+export interface AddProjectMemberResponse extends ApiResponse {
+  member: ProjectMember;
+}
+
+export interface SearchUsersResponse extends ApiResponse {
+  users: SearchUser[];
+}
+
+export interface CreateProjectRequest {
+  name: string;
   description?: string;
-  status?: Project["status"];
-  priority?: Project["priority"];
+  status?: string;
+  priority?: string;
   start_date?: string;
   end_date?: string;
+  owner_id: number;
+  memberEmails?: string[];
 }
 
-export const projectsApi = baseApi.injectEndpoints({
+export interface UpdateProjectRequest {
+  name?: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+  start_date?: string;
+  end_date?: string;
+  memberEmails?: string[];
+}
+
+export interface AddProjectMemberRequest {
+  user_id: number;
+  role?: string;
+}
+
+export const projectApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    // Get all projects
-    getAllProjects: builder.query<Project[], void>({
-      async queryFn() {
-        try {
-          const { data, error } = await supabase
-            .from("projects")
-            .select("*")
-            .order("created_at", { ascending: false });
-
-          if (error) {
-            console.error("Get projects error:", error);
-            return { error: { message: error.message } };
-          }
-
-          return { data: data || [] };
-        } catch (err: any) {
-          console.error("Unexpected error:", err);
-          return {
-            error: {
-              message:
-                err.message || "An unexpected error occurred fetching projects",
-            },
-          };
+    listProjects: builder.query<Project[], void>({
+      query: () => "/projects",
+      keepUnusedDataFor: 300,
+      transformResponse: (response: ListProjectsResponse) => {
+        // Handle error responses
+        if (!response.success || !response.projects) {
+          return [];
         }
+        return response.projects;
       },
       providesTags: (result) =>
         result
           ? [
               ...result.map(({ project_id }) => ({
-                type: "Projects" as const,
+                type: "Project" as const,
                 id: project_id,
               })),
-              { type: "Projects", id: "LIST" },
+              { type: "Project", id: "LIST" },
             ]
-          : [{ type: "Projects", id: "LIST" }],
+          : [{ type: "Project", id: "LIST" }],
     }),
 
-    // Get projects by user (owner or member)
-    getUserProjects: builder.query<Project[], number>({
-      async queryFn(userId) {
-        try {
-          const { data: ownedProjects, error: ownedError } = await supabase
-            .from("projects")
-            .select("*")
-            .eq("owner_id", userId);
-
-          if (ownedError) {
-            console.error("Get owned projects error:", ownedError);
-            return { error: { message: ownedError.message } };
-          }
-
-          const { data: memberProjects, error: memberError } = await supabase
-            .from("project_members")
-            .select("project_id")
-            .eq("user_id", userId);
-
-          if (memberError) {
-            console.error("Get member projects error:", memberError);
-            return { error: { message: memberError.message } };
-          }
-
-          const memberProjectIds =
-            memberProjects?.map((m) => m.project_id) || [];
-
-          let allMemberProjects: Project[] = [];
-          if (memberProjectIds.length > 0) {
-            const { data: projectsData, error: projectsError } = await supabase
-              .from("projects")
-              .select("*")
-              .in("project_id", memberProjectIds);
-
-            if (projectsError) {
-              console.error("Get member project details error:", projectsError);
-              return { error: { message: projectsError.message } };
-            }
-
-            allMemberProjects = projectsData || [];
-          }
-
-          const allProjects = [...(ownedProjects || []), ...allMemberProjects];
-          const uniqueProjects = allProjects.filter(
-            (project, index, self) =>
-              index ===
-              self.findIndex((p) => p.project_id === project.project_id)
-          );
-
-          return { data: uniqueProjects };
-        } catch (err: any) {
-          console.error("Unexpected error:", err);
-          return {
-            error: {
-              message:
-                err.message ||
-                "An unexpected error occurred fetching user projects",
-            },
-          };
+    searchUsers: builder.query<SearchUser[], string>({
+      query: (q) => `/users/search?q=${encodeURIComponent(q)}`,
+      transformResponse: (response: SearchUsersResponse) => {
+        if (!response.success || !response.users) {
+          return [];
         }
+        return response.users;
       },
-      providesTags: (result) =>
-        result
-          ? [
-              ...result.map(({ project_id }) => ({
-                type: "Projects" as const,
-                id: project_id,
-              })),
-              { type: "Projects", id: "USER_LIST" },
-            ]
-          : [{ type: "Projects", id: "USER_LIST" }],
     }),
 
-    // Get single project by ID
     getProjectById: builder.query<Project, number>({
-      async queryFn(projectId) {
-        try {
-          const { data, error } = await supabase
-            .from("projects")
-            .select("*")
-            .eq("project_id", projectId)
-            .single();
-
-          if (error) {
-            console.error("Get project error:", error);
-            return { error: { message: error.message } };
-          }
-
-          return { data };
-        } catch (err: any) {
-          console.error("Unexpected error:", err);
-          return {
-            error: {
-              message:
-                err.message || "An unexpected error occurred fetching project",
-            },
-          };
-        }
-      },
-      providesTags: (result, error, id) => [{ type: "Projects", id }],
+      query: (projectId) => `/projects/${projectId}`,
+      transformResponse: (response: GetProjectResponse) => response.project,
+      providesTags: (_r, _e, projectId) => [{ type: "Project", id: projectId }],
     }),
 
-    // Create new project with optimistic update
-    createProject: builder.mutation<Project, CreateProjectParams>({
-      async queryFn({
-        name,
-        description,
-        status,
-        priority,
-        start_date,
-        end_date,
-        owner_id,
-        member_ids,
-      }) {
-        try {
-          const { data: projectData, error: projectError } = await supabase
-            .from("projects")
-            .insert({
-              name,
-              description,
-              status,
-              priority,
-              start_date,
-              end_date,
-              owner_id,
-            })
-            .select()
-            .single();
-
-          if (projectError) {
-            console.error("Create project error:", projectError);
-            return { error: { message: projectError.message } };
-          }
-
-          if (!projectData) {
-            return { error: { message: "Failed to create project" } };
-          }
-
-          const { error: ownerMemberError } = await supabase
-            .from("project_members")
-            .insert({
-              project_id: projectData.project_id,
-              user_id: owner_id,
-              role: "owner",
-            });
-
-          if (ownerMemberError) {
-            console.error("Add owner as member error:", ownerMemberError);
-          }
-
-          if (member_ids && member_ids.length > 0) {
-            const memberInserts = member_ids
-              .filter((id) => id !== owner_id)
-              .map((user_id) => ({
-                project_id: projectData.project_id,
-                user_id,
-                role: "editor" as const,
-              }));
-
-            if (memberInserts.length > 0) {
-              const { error: membersError } = await supabase
-                .from("project_members")
-                .insert(memberInserts);
-
-              if (membersError) {
-                console.error("Add members error:", membersError);
-              }
-            }
-          }
-
-          return { data: projectData };
-        } catch (err: any) {
-          console.error("Unexpected error:", err);
-          return {
-            error: {
-              message:
-                err.message || "An unexpected error occurred creating project",
-            },
-          };
-        }
-      },
-      async onQueryStarted(args, { dispatch, queryFulfilled }) {
-        // Create optimistic project with temporary ID
+    createProject: builder.mutation<Project, CreateProjectRequest>({
+      query: (body) => ({
+        url: "/projects",
+        method: "POST",
+        body,
+      }),
+      transformResponse: (response: CreateProjectResponse) => response.project,
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         const tempId = Date.now();
         const optimisticProject: Project = {
           project_id: tempId,
-          name: args.name,
-          description: args.description,
-          status: args.status,
-          priority: args.priority,
-          start_date: args.start_date,
-          end_date: args.end_date,
-          owner_id: args.owner_id,
+          name: arg.name,
+          description: arg.description,
+          status: arg.status,
+          priority: arg.priority,
+          start_date: arg.start_date,
+          end_date: arg.end_date,
+          owner_id: arg.owner_id,
+          memberEmails: arg.memberEmails || [],
           created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         };
 
-        // Optimistically update getAllProjects
-        const patchAllProjects = dispatch(
-          projectsApi.util.updateQueryData(
-            "getAllProjects",
+        const patch = dispatch(
+          projectApi.util.updateQueryData(
+            "listProjects",
             undefined,
-            (draft) => {
-              draft.unshift(optimisticProject);
-            }
-          )
-        );
-
-        // Optimistically update getUserProjects
-        const patchUserProjects = dispatch(
-          projectsApi.util.updateQueryData(
-            "getUserProjects",
-            args.owner_id,
             (draft) => {
               draft.unshift(optimisticProject);
             }
@@ -300,331 +179,220 @@ export const projectsApi = baseApi.injectEndpoints({
 
         try {
           const { data } = await queryFulfilled;
-
-          // Replace optimistic project with real one
           dispatch(
-            projectsApi.util.updateQueryData(
-              "getAllProjects",
+            projectApi.util.updateQueryData(
+              "listProjects",
               undefined,
               (draft) => {
                 const index = draft.findIndex((p) => p.project_id === tempId);
                 if (index !== -1) {
-                  draft[index] = data;
-                }
-              }
-            )
-          );
-
-          dispatch(
-            projectsApi.util.updateQueryData(
-              "getUserProjects",
-              args.owner_id,
-              (draft) => {
-                const index = draft.findIndex((p) => p.project_id === tempId);
-                if (index !== -1) {
-                  draft[index] = data;
+                  draft[index] = {
+                    ...data,
+                    memberEmails: data.memberEmails || arg.memberEmails || [],
+                  };
                 }
               }
             )
           );
         } catch {
-          // Revert optimistic updates on error
-          patchAllProjects.undo();
-          patchUserProjects.undo();
+          patch.undo();
         }
       },
-      invalidatesTags: [{ type: "Projects", id: "LIST" }],
     }),
 
-    // Update project with optimistic update
-    updateProject: builder.mutation<Project, UpdateProjectParams>({
-      async queryFn({ project_id, ...updates }) {
-        try {
-          const { data, error } = await supabase
-            .from("projects")
-            .update(updates)
-            .eq("project_id", project_id)
-            .select()
-            .single();
-
-          if (error) {
-            console.error("Update project error:", error);
-            return { error: { message: error.message } };
-          }
-
-          if (!data) {
-            return { error: { message: "Failed to update project" } };
-          }
-
-          return { data };
-        } catch (err: any) {
-          console.error("Unexpected error:", err);
-          return {
-            error: {
-              message:
-                err.message || "An unexpected error occurred updating project",
-            },
-          };
-        }
-      },
-      async onQueryStarted(
-        { project_id, ...patch },
-        { dispatch, queryFulfilled }
-      ) {
-        // Optimistically update getAllProjects
-        const patchAllProjects = dispatch(
-          projectsApi.util.updateQueryData(
-            "getAllProjects",
+    updateProject: builder.mutation<
+      Project,
+      { projectId: number; data: UpdateProjectRequest }
+    >({
+      query: ({ projectId, data }) => ({
+        url: `/projects/${projectId}`,
+        method: "PUT",
+        body: data,
+      }),
+      transformResponse: (response: UpdateProjectResponse) => response.project,
+      async onQueryStarted({ projectId, data }, { dispatch, queryFulfilled }) {
+        const patchList = dispatch(
+          projectApi.util.updateQueryData(
+            "listProjects",
             undefined,
             (draft) => {
-              const project = draft.find((p) => p.project_id === project_id);
+              const project = draft.find((p) => p.project_id === projectId);
               if (project) {
-                Object.assign(project, patch);
+                Object.assign(project, data);
+                if (data.memberEmails !== undefined) {
+                  project.memberEmails = data.memberEmails;
+                }
               }
             }
           )
         );
-
-        // Optimistically update getProjectById
-        const patchProjectById = dispatch(
-          projectsApi.util.updateQueryData(
+        const patchSingle = dispatch(
+          projectApi.util.updateQueryData(
             "getProjectById",
-            project_id,
+            projectId,
             (draft) => {
-              Object.assign(draft, patch);
+              Object.assign(draft, data);
+              if (data.memberEmails !== undefined) {
+                draft.memberEmails = data.memberEmails;
+              }
             }
           )
         );
-
-        // Optimistically update all getUserProjects queries
-        const patchResults: any[] = [];
-        const state = dispatch(projectsApi.util.getRunningQueriesThunk());
-
         try {
-          await queryFulfilled;
+          const { data: updatedProject } = await queryFulfilled;
+          dispatch(
+            projectApi.util.updateQueryData(
+              "listProjects",
+              undefined,
+              (draft) => {
+                const project = draft.find((p) => p.project_id === projectId);
+                if (project) {
+                  Object.assign(project, updatedProject);
+                }
+              }
+            )
+          );
         } catch {
-          // Revert all optimistic updates on error
-          patchAllProjects.undo();
-          patchProjectById.undo();
-          patchResults.forEach((patch) => patch.undo());
+          patchList.undo();
+          patchSingle.undo();
         }
       },
-      invalidatesTags: (result, error, { project_id }) => [
-        { type: "Projects", id: project_id },
-      ],
     }),
 
-    // Delete project with optimistic update
-    deleteProject: builder.mutation<void, number>({
-      async queryFn(projectId) {
-        try {
-          const { error } = await supabase
-            .from("projects")
-            .delete()
-            .eq("project_id", projectId);
-
-          if (error) {
-            console.error("Delete project error:", error);
-            return { error: { message: error.message } };
-          }
-
-          return { data: undefined };
-        } catch (err: any) {
-          console.error("Unexpected error:", err);
+    deleteProject: builder.mutation<DeleteProjectResponse, number | number[]>({
+      query: (projectIdOrIds) => {
+        // Check if it's an array (bulk delete)
+        if (Array.isArray(projectIdOrIds)) {
           return {
-            error: {
-              message:
-                err.message || "An unexpected error occurred deleting project",
-            },
+            url: `/projects/${projectIdOrIds[0]}`, // Use first ID for route
+            method: "DELETE",
+            body: { projectIds: projectIdOrIds },
           };
         }
+        // Single delete
+        return {
+          url: `/projects/${projectIdOrIds}`,
+          method: "DELETE",
+        };
       },
-      async onQueryStarted(projectId, { dispatch, queryFulfilled }) {
-        // Optimistically remove from getAllProjects
-        const patchAllProjects = dispatch(
-          projectsApi.util.updateQueryData(
-            "getAllProjects",
+      async onQueryStarted(projectIdOrIds, { dispatch, queryFulfilled }) {
+        const idsToDelete = Array.isArray(projectIdOrIds)
+          ? projectIdOrIds
+          : [projectIdOrIds];
+
+        const patch = dispatch(
+          projectApi.util.updateQueryData(
+            "listProjects",
             undefined,
             (draft) => {
-              return draft.filter((p) => p.project_id !== projectId);
+              return draft.filter((p) => !idsToDelete.includes(p.project_id));
             }
           )
         );
-
-        // Store patches for potential rollback
-        const patchResults: any[] = [patchAllProjects];
-
         try {
           await queryFulfilled;
         } catch {
-          // Revert all optimistic updates on error
-          patchResults.forEach((patch) => patch.undo());
+          patch.undo();
         }
       },
-      invalidatesTags: (result, error, id) => [
-        { type: "Projects", id },
-        { type: "Projects", id: "LIST" },
-        { type: "Projects", id: "USER_LIST" },
+    }),
+
+    listProjectMembers: builder.query<ProjectMember[], number>({
+      query: (projectId) => `/projects/${projectId}/members`,
+      transformResponse: (response: ListProjectMembersResponse) => {
+        if (!response.success || !response.members) {
+          return [];
+        }
+        return response.members;
+      },
+      providesTags: (_r, _e, projectId) => [
+        { type: "ProjectMember", id: `PROJECT_${projectId}` },
+        { type: "ProjectMember", id: "LIST" },
       ],
     }),
 
-    // Get project members
-    getProjectMembers: builder.query<ProjectMember[], number>({
-      async queryFn(projectId) {
-        try {
-          const { data, error } = await supabase
-            .from("project_members")
-            .select("*")
-            .eq("project_id", projectId);
-
-          if (error) {
-            console.error("Get project members error:", error);
-            return { error: { message: error.message } };
-          }
-
-          return { data: data || [] };
-        } catch (err: any) {
-          console.error("Unexpected error:", err);
-          return {
-            error: {
-              message:
-                err.message || "An unexpected error occurred fetching members",
-            },
-          };
-        }
+    sendProjectInvites: builder.mutation<
+      { success: boolean; message: string; emailsSent?: number },
+      { projectId: number; memberEmails: string[] }
+    >({
+      query: ({ projectId, memberEmails }) => ({
+        url: `/projects/${projectId}/invites`,
+        method: "POST",
+        body: { memberEmails },
+      }),
+      transformErrorResponse: (response: {
+        status: number;
+        data?: ApiResponse;
+      }) => {
+        return {
+          status: response.status,
+          data: response.data || {
+            success: false,
+            message: "Failed to send invites",
+          },
+        };
       },
-      providesTags: (result, error, projectId) => [
-        { type: "Projects", id: `MEMBERS_${projectId}` },
-      ],
     }),
 
-    // Add project member with optimistic update
     addProjectMember: builder.mutation<
       ProjectMember,
-      { project_id: number; user_id: number; role?: ProjectMember["role"] }
+      { projectId: number; data: AddProjectMemberRequest }
     >({
-      async queryFn({ project_id, user_id, role = "viewer" }) {
-        try {
-          const { data, error } = await supabase
-            .from("project_members")
-            .insert({
-              project_id,
-              user_id,
-              role,
-            })
-            .select()
-            .single();
-
-          if (error) {
-            console.error("Add project member error:", error);
-            return { error: { message: error.message } };
-          }
-
-          return { data };
-        } catch (err: any) {
-          console.error("Unexpected error:", err);
-          return {
-            error: {
-              message:
-                err.message || "An unexpected error occurred adding member",
-            },
-          };
-        }
-      },
-      async onQueryStarted(args, { dispatch, queryFulfilled }) {
-        const optimisticMember: ProjectMember = {
-          project_id: args.project_id,
-          user_id: args.user_id,
-          role: args.role || "viewer",
+      query: ({ projectId, data }) => ({
+        url: `/projects/${projectId}/members`,
+        method: "POST",
+        body: data,
+      }),
+      transformResponse: (response: AddProjectMemberResponse) =>
+        response.member,
+      async onQueryStarted({ projectId, data }, { dispatch, queryFulfilled }) {
+        const tempMember: ProjectMember = {
+          project_id: projectId,
+          user_id: data.user_id,
+          role: data.role ?? "member",
           added_at: new Date().toISOString(),
+          users: { name: "Pending...", email: "" },
         };
-
-        const patchResult = dispatch(
-          projectsApi.util.updateQueryData(
-            "getProjectMembers",
-            args.project_id,
+        const patch = dispatch(
+          projectApi.util.updateQueryData(
+            "listProjectMembers",
+            projectId,
             (draft) => {
-              draft.push(optimisticMember);
+              draft.push(tempMember);
             }
           )
         );
-
         try {
-          await queryFulfilled;
+          const { data: realMember } = await queryFulfilled;
+          dispatch(
+            projectApi.util.updateQueryData(
+              "listProjectMembers",
+              projectId,
+              (draft) => {
+                const index = draft.findIndex(
+                  (m) => m.user_id === tempMember.user_id
+                );
+                if (index !== -1) draft[index] = realMember;
+              }
+            )
+          );
         } catch {
-          patchResult.undo();
+          patch.undo();
         }
       },
-      invalidatesTags: (result, error, { project_id }) => [
-        { type: "Projects", id: `MEMBERS_${project_id}` },
-      ],
-    }),
-
-    // Remove project member with optimistic update
-    removeProjectMember: builder.mutation<
-      void,
-      { project_id: number; user_id: number }
-    >({
-      async queryFn({ project_id, user_id }) {
-        try {
-          const { error } = await supabase
-            .from("project_members")
-            .delete()
-            .eq("project_id", project_id)
-            .eq("user_id", user_id);
-
-          if (error) {
-            console.error("Remove project member error:", error);
-            return { error: { message: error.message } };
-          }
-
-          return { data: undefined };
-        } catch (err: any) {
-          console.error("Unexpected error:", err);
-          return {
-            error: {
-              message:
-                err.message || "An unexpected error occurred removing member",
-            },
-          };
-        }
-      },
-      async onQueryStarted(
-        { project_id, user_id },
-        { dispatch, queryFulfilled }
-      ) {
-        const patchResult = dispatch(
-          projectsApi.util.updateQueryData(
-            "getProjectMembers",
-            project_id,
-            (draft) => {
-              return draft.filter((m) => m.user_id !== user_id);
-            }
-          )
-        );
-
-        try {
-          await queryFulfilled;
-        } catch {
-          patchResult.undo();
-        }
-      },
-      invalidatesTags: (result, error, { project_id }) => [
-        { type: "Projects", id: `MEMBERS_${project_id}` },
-      ],
     }),
   }),
-  overrideExisting: false,
 });
 
 export const {
-  useGetAllProjectsQuery,
-  useGetUserProjectsQuery,
+  useListProjectsQuery,
+  useSearchUsersQuery,
+  useLazySearchUsersQuery,
   useGetProjectByIdQuery,
   useCreateProjectMutation,
   useUpdateProjectMutation,
   useDeleteProjectMutation,
-  useGetProjectMembersQuery,
+  useListProjectMembersQuery,
   useAddProjectMemberMutation,
-  useRemoveProjectMemberMutation,
-} = projectsApi;
+  useSendProjectInvitesMutation,
+} = projectApi;

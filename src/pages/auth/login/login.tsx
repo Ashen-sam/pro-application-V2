@@ -1,7 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { toast } from "sonner";
-
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
     Card,
@@ -13,55 +11,73 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useSignInMutation } from "@/features/auth/authApi";
+import { showToast } from "@/components/common/commonToast";
+import { useLoginMutation } from "@/features/auth/authApi";
+import { SignInButton } from "@clerk/clerk-react";
 import { Loader2 } from "lucide-react";
+import GithubIcon from "../../../../public/github.png";
+import GoogleIcon from "../../../../public/search.png";
 
 export const Login = () => {
     const navigate = useNavigate();
-    const [signIn, { isLoading }] = useSignInMutation();
+    const [login, { isLoading }] = useLoginMutation();
+    const [email, setEmail] = useState<string>("");
+    const [password, setPassword] = useState<string>("");
 
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-
-    const handleLogin = async (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         if (!email || !password) {
-            toast.error("Please enter email and password");
+            showToast.error("Please enter email and password", "Both fields are required.");
             return;
         }
 
         try {
-            const result = await signIn({
+            const result = await login({
                 email: email.trim(),
                 password,
             }).unwrap();
 
-            if (result && result.user_id) {
-                // Store user data in localStorage
-                localStorage.setItem("userId", result.user_id.toString());
-                localStorage.setItem("userName", result.name);
-                localStorage.setItem("userEmail", result.email);
-                localStorage.setItem("isAuthenticated", "true");
-
-                toast.success("Login successful ✅");
-
-                // Navigate to home page
-                navigate("/home", { replace: true });
-            } else {
-                toast.error("Login failed. Please try again.");
+            // Store the token in localStorage
+            if (result.token) {
+                localStorage.setItem("authToken", result.token);
             }
-        } catch (err: any) {
+
+            // Store user info in localStorage
+            if (result.user) {
+                localStorage.setItem("userId", result.user.user_id.toString());
+                localStorage.setItem("userName", result.user.name);
+                localStorage.setItem("userEmail", result.user.email);
+                localStorage.setItem("user", JSON.stringify(result.user));
+            }
+
+            localStorage.setItem("isAuthenticated", "true");
+            showToast.success("Login successful ", "Welcome back!");
+
+            // Navigate to home/dashboard
+            navigate("/home", { replace: true });
+        } catch (err) {
             console.error("Login error:", err);
 
-            // Extract error message
-            const errorMessage =
-                err?.data?.message ||
-                err?.error?.message ||
-                err?.message ||
-                "Invalid email or password ❌";
+            // Handle RTK Query errors
+            const error = err as {
+                data?: { message?: string };
+                error?: string;
+                message?: string;
+                status?: number;
+            };
 
-            toast.error(errorMessage);
+            let errorMessage = "Invalid email or password ❌";
+
+            if (error?.data?.message) {
+                errorMessage = error.data.message;
+            } else if (error?.message) {
+                errorMessage = error.message;
+            } else if (error?.error) {
+                errorMessage = typeof error.error === "string" ? error.error : "Login failed";
+            }
+
+            showToast.error(errorMessage, "Please try again");
         }
     };
 
@@ -73,7 +89,6 @@ export const Login = () => {
                     Enter your email below to login to your account
                 </CardDescription>
             </CardHeader>
-
             <CardContent>
                 <form onSubmit={handleLogin}>
                     <div className="flex flex-col gap-6">
@@ -89,7 +104,6 @@ export const Login = () => {
                                 required
                             />
                         </div>
-
                         <div className="grid gap-2">
                             <div className="flex items-center">
                                 <Label htmlFor="password">Password</Label>
@@ -100,7 +114,6 @@ export const Login = () => {
                                     Forgot password?
                                 </Link>
                             </div>
-
                             <Input
                                 id="password"
                                 type="password"
@@ -111,7 +124,6 @@ export const Login = () => {
                                 required
                             />
                         </div>
-
                         <Button type="submit" className="w-full" disabled={isLoading}>
                             {isLoading ? (
                                 <>
@@ -125,18 +137,32 @@ export const Login = () => {
                     </div>
                 </form>
             </CardContent>
-
             <CardFooter className="flex-col gap-2">
-                <Button variant="outline" className="w-full" disabled={isLoading}>
-                    Continue with Google
-                </Button>
-
+                <div className="flex gap-2 w-full">
+                    <SignInButton mode="modal" fallbackRedirectUrl="/home">
+                        <Button
+                            variant="outline"
+                            className="flex-1 p-4 flex items-center gap-2"
+                            disabled={isLoading}
+                        >
+                            <img src={GoogleIcon} width={18} height={18} alt="google" />
+                            Google
+                        </Button>
+                    </SignInButton>
+                    <SignInButton mode="modal" fallbackRedirectUrl="/home">
+                        <Button
+                            variant="outline"
+                            className="flex-1 p-4 flex items-center gap-2"
+                            disabled={isLoading}
+                        >
+                            <img src={GithubIcon} width={20} height={20} alt="github" />
+                            GitHub
+                        </Button>
+                    </SignInButton>
+                </div>
                 <div className="mt-4 text-center text-sm">
                     Don&apos;t have an account?{" "}
-                    <Link
-                        to="/register"
-                        className="underline underline-offset-4"
-                    >
+                    <Link to="/register" className="underline underline-offset-4">
                         Sign up
                     </Link>
                 </div>

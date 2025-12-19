@@ -166,7 +166,7 @@ export const Home = () => {
 
                     {/* Stats Cards */}
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                        <Card className="shadow-none rounded-sm dark:bg-[#282828]">
+                        <Card className="shadow-none rounded-sm dark:bg-[#282828] bg-[#fcfcfc]">
                             <CardContent className="">
                                 <div className="flex items-center justify-between">
                                     <div>
@@ -184,7 +184,7 @@ export const Home = () => {
                             </CardContent>
                         </Card>
 
-                        <Card className="shadow-none rounded-sm dark:bg-[#282828]">
+                        <Card className="shadow-none rounded-sm dark:bg-[#282828] bg-[#fcfcfc]">
                             <CardContent className="">
                                 <div className="flex items-center justify-between">
                                     <div>
@@ -201,7 +201,7 @@ export const Home = () => {
                             </CardContent>
                         </Card>
 
-                        <Card className="shadow-none rounded-sm dark:bg-[#282828]">
+                        <Card className="shadow-none rounded-sm dark:bg-[#282828] bg-[#fcfcfc]">
                             <CardContent className="">
                                 <div className="flex items-center justify-between">
                                     <div>
@@ -219,7 +219,7 @@ export const Home = () => {
                             </CardContent>
                         </Card>
 
-                        <Card className="shadow-none rounded-sm dark:bg-[#282828]">
+                        <Card className="shadow-none rounded-sm dark:bg-[#282828] bg-[#fcfcfc]">
                             <CardContent className="">
                                 <div className="flex items-center justify-between">
                                     <div>
@@ -240,7 +240,7 @@ export const Home = () => {
                     <div className="grid gap-6 lg:grid-cols-3">
                         <div className="lg:col-span-2 space-y-6">
 
-                            <Card className="shadow-none rounded-sm dark:bg-[#282828]">
+                            <Card className="shadow-none rounded-sm dark:bg-[#282828] bg-[#fcfcfc]">
                                 <CardHeader>
                                     <div className="flex items-center justify-between">
                                         <CardTitle className="text-base font-semibold">Recent Tasks</CardTitle>
@@ -282,7 +282,7 @@ export const Home = () => {
                         {/* Right Column - Deadlines & Activity */}
                         <div className="space-y-6">
                             {/* Upcoming Deadlines */}
-                            <Card className="shadow-none rounded-sm dark:bg-[#282828]">
+                            <Card className="shadow-none rounded-sm dark:bg-[#282828] bg-[#fcfcfc]">
                                 <CardHeader>
                                     <CardTitle className="text-base font-semibold">Upcoming Deadlines</CardTitle>
                                 </CardHeader>
@@ -315,7 +315,7 @@ export const Home = () => {
                             </Card>
 
                             {/* Recent Activity */}
-                            <Card className="shadow-none rounded-sm dark:bg-[#282828]">
+                            <Card className="shadow-none rounded-sm dark:bg-[#282828] bg-[#fcfcfc]">
                                 <CardHeader>
                                     <CardTitle className="text-base font-semibold">Recent Activity</CardTitle>
                                 </CardHeader>

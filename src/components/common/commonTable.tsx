@@ -84,7 +84,6 @@ export function CommonTable<T extends Record<string, unknown>>({
                     placeholder={searchPlaceholder}
                 />
             )}
-
             <div className="w-full overflow-hidden border rounded-md">
                 <Table className="w-full ">
                     <TableHeader className="text-slate-500 text-xs">
@@ -130,9 +129,9 @@ export function CommonTable<T extends Record<string, unknown>>({
                                     <TableRow
                                         key={index}
                                         className={`
-                                            ${onRowClick ? "cursor-pointer hover:bg-muted/50" : ""}
-                                            ${isSelected ? "bg-muted/30" : ""}
-                                        `}
+        ${onRowClick ? "cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800" : ""}
+        ${isSelected ? "bg-muted/30" : ""}
+    `}
                                         onClick={(e) => {
                                             if (
                                                 (e.target as HTMLElement).closest('[role="checkbox"]') ||
@@ -178,7 +177,6 @@ export function CommonTable<T extends Record<string, unknown>>({
                     </TableBody>
                 </Table>
             </div>
-
             {sortedData.length > 0 && (
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <div>
