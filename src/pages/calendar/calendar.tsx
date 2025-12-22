@@ -1,142 +1,195 @@
 // File: CalendarPage.tsx
 
 import { CalendarCommon, type CalendarEvent } from "@/components/common/calendarCommon";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useGetCalendarDataQuery } from "../../features/calendarApi";
+import { Bolt, Calendar } from "lucide-react";
+
+// Color storage key
+const COLOR_STORAGE_KEY = "calendar_project_colors";
+
+// Get color from localStorage
+const getStoredColor = (projectId: number, type: 'start' | 'end'): string | null => {
+    try {
+        const stored = localStorage.getItem(COLOR_STORAGE_KEY);
+        if (stored) {
+            const colors = JSON.parse(stored);
+            return colors[`project-${type}-${projectId}`] || null;
+        }
+    } catch (error) {
+        console.error("Error reading colors from localStorage:", error);
+    }
+    return null;
+};
+
+// Save color to localStorage
+const saveColor = (eventId: string, color: string) => {
+    try {
+        const stored = localStorage.getItem(COLOR_STORAGE_KEY);
+        const colors = stored ? JSON.parse(stored) : {};
+        colors[eventId] = color;
+        localStorage.setItem(COLOR_STORAGE_KEY, JSON.stringify(colors));
+    } catch (error) {
+        console.error("Error saving color to localStorage:", error);
+    }
+};
 
 export default function CalendarPage() {
-    const initialEvents: CalendarEvent[] = [
-        {
-            id: "1",
-            title: "One-on-one with John",
-            date: new Date(2025, 0, 2),
-            time: "10:00 AM",
-            color: "text-red-600",
-            description: "Weekly sync meeting to discuss project progress and roadblocks."
-        },
-        {
-            id: "2",
-            title: "All-hands meeting",
-            date: new Date(2025, 0, 2),
-            time: "4:00 PM",
-            color: "text-purple-700",
-            description: "Monthly company-wide meeting with leadership updates."
-        },
-        {
-            id: "3",
-            title: "Dinner with Client",
-            date: new Date(2025, 0, 2),
-            time: "6:30 PM",
-            color: "text-green-600",
-            description: "Business dinner at The Riverside Restaurant."
-        },
-        {
-            id: "4",
-            title: "Friday standup",
-            date: new Date(2025, 0, 3),
-            time: "9:00 AM",
-            color: "text-blue-600",
-            description: "Daily team standup to share updates and blockers."
-        },
-        {
-            id: "5",
-            title: "House inspection",
-            date: new Date(2025, 0, 4),
-            time: "10:30 AM",
-            color: "text-orange-600",
-            description: "Property inspection with real estate agent."
-        },
-        {
-            id: "6",
-            title: "Morning standup",
-            date: new Date(2025, 0, 1),
-            time: "9:00 AM",
-            color: "text-gray-600",
-            description: "Daily team sync-up meeting."
-        },
-        {
-            id: "7",
-            title: "Coffee with Alex",
-            date: new Date(2025, 0, 1),
-            time: "11:00 AM",
-            color: "text-blue-600",
-            description: "Casual catch-up at the local coffee shop."
-        },
-        {
-            id: "8",
-            title: "Marketing afternoon",
-            date: new Date(2025, 0, 1),
-            time: "2:30 PM",
-            color: "text-purple-600",
-            description: "Marketing strategy session for Q1 campaigns."
-        },
-        {
-            id: "9",
-            title: "Morning standup",
-            date: new Date(2024, 11, 30),
-            time: "9:00 AM",
-            color: "text-gray-600",
-            description: "Team standup meeting."
-        },
-        {
-            id: "10",
-            title: "Monday standup",
-            date: new Date(2025, 0, 6),
-            time: "9:00 AM",
-            color: "text-gray-600",
-            description: "Weekly kickoff meeting."
-        },
-        {
-            id: "11",
-            title: "One-on-one with Sarah",
-            date: new Date(2025, 0, 7),
-            time: "9:00 AM",
-            color: "text-red-600",
-            description: "Performance review and career development discussion."
-        },
-        {
-            id: "12",
-            title: "Content planning",
-            date: new Date(2025, 0, 6),
-            time: "11:00 AM",
-            color: "text-blue-600",
-            description: "Plan social media content calendar for the month."
-        },
-    ];
+    // Fetch calendar data from API
+    const { data: calendarData, isLoading, error } = useGetCalendarDataQuery();
+    console.log("ashensam", calendarData);
 
-    // State to manage events - THIS IS THE KEY CHANGE
-    const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
+    // State to trigger re-render when colors change
+    const [colorVersion, setColorVersion] = useState(0);
+
+    // Function to handle color change
+    // Modify the handleColorChange function
+    const handleColorChange = (eventId: string, color: string) => {
+        // Extract project ID from event ID (e.g., "project-start-123" or "project-end-123")
+        const match = eventId.match(/project-(start|end)-(\d+)/);
+
+        if (match) {
+            const projectId = match[2];
+            // Save color for both start and end events of this project
+            saveColor(`project-start-${projectId}`, color);
+            saveColor(`project-end-${projectId}`, color);
+        } else {
+            // For non-project events, just save normally
+            saveColor(eventId, color);
+        }
+
+        setColorVersion(prev => prev + 1); // Force re-render
+    };
+    // Transform API data to CalendarEvent format
+    const events: CalendarEvent[] = useMemo(() => {
+        if (!calendarData) return [];
+
+        const transformedEvents: CalendarEvent[] = [];
+
+        // Transform projects to calendar events
+        calendarData.projects.forEach((project) => {
+            // Normalize priority to lowercase for comparison
+            const priorityLower = project.priority.toLowerCase();
+
+            // Default color based on priority
+            const defaultColor = priorityLower === "high" || priorityLower === "critical"
+                ? "text-red-600"
+                : priorityLower === "medium"
+                    ? "text-orange-600"
+                    : "text-blue-600";
+
+            // Add start date event
+            if (project.start_date) {
+                const eventId = `project-start-${project.project_id}`;
+                const storedColor = getStoredColor(project.project_id, 'start');
+
+                transformedEvents.push({
+                    id: eventId,
+                    title: `${project.name} (Start)`,
+                    date: new Date(project.start_date),
+                    time: "All Day",
+                    color: storedColor || defaultColor,
+                    description: project.description || `Project: ${project.name} - ${project.status}`,
+                });
+            }
+
+            // Add end date event
+            if (project.end_date) {
+                const eventId = `project-end-${project.project_id}`;
+                const storedColor = getStoredColor(project.project_id, 'end');
+
+                transformedEvents.push({
+                    id: eventId,
+                    title: `${project.name} (End)`,
+                    date: new Date(project.end_date),
+                    time: "All Day",
+                    color: storedColor || defaultColor,
+                    description: project.description || `Project: ${project.name} - ${project.status}`,
+                });
+            }
+        });
+
+        // Transform tasks to calendar events
+        calendarData.tasks.forEach((task) => {
+            if (task.due_date) {
+                // Normalize priority to lowercase for comparison
+                const priorityLower = task.priority.toLowerCase();
+
+                transformedEvents.push({
+                    id: `task-${task.task_id}`,
+                    title: task.name,
+                    date: new Date(task.due_date),
+                    time: "All Day",
+                    color: priorityLower === "high" || priorityLower === "critical"
+                        ? "text-purple-700"
+                        : priorityLower === "medium"
+                            ? "text-green-600"
+                            : "text-gray-600",
+                    description: task.description || `Task: ${task.name} - ${task.status}${task.projects ? ` (${task.projects.name})` : ''}`,
+                });
+            }
+        });
+
+        return transformedEvents;
+    }, [calendarData, colorVersion]); // Add colorVersion to dependencies
 
     const handleEventClick = (event: CalendarEvent) => {
         console.log("Event clicked:", event);
-    };
-
-    // THIS IS THE CRITICAL FUNCTION - It adds new events to state
-    const handleAddEvent = (newEvent: Omit<CalendarEvent, 'id'>) => {
-        // Generate unique ID using timestamp and random string
-        const eventWithId: CalendarEvent = {
-            ...newEvent,
-            id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-        };
-
-        // Add new event to existing events array
-        setEvents(prevEvents => [...prevEvents, eventWithId]);
-
-        console.log("Event added:", eventWithId);
     };
 
     const handleDateChange = (date: Date) => {
         console.log("Date changed to:", date);
     };
 
+    // Show loading state
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+                    <p className="mt-4 text-gray-600">Loading calendar...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Show error state
+    if (error) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-red-600 text-lg font-semibold">Failed to load calendar data</p>
+                    <p className="mt-2 text-gray-600">Please try refreshing the page</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="min-h-screen">
+        <div className="">
+            <div className="w-full flex items-center justify-between px-4 py-3 bg-primary/10 rounded-lg border border-primary/12">
+                <div className="flex  gap-3 ">
+                    <div className="flex mt-px justify-center  rounded-lg ">
+                        <Calendar size={18} className="text-primary" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <div className="text-xs font-medium  text-white">
+                            Manage and organize your projects
+                        </div>
+                        <div className="text-xs font-medium text-gray-400">
+                            Manage  projects efficiently
+                        </div>
+                    </div>
+                </div>
+
+            </div>
             <CalendarCommon
                 events={events}
                 initialDate={new Date()}
                 onEventClick={handleEventClick}
-                onAddEvent={handleAddEvent}
                 onDateChange={handleDateChange}
-                showAddButton={true}
+                onColorChange={handleColorChange}
+                showAddButton={false}
                 showTodayButton={true}
                 highlightToday={true}
                 maxEventsPerDay={3}

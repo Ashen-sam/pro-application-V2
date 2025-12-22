@@ -21,7 +21,7 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
       data-slot="table-header"
-      className={cn("[&_tr]:border-b bg-[#fcfcfc]  dark:bg-[#191919] dark:text-white ", className)}
+      className={cn("[&_tr]:border-b bg-[#fcfcfc]  dark:bg-[#1a1a1a] dark:text-white ", className)}
       {...props}
     />
   )
@@ -31,7 +31,7 @@ function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
   return (
     <tbody
       data-slot="table-body"
-      className={cn("[&_tr:last-child]:border-0 dark:bg-[#282828]", className)}
+      className={cn("[&_tr:last-child]:border-0 dark:bg-[#1a1a1a]", className)}
       {...props}
     />
   )

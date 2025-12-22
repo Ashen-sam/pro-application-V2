@@ -20,6 +20,7 @@ export function CommonDialogFooter({
     showCancel = true,
     showConfirm = true,
     enableCreateAnother = true,
+    confirmDisabled = false,
     formMode,
 }: DialogFooterProps) {
     return (
@@ -40,7 +41,7 @@ export function CommonDialogFooter({
                         className={`text-xs ${formMode === "add" ? "rounded-r-none border-r-0 border" : ""}`}
                         variant="outline"
                         onClick={onConfirm}
-                        disabled={isLoading}
+                        disabled={isLoading || confirmDisabled}
                     >
                         {isLoading ? "Loading..." : confirmText}
                     </Button>

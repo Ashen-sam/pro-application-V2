@@ -1,6 +1,13 @@
+// File: calendarCommon.tsx
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 import {
     Select,
     SelectContent,
@@ -9,7 +16,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { Calendar, CalendarDays, CalendarPlus, ChevronLeft, ChevronRight, Clock, PackagePlus } from "lucide-react";
+import { Calendar, CalendarDays, CalendarPlus, ChevronLeft, ChevronRight, Clock, Package, Palette } from "lucide-react";
 import { useState } from "react";
 import { CommonDialog } from "./commonDialog";
 import { CommonDialogFooter } from "./commonDialogFooter";
@@ -29,6 +36,7 @@ export interface CalendarProps {
     onEventClick?: (event: CalendarEvent) => void;
     onAddEvent?: (event: Omit<CalendarEvent, 'id'>) => void;
     onDateChange?: (date: Date) => void;
+    onColorChange?: (eventId: string, color: string) => void;
     showAddButton?: boolean;
     showTodayButton?: boolean;
     className?: string;
@@ -47,6 +55,7 @@ export const CalendarCommon = ({
     onEventClick,
     onAddEvent,
     onDateChange,
+    onColorChange,
     showAddButton = true,
     showTodayButton = true,
     className = "",
@@ -159,6 +168,10 @@ export const CalendarCommon = ({
         setIsAddDialogOpen(false);
     };
 
+    const handleColorChange = (eventId: string, color: string) => {
+        onColorChange?.(eventId, color);
+    };
+
     const formatDate = (date: Date) => {
         return date.toLocaleDateString('en-US', {
             weekday: 'long',
@@ -167,6 +180,60 @@ export const CalendarCommon = ({
             day: 'numeric'
         });
     };
+
+    const colorOptions = [
+        {
+            value: "text-blue-500",
+            label: "Blue",
+            bgClass: "bg-blue-100",
+        },
+        {
+            value: "text-indigo-500",
+            label: "Indigo",
+            bgClass: "bg-indigo-100",
+        },
+        {
+            value: "text-purple-500",
+            label: "Purple",
+            bgClass: "bg-purple-100",
+        },
+        {
+            value: "text-pink-500",
+            label: "Pink",
+            bgClass: "bg-pink-100",
+        },
+        {
+            value: "text-red-500",
+            label: "Red",
+            bgClass: "bg-red-100",
+        },
+        {
+            value: "text-orange-500",
+            label: "Orange",
+            bgClass: "bg-orange-100",
+        },
+        {
+            value: "text-yellow-600",
+            label: "Yellow",
+            bgClass: "bg-yellow-100",
+        },
+        {
+            value: "text-green-500",
+            label: "Green",
+            bgClass: "bg-green-100",
+        },
+        {
+            value: "text-teal-500",
+            label: "Teal",
+            bgClass: "bg-teal-100",
+        },
+        {
+            value: "text-gray-500",
+            label: "Gray",
+            bgClass: "bg-gray-100",
+        },
+    ];
+
 
     const renderCalendarDays = () => {
         const days = [];
@@ -219,7 +286,7 @@ export const CalendarCommon = ({
                 <div
                     key={day}
                     className={cn(
-                        "min-h-[120px] border-r border-b p-3  hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors relative",
+                        "min-h-[120px] border-r border-b p-3 dark:bg-[#282828]  hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors relative",
                         isTodayDate && "bg-blue-50/30"
                     )}
                 >
@@ -235,12 +302,54 @@ export const CalendarCommon = ({
                         {dayEvents.slice(0, maxEventsPerDay).map((event) => (
                             <div
                                 key={event.id}
-                                onClick={() => handleEventClick(event)}
-                                className="text-xs px-2 py-1 rounded bg-white dark:bg-[#282828] border truncate cursor-pointer hover:shadow-sm transition-shadow"
+                                className="text-xs px-2 py-1 rounded bg-white dark:bg-[#323232] border truncate cursor-pointer hover:shadow-sm transition-shadow group relative"
                             >
-                                <span className={cn("font-medium", event.color)}>
-                                    <PackagePlus className="w-3 h-3 mr-1 inline" />{event.title}
-                                </span>
+                                <div
+                                    onClick={() => handleEventClick(event)}
+                                    className="flex items-center"
+                                >
+                                    <span className={cn("font-medium flex items-center w-full", event.color)}>
+                                        <Package size={16} className="mr-1 shrink-0" />
+
+                                        <span className="flex-1 truncate">
+                                            {event.title}
+                                        </span>
+                                    </span>
+
+                                </div>
+                                {/* Color picker for project events only */}
+                                {event.id.startsWith('project-') && onColorChange && (
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <button
+                                                className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <Palette className="w-3 h-3 text-gray-500 hover:text-gray-700" />
+                                            </button>
+                                        </PopoverTrigger>
+                                        <PopoverContent
+                                            className="w-auto p-2"
+                                            side="right"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <div className="grid grid-cols-5 gap-1">
+                                                {colorOptions.map((colorOption) => (
+                                                    <button
+                                                        key={colorOption.value}
+                                                        className={cn(
+                                                            "w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform",
+                                                            colorOption.bgClass,
+                                                            event.color === colorOption.value ? "border-gray-900" : "border-transparent"
+                                                        )}
+                                                        onClick={() => handleColorChange(event.id, colorOption.value)}
+                                                        title={colorOption.label}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </PopoverContent>
+                                    </Popover>
+                                )}
                             </div>
                         ))}
                         {dayEvents.length > maxEventsPerDay && (
@@ -258,7 +367,7 @@ export const CalendarCommon = ({
             days.push(
                 <div
                     key={`next-${day}`}
-                    className="min-h-[120px] border-r border-b p-3 dark:bg-[#282828]"
+                    className="min-h-[120px] border-r border-b p-3 "
                 >
                     <span className="text-sm text-gray-400 font-medium">{day}</span>
                 </div>
@@ -268,31 +377,22 @@ export const CalendarCommon = ({
         return days;
     };
 
-    const colorOptions = [
-        { value: "text-blue-600", label: "Blue", bgClass: "bg-blue-600" },
-        { value: "text-red-600", label: "Red", bgClass: "bg-red-600" },
-        { value: "text-green-600", label: "Green", bgClass: "bg-green-600" },
-        { value: "text-purple-600", label: "Purple", bgClass: "bg-purple-600" },
-        { value: "text-orange-600", label: "Orange", bgClass: "bg-orange-600" },
-        { value: "text-gray-600", label: "Gray", bgClass: "bg-gray-600" },
-    ];
-
     return (
         <div className={cn("flex flex-col ", className)}>
             {showHeader && (
                 <div className="mb-4">
                     <div className="w-full flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            {showHeaderIcon && (
-                                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
-                                    <CalendarDays className="h-5 w-5 text-primary" />
-                                </div>
-                            )}
-                            <div>
-                                <h1 className="text-xl font-semibold tracking-tight">{headerTitle}</h1>
-                                <p className="text-sm text-muted-foreground">{headerDescription}</p>
+                        {/* <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
+                                <CalendarDays size={20} className=" text-primary" />
                             </div>
-                        </div>
+                            <div>
+                                <div className="text-sm font-semibold tracking-tight">{headerTitle}</div>
+                                <div className="text-xs text-muted-foreground">
+                                    {headerDescription}
+                                </div>
+                            </div>
+                        </div> */}
 
                         <div className="flex items-center justify-between gap-4">
                             {showAddButton && (

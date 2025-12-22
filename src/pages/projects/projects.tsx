@@ -3,13 +3,15 @@ import { AvatarGroup } from "@/components/common/avatarCommon";
 import { CircularProgress } from "@/components/common/cicularProgress";
 import { CommonDialog } from "@/components/common/commonDialog";
 import { CommonDialogFooter } from "@/components/common/commonDialogFooter";
+import { LinearLoader } from "@/components/common/CommonLoader";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, CircleArrowOutUpRight, Edit, PackageCheck, PackagePlus, Trash2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { format } from "date-fns";
+import { AlertCircle, CalendarPlus, FileText, FolderOpen, PackagePlus, Plus, Trash2, UserRoundPlus } from "lucide-react";
 import { useMemo } from "react";
 import { ProjectForm } from "../../components/common/projectForm";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useProjects, type Project } from "../projects/hooks/useProjects";
-import { LinearLoader } from "@/components/common/CommonLoader";
 
 export const Projects = () => {
     const {
@@ -18,7 +20,6 @@ export const Projects = () => {
         isFetching,
         isError,
         isAddDialogOpen,
-        isEditDialogOpen,
         isDeleteDialogOpen,
         selectedProject,
         formData,
@@ -29,18 +30,31 @@ export const Projects = () => {
         setIsCalendarOpen,
         handleAddProject,
         handleAddProjectAndCreateAnother,
-        handleEditClick,
-        handleUpdateProject,
         handleDeleteClick,
         handleDeleteProject,
+        setIsTitleDialogOpen,
         handleDialogOpenChange,
         handleNavigateToProject,
+        setIsDescriptionDialogOpen,
+        setTitleProject,
+        setDescriptionProject,
+        isTitleDialogOpen,
+        titleInput,
+        setTitleInput,
+        handleEditTitle,
+        handleSaveTitle,
+        isDescriptionDialogOpen,
+        descriptionInput,
+        setDescriptionInput,
+        handleAddDescriptionClick,
+        handleSaveDescription,
         refetch,
         selectedRows,
         setSelectedRows,
         isBulkDeleteDialogOpen,
         handleBulkDeleteClick,
         handleBulkDeleteProject,
+        handleUpdateProject,
     } = useProjects();
 
     const tableColumns = useMemo(() => [
@@ -48,7 +62,7 @@ export const Projects = () => {
             key: "name",
             header: "Project Name",
             accessor: (row: Project) => row.name,
-            sortable: true,
+
         },
         {
             key: "status",
@@ -68,11 +82,24 @@ export const Projects = () => {
         {
             key: "dueDate",
             header: "Due Date",
-            accessor: (row: Project) => (
-                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-                    <span>{row.dueDate}</span>
-                </div>
-            ),
+            accessor: (row: Project) => {
+                if (!row.dateRange || !row.dateRange.from) {
+                    return (
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                            <span className="flex items-center gap-2"><CalendarPlus size={16} />-</span>
+                        </div>
+                    );
+                }
+
+                const fromDate = row.dateRange.from ? format(new Date(row.dateRange.from), "MMM dd") : "";
+                const toDate = row.dateRange.to ? format(new Date(row.dateRange.to), "MMM dd, yyyy") : "";
+
+                return (
+                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                        <span>{toDate ? `${fromDate} - ${toDate}` : fromDate}</span>
+                    </div>
+                );
+            },
         },
         {
             key: "members",
@@ -91,29 +118,18 @@ export const Projects = () => {
                         size="sm"
                     />
                 ) : (
-                    <span className="text-sm text-muted-foreground">No members</span>
+                    <div className="flex items-center gap-2">
+                        <UserRoundPlus size={15} />
+                        <span>Invite</span>
+                    </div>
                 );
             },
         },
     ], []);
 
-    const tableActions = useMemo(() => [
-        {
-            label: "View",
-            onClick: (row: Project) => handleNavigateToProject(row.project_id),
-            icon: <CircleArrowOutUpRight />,
-        },
-        {
-            label: "Edit",
-            onClick: (row: Project) => handleEditClick(row),
-            icon: <Edit />,
-        },
-        {
-            label: "Delete",
-            onClick: (row: Project) => handleDeleteClick(row),
-            icon: <Trash2 />,
-        },
-    ], [handleNavigateToProject, handleEditClick, handleDeleteClick]);
+    const handleViewRow = (row: Project) => {
+        handleNavigateToProject(row.project_id);
+    };
 
     if (!currentUserId) {
         return (
@@ -134,6 +150,7 @@ export const Projects = () => {
             </div>
         );
     }
+
     if (isError) {
         return (
             <div className="flex items-center justify-center min-h-[700px]">
@@ -142,12 +159,10 @@ export const Projects = () => {
                     <AlertTitle className="text-sm font-medium">
                         Unable to load projects
                     </AlertTitle>
-
                     <AlertDescription className="mt-2 flex items-center justify-between gap-4">
                         <span className="text-sm text-muted-foreground">
                             Please try again.
                         </span>
-
                         <Button
                             onClick={() => refetch()}
                             variant="outline"
@@ -166,20 +181,26 @@ export const Projects = () => {
             {projects.length === 0 ? (
                 <div className="flex items-center justify-center min-h-[700px]">
                     <div className="flex flex-col items-center max-w-md text-center space-y-4 px-6">
-                        <div className="flex items-center justify-center p-3 rounded-lg bg-primary/10">
+
+                        <div className="relative flex items-center justify-center">
+                            <div className="absolute h-20 w-20 rounded-full bg-primary/80 blur-3xl"></div>
+
                             <PackagePlus className="h-10 w-10 text-primary" />
                         </div>
 
+                        {/* Title */}
                         <div className="text-2xl text-zinc-800 dark:text-slate-200 font-semibold tracking-tight">
                             Projects
                         </div>
 
+                        {/* Description */}
                         <p className="text-sm text-muted-foreground leading-relaxed">
                             Projects are larger units of work with a clear outcome, such as a new
                             feature you want to ship. They can be shared across multiple teams and
                             are comprised of optional documents.
                         </p>
 
+                        {/* Action */}
                         <div className="flex gap-3 pt-2">
                             <Button
                                 variant="outline"
@@ -191,38 +212,41 @@ export const Projects = () => {
                         </div>
                     </div>
                 </div>
+
             ) : (
                 <div className="space-y-4">
-                    <div className="w-full flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
-                                <PackagePlus className="h-5 w-5 text-primary" />
+                    <div className="w-full flex items-center justify-between px-4 py-3 bg-primary/10 rounded-lg border border-primary/12">
+                        <div className="flex  gap-3 ">
+                            <div className="flex mt-px justify-center  rounded-lg ">
+                                <FolderOpen size={18} className="text-primary" />
                             </div>
-                            <div>
-                                <h1 className="text-xl font-semibold tracking-tight">Projects</h1>
-                                <p className="text-sm text-muted-foreground">
+                            <div className="flex flex-col gap-1">
+                                <div className="text-xs font-medium  text-white">
                                     Manage and organize your projects ({projects.length})
-                                </p>
+                                </div>
+                                <div className="text-xs font-medium text-gray-400">
+                                    Manage  projects efficiently
+                                </div>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
                             <Button
                                 variant="outline"
-                                className="gap-2 text-xs"
+                                className="gap-2  text-xs bg-transparent   hover:bg-gray-800"
                                 onClick={() => setIsAddDialogOpen(true)}
                                 disabled={isLoading}
                             >
-                                <PackagePlus />
-                                Create Project
+                                <Plus size={16} />
+                                Project
                             </Button>
                             <Button
                                 variant="outline"
-                                className="gap-2 text-xs"
+                                className="gap-2 text-xs bg-transparent border-gray-700 text-white hover:bg-gray-800"
                                 disabled={selectedRows.length === 0}
                                 onClick={handleBulkDeleteClick}
                             >
-                                <Trash2 />
-                                Delete
+                                <Trash2 size={16} />
+
                             </Button>
                         </div>
                     </div>
@@ -232,10 +256,15 @@ export const Projects = () => {
                         data={projects}
                         columns={tableColumns}
                         onSelectionChange={setSelectedRows}
-                        actions={tableActions}
+                        onUpdateProject={handleUpdateProject}
+                        onViewRow={handleViewRow}
+                        onDeleteRow={handleDeleteClick}
+                        onAddDescription={handleAddDescriptionClick}
+                        onEditTitle={handleEditTitle}
                     />
                 </div>
             )}
+
             <CommonDialog
                 className="min-w-[720px]"
                 icon={<PackagePlus size={20} className="text-primary" />}
@@ -265,31 +294,70 @@ export const Projects = () => {
                     isSubmitting={isLoading}
                 />
             </CommonDialog>
+
             <CommonDialog
-                className="min-w-[720px]"
-                icon={<PackageCheck className="text-primary" size={20} />}
-                note="Invite your team to review and Collaboration"
-                open={isEditDialogOpen}
-                onOpenChange={(open) => handleDialogOpenChange('edit', open)}
-                title="Update Project"
-                size="lg"
+                className="min-w-[500px]"
+                icon={<FileText size={20} className="text-primary" />}
+                note="Update project title"
+                open={isTitleDialogOpen}
+                onOpenChange={setIsTitleDialogOpen}
+                title={`Edit Title`}
+                size="sm"
                 footer={
                     <CommonDialogFooter
-                        onCancel={() => handleDialogOpenChange('edit', false)}
-                        onConfirm={handleUpdateProject}
+                        onCancel={() => {
+                            setIsTitleDialogOpen(false);
+                            setTitleProject(null);
+                            setTitleInput("");
+                        }}
+                        onConfirm={handleSaveTitle}
                         cancelText="Cancel"
-                        confirmText={"Update Project"}
+                        confirmText="Save Title"
                     />
                 }
             >
-                <ProjectForm
-                    formData={formData}
-                    onFormChange={setFormData}
-                    isCalendarOpen={isCalendarOpen}
-                    onCalendarOpenChange={setIsCalendarOpen}
-                    isSubmitting={isLoading}
-                />
+                <div className="space-y-3">
+                    <Textarea
+                        value={titleInput}
+                        onChange={(e) => setTitleInput(e.target.value)}
+                        placeholder="Enter project title"
+                        className="min-h-20 text-sm resize-none rounded-sm"
+                    />
+                </div>
             </CommonDialog>
+
+            <CommonDialog
+                className="min-w-[600px]"
+                icon={<FileText size={20} className="text-primary" />}
+                note="Add or update project description"
+                open={isDescriptionDialogOpen}
+                onOpenChange={setIsDescriptionDialogOpen}
+                title={`Edit Description`}
+                size="sm"
+                footer={
+                    <CommonDialogFooter
+                        onCancel={() => {
+                            setIsDescriptionDialogOpen(false);
+                            setDescriptionProject(null);
+                            setDescriptionInput("");
+                        }}
+                        onConfirm={handleSaveDescription}
+                        cancelText="Cancel"
+                        confirmText="Save Description"
+                    />
+                }
+            >
+                <div className="w-full wrap-break-word overflow-wrap-anywhere">
+                    <Textarea
+                        value={descriptionInput}
+                        onChange={(e) => setDescriptionInput(e.target.value)}
+                        placeholder="Write a description, a project brief..."
+                        className="min-h-[200px] text-sm resize-none wrap-break-word"
+                        style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
+                    />
+                </div>
+            </CommonDialog>
+
             <CommonDialog
                 icon={<Trash2 className="text-red-400" size={20} />}
                 note="This action cannot be undone"
@@ -302,7 +370,7 @@ export const Projects = () => {
                         onCancel={() => handleDialogOpenChange('delete', false)}
                         onConfirm={handleDeleteProject}
                         cancelText="Cancel"
-                        confirmText={"Delete Project"}
+                        confirmText="Delete Project"
                         confirmVariant="destructive"
                     />
                 }
@@ -313,6 +381,7 @@ export const Projects = () => {
                     data will be permanently deleted.
                 </div>
             </CommonDialog>
+
             <CommonDialog
                 icon={<Trash2 className="text-red-400" size={20} />}
                 note="This action cannot be undone"

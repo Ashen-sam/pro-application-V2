@@ -81,7 +81,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
     const priorityOptions: PriorityType[] = ["Low", "Medium", "High"];
 
     return (
-        <div className="space-y-5 border dark:bg-[#333333] rounded-sm p-6">
+        <div className="space-y-5 border dark:border-[#313131] rounded-sm p-6">
             <div className="space-y-1.5">
                 <Input
                     value={formData.name}
@@ -272,8 +272,11 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                             selected={formData.dateRange}
                             onSelect={(range) => {
                                 handleFieldChange("dateRange", range || { from: undefined, to: undefined });
-                                if (range?.from && range?.to) {
-                                    onCalendarOpenChange(false);
+                            }}
+                            onDayClick={() => {
+                                // Prevent popover from closing on first date selection
+                                if (formData.dateRange.from && !formData.dateRange.to) {
+                                    onCalendarOpenChange(true);
                                 }
                             }}
                             numberOfMonths={2}

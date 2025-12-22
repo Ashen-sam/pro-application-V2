@@ -29,10 +29,10 @@ export const router = createBrowserRouter([
     // 🏠 Protected routes (require authentication)
     {
         element: (
-            <>
+            <div className="">
                 <TitleProvider />
                 <GlobalLayout />
-            </>
+            </div>
         ),
         children: [
             { index: true, element: <Navigate to="/home" replace /> },

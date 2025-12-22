@@ -1,4 +1,5 @@
 import {
+    CircleDashed,
     Loader
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -50,21 +51,20 @@ export const CircularProgress = ({
     };
 
     const config = getConfig(animatedValue);
-    const Icon = config.icon;
 
     return (
         <div
             className={`inline-flex items-center gap-2 px-3 py-1 rounded-full  ${className}`}
         >
             <span
-                className={`flex items-center justify-center w-5 h-5 rounded-full ${config.iconBg} border border-${config.iconBg}`}
+                className={`flex items-center justify-center w-5 h-5 rounded-full  `}
             >
-                <Icon size={12} className={config.text} />
+                <CircleDashed size={13} className={config.text} />
             </span>
 
             {showLabel && (
                 <span
-                    className={`text-xs font-medium tabular-nums ${config.text}`}
+                    className={`text-xs  tabular-nums `}
                 >
                     {Math.round(animatedValue)}%
                 </span>

@@ -21,3 +21,18 @@
 ::-webkit-scrollbar-thumb:hover {
   background-color: rgba(0, 0, 0, 0.45);
 }
+.bg-grid {
+  background-color: #191919;
+  background-image:
+    /* center fade mask */ radial-gradient(
+      ellipse at center,
+      rgba(255, 255, 255, 0.08),
+      rgba(255, 255, 255, 0.02) 45%,
+      transparent 75%
+    ),
+    /* horizontal lines */
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    /* vertical lines */
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 100% 100%, /* fade */ 24px 24px, /* smaller grid */ 24px 24px;
+}

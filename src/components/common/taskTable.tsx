@@ -15,7 +15,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { CalendarPlus, Plus, Trash2, UserRoundPlus, X } from "lucide-react";
+import { CalendarPlus, CircleCheck, CirclePlus, Plus, Trash2, UserRoundPlus, X } from "lucide-react";
 import * as React from "react";
 import { ProjectStatusCommon, type StatusType } from "./ProjectStatusCommon";
 import { ProjectPriorityCommon, type PriorityType } from "./projectPriorityCommon";
@@ -53,7 +53,7 @@ interface TaskRowProps {
     onTaskChange?: (taskId: number, field: keyof Task, value: string) => void;
     onTaskDelete?: (taskId: number) => void;
     isLastRow: boolean;
-    newTaskRef: React.RefObject<HTMLInputElement>;
+    newTaskRef: React.RefObject<HTMLInputElement | null>;
 }
 
 // Status Popover Component
@@ -140,41 +140,73 @@ const PriorityPopover = React.memo<{
 
 PriorityPopover.displayName = 'PriorityPopover';
 
-// Date Range Popover Component
+// Modified DatePopover Component with Date Range Selection
 const DatePopover = React.memo<{
     value: string | null | undefined;
     onChange: (value: string) => void;
 }>(({ value, onChange }) => {
     const [open, setOpen] = React.useState(false);
-    const [date, setDate] = React.useState<Date | undefined>(
-        value ? new Date(value) : undefined
-    );
 
-    const handleSelect = React.useCallback((selectedDate: Date | undefined) => {
-        setDate(selectedDate);
-        if (selectedDate) {
-            const formattedDate = selectedDate.toISOString().split('T')[0];
-            onChange(formattedDate);
+    // Parse the date range from value (format: "YYYY-MM-DD to YYYY-MM-DD")
+    const parseValue = (val: string | null | undefined) => {
+        if (!val) return { from: undefined, to: undefined };
+        if (val.includes(' to ')) {
+            const [start, end] = val.split(' to ');
+            return {
+                from: start ? new Date(start) : undefined,
+                to: end ? new Date(end) : undefined
+            };
+        }
+        return { from: new Date(val), to: undefined };
+    };
+
+    const [dateRange, setDateRange] = React.useState<{
+        from: Date | undefined;
+        to: Date | undefined;
+    }>(parseValue(value));
+
+    const handleSelect = React.useCallback((range: { from: Date | undefined; to: Date | undefined } | undefined) => {
+        if (!range) return;
+
+        setDateRange(range);
+
+        // Only close and save when both dates are selected
+        if (range.from && range.to) {
+            const fromStr = range.from.toISOString().split('T')[0];
+            const toStr = range.to.toISOString().split('T')[0];
+            onChange(`${fromStr} to ${toStr}`);
             setOpen(false);
+        } else if (range.from && !range.to) {
+            // First date selected, keep open for second selection
+            setDateRange(range);
         }
     }, [onChange]);
 
     const handleClear = React.useCallback((e: React.MouseEvent) => {
         e.stopPropagation();
-        setDate(undefined);
+        setDateRange({ from: undefined, to: undefined });
         onChange('');
         setOpen(false);
     }, [onChange]);
+
+    const formatDateRange = () => {
+        if (dateRange.from && dateRange.to) {
+            return `${dateRange.from.toLocaleDateString()} - ${dateRange.to.toLocaleDateString()}`;
+        } else if (dateRange.from) {
+            return `${dateRange.from.toLocaleDateString()} - ...`;
+        }
+        return 'Select date range';
+    };
 
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <button className="flex items-center gap-2 text-sm hover:bg-accent px-2 py-1 rounded-sm w-full justify-start">
                     <CalendarPlus size={16} className="text-gray-400" />
-                    <span className="text-gray-600 dark:text-gray-400">
-                        {date ? date.toLocaleDateString() : 'Select date'}
+                    <span className="text-gray-600 dark:text-gray-400 truncate">
+                        {formatDateRange()}
                     </span>
-                    {date && (
+                    {dateRange.from && (
                         <X
                             size={14}
                             className="ml-auto text-gray-400 hover:text-gray-600"
@@ -185,9 +217,10 @@ const DatePopover = React.memo<{
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
-                    mode="single"
-                    selected={date}
+                    mode="range"
+                    selected={dateRange}
                     onSelect={handleSelect}
+                    numberOfMonths={2}
                     initialFocus
                 />
             </PopoverContent>
@@ -470,7 +503,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
                             {normalizedColumns.name && (
                                 <TableHead className="w-[35%]">
                                     <div className="flex items-center gap-2">
-                                        Name
+                                        Task
                                     </div>
                                 </TableHead>
                             )}
@@ -522,15 +555,13 @@ export const TaskTable: React.FC<TaskTableProps> = ({
                         ))}
 
                         <TableRow className="dark:hover:bg-zinc-900 hover:bg-zinc-100 border-none dark:bg-[#202020]">
-                            <TableCell colSpan={columnCount} className="p-0  ">
-                                <Button
+                            <TableCell colSpan={columnCount} className=" ">
+                                <button
                                     onClick={handleAddTask}
-                                    variant="ghost"
-                                    size={'sm'}
-                                    className="w-full border-none justify-start text-gray-400 hover:text-gray-600 rounded-none h-12"
+                                    className="w-full bg-transparent!  border-0 justify-start text-gray-400 hover:text-gray-600 rounded-none "
                                 >
-                                    <Plus /> Add task
-                                </Button>
+                                    <CirclePlus size={20} />
+                                </button>
                             </TableCell>
                         </TableRow>
                     </TableBody>

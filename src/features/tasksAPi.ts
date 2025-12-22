@@ -1,11 +1,5 @@
-// src/services/api/taskApi.ts
-
 import type { StatusType } from "@/components";
 import baseApi from "@/store/baseAPI";
-
-/**
- * Task Interface
- */
 export interface Task {
   task_id: number;
   project_id: number;
@@ -17,10 +11,6 @@ export interface Task {
   created_at?: string;
   updated_at?: string;
 }
-
-/**
- * Task Assignment Interface
- */
 export interface TaskAssignment {
   task_id: number;
   user_id: number;
@@ -30,10 +20,6 @@ export interface TaskAssignment {
     email: string;
   };
 }
-
-/**
- * API Response Interfaces
- */
 export interface TasksListResponse {
   success: boolean;
   tasks: Task[];
@@ -60,13 +46,9 @@ export interface DeleteTaskResponse {
 
 export interface ErrorResponse {
   success: boolean;
-  error?: any;
+  error?: string | object;
   message?: string;
 }
-
-/**
- * Request Body Interfaces
- */
 export interface CreateTaskRequest {
   project_id: number;
   title?: string;
@@ -101,9 +83,6 @@ export interface ListTasksParams {
  */
 export const taskApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    /**
-     * Get list of tasks with optional project filter
-     */
     listTasks: builder.query<TasksListResponse, ListTasksParams | void>({
       query: (params) => ({
         url: "/tasks",
@@ -121,17 +100,11 @@ export const taskApi = baseApi.injectEndpoints({
           : [{ type: "Task", id: "LIST" }],
     }),
 
-    /**
-     * Get a single task by ID
-     */
     getTaskById: builder.query<TaskResponse, number>({
       query: (taskId) => `/tasks/${taskId}`,
       providesTags: (result, error, taskId) => [{ type: "Task", id: taskId }],
     }),
 
-    /**
-     * Create a new task
-     */
     createTask: builder.mutation<TaskResponse, CreateTaskRequest>({
       query: (body) => ({
         url: "/tasks",
@@ -141,9 +114,6 @@ export const taskApi = baseApi.injectEndpoints({
       invalidatesTags: [{ type: "Task", id: "LIST" }],
     }),
 
-    /**
-     * Update an existing task
-     */
     updateTask: builder.mutation<
       TaskResponse,
       { taskId: number; body: UpdateTaskRequest }
@@ -159,9 +129,6 @@ export const taskApi = baseApi.injectEndpoints({
       ],
     }),
 
-    /**
-     * Delete a task
-     */
     deleteTask: builder.mutation<DeleteTaskResponse, number>({
       query: (taskId) => ({
         url: `/tasks/${taskId}`,
@@ -174,9 +141,6 @@ export const taskApi = baseApi.injectEndpoints({
       ],
     }),
 
-    /**
-     * Get list of users assigned to a task
-     */
     listTaskAssignments: builder.query<TaskAssignmentsResponse, number>({
       query: (taskId) => `/tasks/${taskId}/assignments`,
       providesTags: (result, error, taskId) => [
@@ -185,9 +149,6 @@ export const taskApi = baseApi.injectEndpoints({
       ],
     }),
 
-    /**
-     * Assign a user to a task
-     */
     assignUserToTask: builder.mutation<
       TaskAssignmentResponse,
       { taskId: number; user_id: number }
@@ -205,8 +166,6 @@ export const taskApi = baseApi.injectEndpoints({
   }),
   overrideExisting: false,
 });
-
-// Export hooks for usage in functional components
 export const {
   useListTasksQuery,
   useGetTaskByIdQuery,

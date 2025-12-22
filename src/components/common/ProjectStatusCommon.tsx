@@ -1,4 +1,4 @@
-import { ActivityIcon, CircleCheck, TrendingDown, TrendingUp } from 'lucide-react';
+import { BadgeCheckIcon, CircleDashed, Hexagon } from 'lucide-react';
 import React from 'react';
 
 export type StatusType = 'On track' | 'Off track' | 'At risk' | "Completed";
@@ -19,23 +19,23 @@ export const ProjectStatusCommon: React.FC<StatusBadgeProps> = ({
         'On track': {
             text: 'text-blue-400',
             iconBg: 'bg-blue-500/20',
-            icon: TrendingUp,
+            icon: Hexagon,
         },
         'Off track': {
             text: 'text-yellow-400',
             iconBg: 'bg-yellow-500/20',
-            icon: TrendingDown,
+            icon: CircleDashed,
         },
         'At risk': {
 
             text: 'text-red-400',
             iconBg: 'bg-red-500/20',
-            icon: ActivityIcon,
+            icon: Hexagon,
         },
         'Completed': {
             text: 'text-green-400',
             iconBg: 'bg-green-500/20',
-            icon: CircleCheck,
+            icon: BadgeCheckIcon,
         },
     };
 
@@ -46,10 +46,10 @@ export const ProjectStatusCommon: React.FC<StatusBadgeProps> = ({
         <span
             className={`
         inline-flex items-center gap-2
-            ${padding ? 'px-3 py-1' : 'py-1'}
-        text-xs font-semibold   
-        rounded-full
-        ${config.text}
+            ${padding ? ' py-[3px]' : 'py-1'}
+        text-xs    
+        rounded-sm
+     
 
         ${className}
       `}
@@ -58,12 +58,11 @@ export const ProjectStatusCommon: React.FC<StatusBadgeProps> = ({
                 className={`
           flex items-center justify-center
           w-5 h-5 rounded-full
-          ${config.iconBg}
-          border border-${config.iconBg}
+        ${config.text}
 
         `}
             >
-                <Icon strokeWidth={3} size={10} className={config.text} />
+                <Icon strokeWidth={3} size={13} />
             </span>
 
             {status}

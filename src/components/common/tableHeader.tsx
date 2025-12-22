@@ -1,6 +1,6 @@
 import { TableHead } from "@/components/ui/table";
-import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
-import type { TableColumn, SortConfig } from "./tableTypes";
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import type { SortConfig, TableColumn } from "./tableTypes";
 
 interface TableHeaderRowProps<T> {
     columns: TableColumn<T>[];

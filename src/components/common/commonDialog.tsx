@@ -31,12 +31,13 @@ export function CommonDialog({
             onOpenChange(val)
         }} >
             <DialogContent
+
                 className={`
                         ${className}
                         /* macOS glass effect */
                         p-0 gap-0 rounded-md
                         backdrop-blur-xl bg-white/70 dark:bg-zinc-900/50 
-                         border border-zinc-300 dark:border-zinc-700
+                         border border-zinc-300 dark:border-[#2a2a2a]
                         shadow-[0_0_40px_rgba(0,0,0,0.20)]
 
                         /* macOS animation */
@@ -49,13 +50,14 @@ export function CommonDialog({
 
                         duration-200
                         overflow-hidden
+                        
                     `}
             >
                 {/* Header */}
                 <div
                     className="
                             flex items-center justify-between px-4 py-2.5
-                            bg-white/60 dark:bg-[#282828] 
+                            bg-white/60 dark:bg-[#1a1a1a] 
                              
                             backdrop-blur-xl 
                         "
@@ -89,7 +91,7 @@ export function CommonDialog({
                 <div
                     className="
                             px-4 py-4 
-                            bg-white/40 dark:bg-[#282828]
+                            bg-white/40 dark:bg-[#1a1a1a]
                             backdrop-blur-xl
                             max-h-[70vh] overflow-y-auto
                         "
@@ -102,7 +104,7 @@ export function CommonDialog({
                     <div
                         className="
                                 px-4 py-3 border-t-3 border-dotted flex justify-end
-                                bg-white/50 dark:bg-[#282828]
+                                bg-white/50 dark:bg-[#1a1a1a]
                                   dark:border-white/10
                                 backdrop-blur-xl
                             "

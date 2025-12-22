@@ -1,30 +1,29 @@
-// tableTypes.ts
-export interface TableColumn<T> {
+export interface Column<T> {
   key: string;
   header: string;
   accessor: (row: T) => React.ReactNode;
   sortable?: boolean;
+}
+
+export interface CommonTableProps<T> {
+  data: T[];
+  columns: Column<T>[];
   searchable?: boolean;
+  searchPlaceholder?: string;
+  emptyMessage?: string;
+  className?: string;
+  selectable?: boolean;
+  onSelectionChange?: (selectedRows: T[]) => void;
+  rowKey?: keyof T;
+  onUpdateProject?: (updatedRow: T) => Promise<void> | void;
+  onDeleteRow?: (row: T) => void;
+  onViewRow?: (row: T) => void;
+  onAddDescription?: (row: T) => void;
+  onEditTitle?: (row: T) => void;
 }
 
 export interface TableAction<T> {
   label: string;
   onClick: (row: T) => void;
   icon?: React.ReactNode;
-  variant?: "default" | "destructive" | "outline" | "ghost";
-}
-
-export interface CommonTableProps<T extends Record<string, unknown>> {
-  data: T[];
-  columns: TableColumn<T>[];
-  actions?: TableAction<T>[];
-  searchable?: boolean;
-  searchPlaceholder?: string;
-  emptyMessage?: string;
-  onRowClick?: (row: T) => void;
-  className?: string;
-  // Checkbox props
-  selectable?: boolean;
-  onSelectionChange?: (selectedRows: T[]) => void;
-  rowKey?: keyof T; // Unique identifier for each row (e.g., 'id')
 }

@@ -779,7 +779,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Edit, FolderArchive, FolderPlus, MoreVertical, PackagePlus, Trash2 } from 'lucide-react';
+import { Edit, FolderArchive, FolderPlus, MoreVertical, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface Project {
@@ -889,34 +889,38 @@ export const ProjectFlow = () => {
                     </div>
                 </div>
             </div> : <div className="w-full space-y-6 ">
-                <div className="w-full flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
-                            <FolderArchive className="h-5 w-5 text-primary" />
+                <div className="w-full flex items-center justify-between px-4 py-3 bg-primary/10 rounded-lg border border-primary/12">
+                    <div className="flex  gap-3 ">
+                        <div className="flex mt-px justify-center  rounded-lg ">
+                            <FolderArchive size={18} className="text-primary" />
                         </div>
-                        <div>
-                            <h1 className="text-xl font-semibold tracking-tight">Projects Flow</h1>
-                            <p className="text-sm text-muted-foreground">
-                                Manage and organize your projects
-                            </p>
+                        <div className="flex flex-col gap-1">
+                            <div className="text-xs font-medium  text-white">
+                                Projects Flow ({projects.length})
+                            </div>
+                            <div className="text-xs font-medium text-gray-400">
+                                Manage  projects efficiently
+                            </div>
                         </div>
                     </div>
-                    <Button
-                        variant={'outline'}
-                        className="gap-2 text-xs"
-                        onClick={() => {
-                            setIsAddDialogOpen(true);
-                            alert('Add Project Flow would open here');
-                        }}
-                    >
-                        <FolderPlus className="h-4 w-4" />
-                        Add Project Flow
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant={'outline'}
+                            className="gap-2 text-xs"
+                            onClick={() => {
+                                setIsAddDialogOpen(true);
+                                alert('Add Project Flow would open here');
+                            }}
+                        >
+                            <FolderPlus className="h-4 w-4" />
+                            Add Project Flow
+                        </Button>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {projects.map((project) => (
-                        <Card key={project.id} className="hover:shadow-sm shadow-xs transition-shadow dark:bg-[#282828]">
+                        <Card key={project.id} className="hover:shadow-sm shadow-xs transition-shadow dark:bg-[#1a1a1a]">
                             <CardHeader className="pb-3">
                                 <div className="flex items-start justify-between">
                                     <div className="space-y-1 flex-1">

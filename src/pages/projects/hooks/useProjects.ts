@@ -32,7 +32,7 @@ const getErrorMessage = (error: unknown): string => {
   );
 };
 
-export interface Project extends ApiProject {
+export interface Project extends ApiProject, Record<string, unknown> {
   status: StatusType;
   priority: PriorityType;
   progress: number;
@@ -149,6 +149,14 @@ export const useProjects = () => {
   const [createProject] = useCreateProjectMutation();
   const [updateProject] = useUpdateProjectMutation();
   const [deleteProject] = useDeleteProjectMutation();
+  const [isTitleDialogOpen, setIsTitleDialogOpen] = useState(false);
+  const [isDescriptionDialogOpen, setIsDescriptionDialogOpen] = useState(false);
+  const [titleProject, setTitleProject] = useState<Project | null>(null);
+  const [descriptionProject, setDescriptionProject] = useState<Project | null>(
+    null
+  );
+  const [titleInput, setTitleInput] = useState("");
+  const [descriptionInput, setDescriptionInput] = useState("");
   const [sendProjectInvites] = useSendProjectInvitesMutation();
   const [projects, setProjects] = useState<Project[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -210,7 +218,6 @@ export const useProjects = () => {
     isSubmittingRef.current = true;
     setIsLoading(true);
 
-    // Optimistic update: Create temporary project immediately
     const tempId = Date.now();
     const optimisticProject: Project = {
       project_id: tempId,
@@ -242,10 +249,7 @@ export const useProjects = () => {
       ),
     };
 
-    // Add to local state immediately
     setProjects((prev) => [optimisticProject, ...prev]);
-
-    // Show instant success toast
     showToast.success("Project created successfully", "create-success");
 
     const createPayload = {
@@ -264,7 +268,6 @@ export const useProjects = () => {
     try {
       const result = await createProject(createPayload).unwrap();
 
-      // Replace optimistic project with real one
       setProjects((prev) =>
         prev.map((p) =>
           p.project_id === tempId ? transformApiProject(result) : p
@@ -294,7 +297,6 @@ export const useProjects = () => {
 
       resetForm();
     } catch (error: unknown) {
-      // Rollback: Remove optimistic project on error
       setProjects((prev) => prev.filter((p) => p.project_id !== tempId));
       const errorMessage = getErrorMessage(error) || "Failed to create project";
       showToast.error(errorMessage, "create-error");
@@ -328,7 +330,6 @@ export const useProjects = () => {
     isSubmittingRef.current = true;
     setIsLoading(true);
 
-    // Optimistic update: Create temporary project immediately
     const tempId = Date.now();
     const optimisticProject: Project = {
       project_id: tempId,
@@ -360,13 +361,8 @@ export const useProjects = () => {
       ),
     };
 
-    // Add to local state immediately
     setProjects((prev) => [optimisticProject, ...prev]);
-
-    // Close dialog immediately for better UX
     closeAllDialogs();
-
-    // Show instant success toast
     showToast.success("Project created successfully", "create-success");
 
     const createPayload = {
@@ -385,7 +381,6 @@ export const useProjects = () => {
     try {
       const result = await createProject(createPayload).unwrap();
 
-      // Replace optimistic project with real one
       setProjects((prev) =>
         prev.map((p) =>
           p.project_id === tempId ? transformApiProject(result) : p
@@ -416,7 +411,6 @@ export const useProjects = () => {
           });
       }
     } catch (error: unknown) {
-      // Rollback: Remove optimistic project on error
       setProjects((prev) => prev.filter((p) => p.project_id !== tempId));
       console.error("Failed to create project:", error);
       const errorMessage = getErrorMessage(error) || "Failed to create project";
@@ -444,16 +438,12 @@ export const useProjects = () => {
     setIsLoading(true);
 
     const projectIds = selectedRows.map((p) => p.project_id);
-
-    // Store original projects for rollback
     const deletedProjects = [...selectedRows];
 
-    // Optimistic update: Remove from local state immediately
     setProjects((prev) =>
       prev.filter((p) => !projectIds.includes(p.project_id))
     );
 
-    // Close dialog and clear selection immediately
     setIsBulkDeleteDialogOpen(false);
     setSelectedRows([]);
     setTimeout(() => {
@@ -461,7 +451,6 @@ export const useProjects = () => {
       isSubmittingRef.current = false;
     }, 300);
 
-    // Show instant success toast
     showToast.success(
       `Successfully deleted ${projectIds.length} project(s)`,
       "bulk-delete-success"
@@ -470,7 +459,6 @@ export const useProjects = () => {
     try {
       await deleteProject(projectIds).unwrap();
     } catch (error: unknown) {
-      // Rollback: Restore deleted projects on error
       setProjects((prev) => [...deletedProjects, ...prev]);
       const errorMessage =
         getErrorMessage(error) || "Failed to delete projects";
@@ -498,7 +486,103 @@ export const useProjects = () => {
     setIsEditDialogOpen(true);
   }, []);
 
-  const handleUpdateProject = useCallback(async () => {
+  // FIXED: Inline update with immediate optimistic UI + toast
+  const handleInlineUpdateProject = useCallback(
+    async (updatedRow: Project) => {
+      if (!updatedRow || !updatedRow.project_id) return;
+
+      const originalProject = projects.find(
+        (p) => p.project_id === updatedRow.project_id
+      );
+      if (!originalProject) return;
+
+      // Optimistic update: Update local state immediately
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.project_id === updatedRow.project_id ? { ...p, ...updatedRow } : p
+        )
+      );
+
+      // Show immediate success toast
+      showToast.success("Project updated", "inline-update-success");
+
+      // Prepare update payload
+      const updatePayload: Partial<Record<string, unknown>> = {};
+
+      if (updatedRow.name !== originalProject.name) {
+        updatePayload.name = updatedRow.name;
+      }
+      if (updatedRow.description !== originalProject.description) {
+        updatePayload.description = updatedRow.description;
+      }
+      if (updatedRow.status !== originalProject.status) {
+        updatePayload.status = mapStatusToApi(updatedRow.status);
+      }
+      if (updatedRow.priority !== originalProject.priority) {
+        updatePayload.priority = updatedRow.priority;
+      }
+
+      // FIXED: Handle date range object
+      // FIXED: Handle date range object - check dateRange field, not dueDate
+      if (
+        updatedRow.dateRange &&
+        typeof updatedRow.dateRange === "object" &&
+        "from" in updatedRow.dateRange &&
+        "to" in updatedRow.dateRange
+      ) {
+        const dateRange = updatedRow.dateRange as {
+          from?: Date | string;
+          to?: Date | string;
+        };
+        if (dateRange.from) {
+          updatePayload.start_date = new Date(dateRange.from).toISOString();
+        }
+        if (dateRange.to) {
+          updatePayload.end_date = new Date(dateRange.to).toISOString();
+        }
+      }
+
+      if (
+        JSON.stringify(updatedRow.memeberEmails) !==
+        JSON.stringify(originalProject.memeberEmails)
+      ) {
+        updatePayload.memberEmails = updatedRow.memeberEmails;
+      }
+
+      if (Object.keys(updatePayload).length === 0) {
+        return;
+      }
+
+      try {
+        const result = await updateProject({
+          projectId: updatedRow.project_id,
+          data: updatePayload,
+        }).unwrap();
+
+        // Replace with server response
+        setProjects((prev) =>
+          prev.map((p) =>
+            p.project_id === updatedRow.project_id
+              ? transformApiProject(result)
+              : p
+          )
+        );
+      } catch (error: unknown) {
+        // Rollback on error
+        setProjects((prev) =>
+          prev.map((p) =>
+            p.project_id === updatedRow.project_id ? originalProject : p
+          )
+        );
+        const errorMessage =
+          getErrorMessage(error) || "Failed to update project";
+        showToast.error(errorMessage, "inline-update-error");
+      }
+    },
+    [projects, updateProject]
+  );
+
+  const handleModalUpdateProject = useCallback(async () => {
     if (isSubmittingRef.current || !selectedProject) return;
     if (!formData.name.trim()) {
       showToast.error("Project name is required", "validation-error");
@@ -514,10 +598,8 @@ export const useProjects = () => {
     isSubmittingRef.current = true;
     setIsLoading(true);
 
-    // Store original project for rollback
     const originalProject = selectedProject;
 
-    // Optimistic update: Update local state immediately
     const updatedProject: Project = {
       ...selectedProject,
       name: formData.name.trim(),
@@ -550,10 +632,7 @@ export const useProjects = () => {
       )
     );
 
-    // Close dialog immediately
     closeAllDialogs();
-
-    // Show instant success toast
     showToast.success("Project updated successfully", "update-success");
 
     const updatePayload = {
@@ -574,7 +653,6 @@ export const useProjects = () => {
         data: updatePayload,
       }).unwrap();
 
-      // Replace with server response
       setProjects((prev) =>
         prev.map((p) =>
           p.project_id === selectedProject.project_id
@@ -583,7 +661,6 @@ export const useProjects = () => {
         )
       );
     } catch (error: unknown) {
-      // Rollback: Restore original project on error
       setProjects((prev) =>
         prev.map((p) =>
           p.project_id === selectedProject.project_id ? originalProject : p
@@ -609,16 +686,12 @@ export const useProjects = () => {
     const projectName = selectedProject.name;
     const projectId = selectedProject.project_id;
 
-    // Store original project for rollback
     const deletedProject = selectedProject;
 
-    // Optimistic update: Remove from local state immediately
     setProjects((prev) => prev.filter((p) => p.project_id !== projectId));
 
-    // Close dialog immediately
     closeAllDialogs();
 
-    // Show instant success toast
     showToast.success(
       `Project "${projectName}" deleted successfully`,
       "delete-success"
@@ -627,7 +700,6 @@ export const useProjects = () => {
     try {
       await deleteProject(projectId).unwrap();
     } catch (error: unknown) {
-      // Rollback: Restore deleted project on error
       setProjects((prev) => [deletedProject, ...prev]);
       const errorMessage = getErrorMessage(error) || "Failed to delete project";
       showToast.error(errorMessage, "delete-error");
@@ -661,6 +733,58 @@ export const useProjects = () => {
     [resetForm]
   );
 
+  // FIXED: handleEditTitle with immediate feedback
+  const handleEditTitle = useCallback((row: Project) => {
+    setTitleProject(row);
+    setTitleInput(row.name || "");
+    setIsTitleDialogOpen(true);
+  }, []);
+
+  const handleSaveTitle = useCallback(async () => {
+    if (!titleProject) return;
+
+    // Close dialog immediately for snappy UX
+    setIsTitleDialogOpen(false);
+    const projectToUpdate = titleProject;
+    const newTitle = titleInput;
+
+    // Clear state
+    setTitleProject(null);
+    setTitleInput("");
+
+    // Perform the update
+    await handleInlineUpdateProject({
+      ...projectToUpdate,
+      name: newTitle,
+    });
+  }, [titleProject, titleInput, handleInlineUpdateProject]);
+
+  // FIXED: handleAddDescriptionClick with immediate feedback
+  const handleAddDescriptionClick = useCallback((row: Project) => {
+    setDescriptionProject(row);
+    setDescriptionInput(row.description || "");
+    setIsDescriptionDialogOpen(true);
+  }, []);
+
+  const handleSaveDescription = useCallback(async () => {
+    if (!descriptionProject) return;
+
+    // Close dialog immediately for snappy UX
+    setIsDescriptionDialogOpen(false);
+    const projectToUpdate = descriptionProject;
+    const newDescription = descriptionInput;
+
+    // Clear state
+    setDescriptionProject(null);
+    setDescriptionInput("");
+
+    // Perform the update
+    await handleInlineUpdateProject({
+      ...projectToUpdate,
+      description: newDescription,
+    });
+  }, [descriptionProject, descriptionInput, handleInlineUpdateProject]);
+
   const handleNavigateToProject = useCallback(
     (projectId: number) => {
       navigate(`/projects/${projectId}`);
@@ -684,16 +808,36 @@ export const useProjects = () => {
     selectedRows,
     setSelectedRows,
     setIsAddDialogOpen,
+    setIsEditDialogOpen,
+    setIsDeleteDialogOpen,
+    closeAllDialogs,
+    resetForm,
     setFormData,
     setIsCalendarOpen,
     handleAddProject,
     handleAddProjectAndCreateAnother,
     handleEditClick,
-    handleUpdateProject,
+    handleUpdateProject: handleInlineUpdateProject,
+    handleModalUpdateProject,
     handleDeleteClick,
     handleDeleteProject,
     handleDialogOpenChange,
     handleNavigateToProject,
+    setTitleProject,
+    setIsTitleDialogOpen,
+    handleSaveDescription,
+    descriptionInput,
+    setDescriptionInput,
+    isDescriptionDialogOpen,
+    handleAddDescriptionClick,
+    handleSaveTitle,
+    titleInput,
+    setTitleInput,
+    isTitleDialogOpen,
+    handleEditTitle,
+    setDescriptionProject,
+    setIsDescriptionDialogOpen,
+    descriptionProject,
     refetch,
     isBulkDeleteDialogOpen,
     handleBulkDeleteClick,

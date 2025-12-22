@@ -103,7 +103,7 @@ export const Overview = () => {
                 {/* Left Column - Project Info */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* Project Details */}
-                    <Card className="shadow-none rounded-sm dark:bg-[#282828]">
+                    <Card className="shadow-none rounded-sm dark:bg-[#1a1a1a] ">
                         <CardContent className="space-y-5">
                             {/* Project Name */}
                             <div>
@@ -163,15 +163,15 @@ export const Overview = () => {
                                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
                                     Description
                                 </label>
-                                <p className="text-sm text-foreground/80 leading-relaxed">
+                                <div className="text-sm break-all text-foreground/80 leading-relaxed">
                                     {project.description || 'No description available'}
-                                </p>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
 
                     {/* Project Members */}
-                    <Card className="shadow-none rounded-sm dark:bg-[#282828]">
+                    <Card className="shadow-none rounded-sm dark:bg-[#1a1a1a]">
                         <CardHeader>
                             <CardTitle className="text-base font-semibold">
                                 Project Members
@@ -190,7 +190,7 @@ export const Overview = () => {
                 {/* Right Column - Summary & Activity */}
                 <div className="space-y-6">
                     {/* Summary */}
-                    <Card className="shadow-none rounded-sm dark:bg-[#282828]">
+                    <Card className="shadow-none rounded-sm dark:bg-[#1a1a1a]">
                         <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
                                 <CardTitle className="text-base font-semibold">Summary</CardTitle>
@@ -236,7 +236,7 @@ export const Overview = () => {
                     </Card>
 
                     {/* Recent Activity */}
-                    <Card className="shadow-none rounded-sm dark:bg-[#282828]">
+                    <Card className="shadow-none rounded-sm dark:bg-[#1a1a1a]">
                         <CardHeader>
                             <CardTitle className="text-base font-semibold">Recent Activity</CardTitle>
                         </CardHeader>

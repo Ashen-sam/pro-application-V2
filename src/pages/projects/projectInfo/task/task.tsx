@@ -10,7 +10,6 @@ type OverviewContext = {
 
 export const Task = () => {
     const { projectId } = useOutletContext<OverviewContext>();
-
     const { tasks, isLoading, handleTaskChange, handleTaskAdd, handleTaskDelete } =
         useTasks({ projectId });
 

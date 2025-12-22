@@ -64,7 +64,14 @@ export const baseApi = createApi({
   baseQuery: baseQueryWithReauth,
 
   // ✅ OPTIMIZED: Define cache tags for automatic cache invalidation
-  tagTypes: ["User", "Project", "Task", "ProjectMember", "TaskAssignment"],
+  tagTypes: [
+    "User",
+    "Project",
+    "Task",
+    "ProjectMember",
+    "TaskAssignment",
+    "Calendar",
+  ],
 
   // ✅ OPTIMIZED: Configure global cache behavior
   // These settings work with the tags to provide intelligent caching

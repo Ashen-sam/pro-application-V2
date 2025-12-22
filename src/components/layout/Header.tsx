@@ -30,44 +30,48 @@ export const Header = () => {
 
 
     return (
-        <div className="w-full border-b bg-[#fcfcfc] dark:bg-[#282828]">
+        <div className="w-full border-b bg-[#fcfcfc] dark:bg-[#282828]" >
             <div className="flex items-center justify-between px-4 ">
-                <div className="flex items-center gap-1">
-                    {topNavItems.map((item) => (
-                        <Link key={item.to} to={item.to}>
-                            <div
-                                className={cn(
-                                    "flex  items-center gap-2 h-9 px-3 text-[11px] transition-all font-medium duration-300",
-                                    isActive(item.to)
-                                        ? "bg-primary/10 text-primary hover:bg-primary/20"
-                                        : "hover:bg-primary/5"
-                                )}
-                            >
-                                <item.icon size={16} className="shrink-0" />
-                                <span className="truncate">{item.label}</span>
-                            </div>
-                        </Link>
-                    ))}
+                < div className="flex items-center gap-1" >
+                    {
+                        topNavItems.map((item) => (
+                            <Link key={item.to} to={item.to}>
+                                <div
+                                    className={cn(
+                                        "flex  items-center gap-2 h-9 px-3 text-[11px] transition-all font-medium duration-300",
+                                        isActive(item.to)
+                                            ? "bg-primary/10 text-primary hover:bg-primary/20"
+                                            : "hover:bg-primary/5"
+                                    )}
+                                >
+                                    <item.icon size={16} className="shrink-0" />
+                                    <span className="truncate">{item.label}</span>
+                                </div>
+                            </Link>
+                        ))
+                    }
 
-                    <Separator orientation="vertical" className="mx-2 h-6" />
+                    < Separator orientation="vertical" className="mx-2 h-6" />
 
 
                     {/* Workspace Items */}
-                    {workspaceItems.map((item) => (
-                        <Link key={item.to} to={item.to}>
-                            <div
-                                className={cn(
-                                    "flex  items-center gap-2 h-9 px-3 text-[11px] transition-all font-medium duration-300",
-                                    isActive(item.to)
-                                        ? "bg-primary/10 text-primary hover:bg-primary/20"
-                                        : "hover:bg-primary/5"
-                                )}
-                            >
-                                <item.icon size={16} className="shrink-0" />
-                                <span className="truncate">{item.label}</span>
-                            </div>
-                        </Link>
-                    ))}
+                    {
+                        workspaceItems.map((item) => (
+                            <Link key={item.to} to={item.to}>
+                                <div
+                                    className={cn(
+                                        "flex  items-center gap-2 h-9 px-3 text-[11px] transition-all font-medium duration-300",
+                                        isActive(item.to)
+                                            ? "bg-primary/10 text-primary hover:bg-primary/20"
+                                            : "hover:bg-primary/5"
+                                    )}
+                                >
+                                    <item.icon size={16} className="shrink-0" />
+                                    <span className="truncate">{item.label}</span>
+                                </div>
+                            </Link>
+                        ))
+                    }
 
 
                     {/* Settings */}
@@ -84,13 +88,13 @@ export const Header = () => {
                             <span className="truncate">Settings</span>
                         </div>
                     </Link>
-                </div>
+                </ div>
 
                 {/* Right Section - Mode Toggle */}
-                <div className="flex items-center">
+                < div className="flex items-center" >
                     <ModeToggle />
-                </div>
-            </div>
-        </div>
+                </div >
+            </div >
+        </div >
     );
 };

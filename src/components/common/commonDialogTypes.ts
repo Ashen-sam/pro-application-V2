@@ -34,4 +34,5 @@ export interface DialogFooterProps {
   createAnotherText?: string;
   enableCreateAnother?: boolean;
   formMode?: "add" | "edit" | "view";
+  confirmDisabled?: boolean; // Add this new prop
 }
