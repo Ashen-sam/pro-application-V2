@@ -1,5 +1,5 @@
 import { AlertTriangle, CheckCircle2, Info, X, XCircle } from "lucide-react";
-import { Toaster, toast } from "sonner";
+import { toast } from "sonner";
 
 type ToastType = "info" | "success" | "error" | "warning";
 
@@ -9,7 +9,7 @@ interface ToastConfig {
     type: ToastType;
 }
 
-const CustomToast = ({
+export const CustomToast = ({
     title,
     description,
     type,
@@ -141,66 +141,3 @@ export const showToast = {
         ),
 };
 
-export default function ToastDemo() {
-    return (
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-950 flex items-center justify-center p-8">
-            <Toaster position="top-center" />
-
-            <div className="text-center space-y-4">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-                    Toast Notification System
-                </h1>
-
-                <div className="flex flex-wrap gap-4 justify-center">
-                    <button
-                        onClick={() =>
-                            showToast.info(
-                                "New Update Available",
-                                "Version 2.1 is ready to download now"
-                            )
-                        }
-                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-                    >
-                        Show Info Toast
-                    </button>
-
-                    <button
-                        onClick={() =>
-                            showToast.success(
-                                "Payment Processed Successfully",
-                                "Your transaction has been completed."
-                            )
-                        }
-                        className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors"
-                    >
-                        Show Success Toast
-                    </button>
-
-                    <button
-                        onClick={() =>
-                            showToast.error(
-                                "Connection Failed",
-                                "Please check your internet & try again."
-                            )
-                        }
-                        className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
-                    >
-                        Show Error Toast
-                    </button>
-
-                    <button
-                        onClick={() =>
-                            showToast.warning(
-                                "Low Storage Space",
-                                "Clear space to continue saving data."
-                            )
-                        }
-                        className="px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-colors"
-                    >
-                        Show Warning Toast
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-}

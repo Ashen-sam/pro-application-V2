@@ -1,9 +1,7 @@
-// File: CalendarPage.tsx
-
 import { CalendarCommon, type CalendarEvent } from "@/components/common/calendarCommon";
+import { LinearLoader } from "@/components/common/CommonLoader";
 import { useMemo, useState } from "react";
 import { useGetCalendarDataQuery } from "../../features/calendarApi";
-import { Bolt, Calendar } from "lucide-react";
 
 // Color storage key
 const COLOR_STORAGE_KEY = "calendar_project_colors";
@@ -144,10 +142,9 @@ export default function CalendarPage() {
     // Show loading state
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
+            <div className="min-h-[500px] flex items-center justify-center">
                 <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-                    <p className="mt-4 text-gray-600">Loading calendar...</p>
+                    <LinearLoader />
                 </div>
             </div>
         );
@@ -167,22 +164,7 @@ export default function CalendarPage() {
 
     return (
         <div className="">
-            <div className="w-full flex items-center justify-between px-4 py-3 bg-primary/10 rounded-lg border border-primary/12">
-                <div className="flex  gap-3 ">
-                    <div className="flex mt-px justify-center  rounded-lg ">
-                        <Calendar size={18} className="text-primary" />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                        <div className="text-xs font-medium  text-white">
-                            Manage and organize your projects
-                        </div>
-                        <div className="text-xs font-medium text-gray-400">
-                            Manage  projects efficiently
-                        </div>
-                    </div>
-                </div>
 
-            </div>
             <CalendarCommon
                 events={events}
                 initialDate={new Date()}

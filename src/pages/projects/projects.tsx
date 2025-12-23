@@ -8,7 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
-import { AlertCircle, CalendarPlus, FileText, FolderOpen, PackagePlus, Plus, Trash2, UserRoundPlus } from "lucide-react";
+import { AlertCircle, CalendarPlus, FileText, FolderOpen, Folders, PackagePlus, Plus, Trash2, UserRoundPlus } from "lucide-react";
 import { useMemo } from "react";
 import { ProjectForm } from "../../components/common/projectForm";
 import { useProjects, type Project } from "../projects/hooks/useProjects";
@@ -185,7 +185,7 @@ export const Projects = () => {
                         <div className="relative flex items-center justify-center">
                             <div className="absolute h-20 w-20 rounded-full bg-primary/80 blur-3xl"></div>
 
-                            <PackagePlus className="h-10 w-10 text-primary" />
+                            <Folders className="h-10 w-10 text-primary" />
                         </div>
 
                         {/* Title */}
@@ -194,13 +194,12 @@ export const Projects = () => {
                         </div>
 
                         {/* Description */}
-                        <p className="text-sm text-muted-foreground leading-relaxed">
+                        <div className="text-sm text-muted-foreground leading-relaxed">
                             Projects are larger units of work with a clear outcome, such as a new
                             feature you want to ship. They can be shared across multiple teams and
                             are comprised of optional documents.
-                        </p>
+                        </div>
 
-                        {/* Action */}
                         <div className="flex gap-3 pt-2">
                             <Button
                                 variant="outline"
@@ -215,13 +214,13 @@ export const Projects = () => {
 
             ) : (
                 <div className="space-y-4">
-                    <div className="w-full flex items-center justify-between px-4 py-3 bg-primary/10 rounded-lg border border-primary/12">
+                    <div className="w-full flex items-center justify-between px-4 py-3 bg-primary/8 rounded-lg border border-primary/12">
                         <div className="flex  gap-3 ">
                             <div className="flex mt-px justify-center  rounded-lg ">
                                 <FolderOpen size={18} className="text-primary" />
                             </div>
                             <div className="flex flex-col gap-1">
-                                <div className="text-xs font-medium  text-white">
+                                <div className="text-xs font-medium  dark:text-slate-200 text-gray-700">
                                     Manage and organize your projects ({projects.length})
                                 </div>
                                 <div className="text-xs font-medium text-gray-400">

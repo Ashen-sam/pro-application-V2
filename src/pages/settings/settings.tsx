@@ -1,14 +1,15 @@
 import { CommonDialog } from '@/components/common/commonDialog';
 import { CommonDialogFooter } from '@/components/common/commonDialogFooter';
+import { LinearLoader } from '@/components/common/CommonLoader';
+import { showToast } from '@/components/common/commonToast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Camera, Settings as SettingIcon, Trash2, Loader2, Settings2, SettingsIcon } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { useGetUserByIdQuery, useUpdateUserMutation, useDeleteUserMutation } from '@/features/auth/authApi';
-import { showToast } from '@/components/common/commonToast';
+import { useDeleteUserMutation, useGetUserByIdQuery, useUpdateUserMutation } from '@/features/auth/authApi';
+import { Camera, Loader2, SettingsIcon, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export const Settings = () => {
     const currentUserId = parseInt(localStorage.getItem('userId') || '1');
@@ -105,8 +106,8 @@ export const Settings = () => {
 
     if (isLoadingUser) {
         return (
-            <div className="flex items-center justify-center h-screen">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="flex items-center justify-center min-h-[500px] ">
+                <LinearLoader />
             </div>
         );
     }
@@ -132,7 +133,7 @@ export const Settings = () => {
                             <SettingsIcon size={18} className="text-primary" />
                         </div>
                         <div className="flex flex-col gap-1">
-                            <div className="text-xs font-medium  text-white">
+                            <div className="text-xs font-medium  text-gray-900 dark:text-slate-200">
                                 Manage and organize your projects
                             </div>
                             <div className="text-xs font-medium text-gray-400">
@@ -144,10 +145,10 @@ export const Settings = () => {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
-                    <div className=" gap-0 rounded-md backdrop-blur-xl bg-white/70 dark:bg-[#1a1a1a] border border-zinc-300 dark:border-[#2a2a2a]  overflow-hidden">
-                        <div className="p-4 bg-white/40 dark:bg-[#1a1a1a] backdrop-blur-xl space-y-5 text-xs">
+                    <div className=" gap-0 rounded-md backdrop-blur-xl bg-white/70 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a]  overflow-hidden">
+                        <div className="p-4 bg-white/40 dark:bg-[#1a1a1a] backdrop-blur-xl space-y-5 text-xs text-gray-900 dark:text-slate-200">
                             <div className="flex items-center justify-between">
-                                <Label className="text-sm font-normal text-slate-900 dark:text-gray-200">
+                                <Label className="text-sm font-normal ">
                                     Profile picture
                                 </Label>
                                 <div className="relative">
@@ -158,7 +159,7 @@ export const Settings = () => {
                                     />
                                     <label
                                         htmlFor="photo-upload"
-                                        className="absolute -bottom-1 -right-1 bg-blue-600 text-white p-1 rounded-full cursor-pointer hover:bg-blue-700 transition-colors shadow-lg"
+                                        className="absolute -bottom-1 -right-1 bg-blue-600  p-1 rounded-full cursor-pointer hover:bg-blue-700 transition-colors shadow-lg"
                                     >
                                         <Camera className="w-3 h-3" />
                                         <input
@@ -175,7 +176,7 @@ export const Settings = () => {
                             <Separator />
 
                             <div className="flex items-center justify-between">
-                                <Label htmlFor="email" className="text-sm font-normal text-slate-900 dark:text-gray-200">
+                                <Label htmlFor="email" className="text-sm font-normal text-gray-900 dark:text-slate-200">
                                     Email
                                 </Label>
                                 <div className="w-64">
@@ -235,7 +236,7 @@ export const Settings = () => {
                     </div>
 
                     {/* Danger Zone Card with Dialog Styling */}
-                    <div className="p-0 gap-0 rounded-md  bg-white/70 dark:bg-zinc-900/50 border border-zinc-300 dark:border-[#2a2a2a] overflow-hidden h-max">
+                    <div className="p-0 gap-0 rounded-md  bg-white/70 dark:bg-zinc-900/50 border border-gray-200 dark:border-[#2a2a2a] overflow-hidden h-max">
                         {/* Header with Dialog Style */}
                         <div className="flex items-center justify-between px-4 py-2.5 bg-white/60 dark:bg-[#1a1a1a] backdrop-blur-xl">
                             <div className="flex gap-3 items-center pt-3">
@@ -262,10 +263,10 @@ export const Settings = () => {
                             </Alert>
 
                             <div className=" p-4 rounded-lg border ">
-                                <h4 className="font-semibold  mb-2">Delete Account</h4>
-                                <p className="text-sm text-slate-600 dark:text-gray-400 mb-4">
+                                <div className="font-semibold  mb-2">Delete Account</div>
+                                <div className="text-sm text-gray-900 dark:text-slate-300 mb-4">
                                     Once you delete your account, there is no going back. Please be certain.
-                                </p>
+                                </div>
                                 <Button
                                     size={'sm'}
                                     variant="outline"

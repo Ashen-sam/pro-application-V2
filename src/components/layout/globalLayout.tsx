@@ -19,6 +19,7 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import { CommonDialog } from "../common/commonDialog";
 import { CommonDialogFooter } from "../common/commonDialogFooter";
 import { Sidebar } from "./sideBar";
+import { ProfileTop } from "@/pages/settings/profileTop/profileTop";
 
 const breadcrumbLabels: Record<string, string> = {
     "/": "Home",
@@ -75,10 +76,13 @@ export const GlobalLayout = () => {
     const pathnames = location.pathname.split("/").filter((x) => x);
 
     return (
-        <div className="items-center justify-center min-h-screen  flex-col w-full   dark:bg-[#141414] ">
-            <div className="flex justify-center gap-5   pt-32   overflow-hidden bg-background  dark:bg-[#141414]  max-w-7xl m-auto">
+        <div className="items-center justify-center min-h-screen  flex-col w-full relative   dark:bg-[#141414] ">
+            <div className="flex justify-center gap-5   pt-28   overflow-hidden bg-background  dark:bg-[#141414]  max-w-7xl m-auto">
                 {/* Sidebar */}
                 <Sidebar />
+                <div className="absolute right-0 top-2" >
+                    <ProfileTop />
+                </div>
 
                 {/* Main Content Area */}
                 <div className="flex-1 flex flex-col overflow-hidden ">

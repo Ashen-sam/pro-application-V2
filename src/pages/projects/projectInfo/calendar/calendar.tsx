@@ -133,7 +133,6 @@ export const Calendar = () => {
             onEventClick={handleEventClick}
             onAddEvent={handleAddEvent}
             onDateChange={handleDateChange}
-            showSearch={true}
             showAddButton={true}
             showTodayButton={true}
             highlightToday={true}

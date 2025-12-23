@@ -16,7 +16,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { Calendar, CalendarDays, CalendarPlus, ChevronLeft, ChevronRight, Clock, Package, Palette } from "lucide-react";
+import { Calendar, CalendarPlus, ChevronLeft, ChevronRight, Clock, Package, Palette } from "lucide-react";
 import { useState } from "react";
 import { CommonDialog } from "./commonDialog";
 import { CommonDialogFooter } from "./commonDialogFooter";
@@ -46,6 +46,7 @@ export interface CalendarProps {
     headerTitle?: string;
     headerDescription?: string;
     showHeaderIcon?: boolean;
+    showHeaderCommon?: boolean;
 }
 
 // Enhanced Reusable Calendar Component
@@ -56,15 +57,16 @@ export const CalendarCommon = ({
     onAddEvent,
     onDateChange,
     onColorChange,
+    showHeaderCommon,
     showAddButton = true,
     showTodayButton = true,
     className = "",
     highlightToday = true,
     maxEventsPerDay = 3,
     showHeader = true,
-    headerTitle = "Calendar",
-    headerDescription = "Manage and organize your projects",
-    showHeaderIcon = true,
+    // headerTitle = "Calendar",
+    // headerDescription = "Manage and organize your projects",
+    // showHeaderIcon = true,
 }: CalendarProps) => {
     const [currentDate, setCurrentDate] = useState(initialDate);
     const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -382,40 +384,35 @@ export const CalendarCommon = ({
             {showHeader && (
                 <div className="mb-4">
                     <div className="w-full flex items-center justify-between">
-                        {/* <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
-                                <CalendarDays size={20} className=" text-primary" />
-                            </div>
-                            <div>
-                                <div className="text-sm font-semibold tracking-tight">{headerTitle}</div>
-                                <div className="text-xs text-muted-foreground">
-                                    {headerDescription}
+                        <div className="w-full flex items-center justify-between px-4 py-3 bg-primary/10 rounded-lg border border-primary/12">
+                            <div className="flex  gap-3 ">
+                                <div className="flex mt-px justify-center  rounded-lg ">
+                                    <Calendar size={18} className="text-primary" />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <div className="text-xs font-medium  text-gray-900 dark:text-slate-200">
+                                        Manage and organize your projects
+                                    </div>
+                                    <div className="text-xs font-medium text-gray-400">
+                                        Manage  projects efficiently
+                                    </div>
                                 </div>
                             </div>
-                        </div> */}
-
-                        <div className="flex items-center justify-between gap-4">
-                            {showAddButton && (
-                                <Button size="sm" className="h-9 text-sm" onClick={handleOpenAddDialog}>
-                                    <CalendarPlus className="h-4 w-4" />
-                                    Event
-                                </Button>
-                            )}
                             <div className="flex items-center gap-3">
                                 <div className="flex items-center border rounded-lg">
                                     <Button
                                         variant="ghost"
-                                        size="icon"
+                                        size="sm"
                                         className="h-9 w-9 rounded-r-none"
                                         onClick={previousMonth}
                                     >
-                                        <ChevronLeft className="h-4 w-4" />
+                                        <ChevronLeft className="" />
                                     </Button>
                                     {showTodayButton && (
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            className="h-9 px-4 rounded-none border-x"
+                                            className="h-9 px-4 text-xs rounded-none border-x"
                                             onClick={goToToday}
                                         >
                                             Today
@@ -423,15 +420,25 @@ export const CalendarCommon = ({
                                     )}
                                     <Button
                                         variant="ghost"
-                                        size="icon"
+                                        size="sm"
                                         className="h-9 w-9 rounded-l-none"
                                         onClick={nextMonth}
                                     >
-                                        <ChevronRight className="h-4 w-4" />
+                                        <ChevronRight className="" />
                                     </Button>
                                 </div>
                             </div>
                         </div>
+
+                        {/* <div className="flex items-center justify-between gap-4">
+                            {showAddButton && (
+                                <Button size="sm" className="h-9 text-sm" onClick={handleOpenAddDialog}>
+                                    <CalendarPlus className="h-4 w-4" />
+                                    Event
+                                </Button>
+                            )}
+
+                        </div> */}
                     </div>
                 </div>
             )}

@@ -1,3 +1,4 @@
+import { AppTour } from "@/components/tour/Apptour";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -7,12 +8,11 @@ import {
     Calendar,
     CheckCircle2,
     FolderOpen,
+    Folders,
+    GitBranch,
     Package,
     TrendingUp,
-    Users,
-    ListTodo,
-    GitBranch,
-    Folders
+    Users
 } from "lucide-react";
 
 export const Home = () => {
@@ -22,7 +22,7 @@ export const Home = () => {
             value: 12,
             icon: Package,
             iconBg: "bg-blue-100 dark:bg-blue-900/20",
-            iconColor: "text-blue-600 dark:text-blue-400",
+            iconColor: "text-primary",
             trend: "+12% from last month",
             trendPositive: true
         },
@@ -31,7 +31,7 @@ export const Home = () => {
             value: 156,
             icon: CheckCircle2,
             iconBg: "bg-green-100 dark:bg-green-900/20",
-            iconColor: "text-green-600 dark:text-green-400",
+            iconColor: "text-primary",
             trend: "+8% efficiency",
             trendPositive: true
         },
@@ -40,7 +40,7 @@ export const Home = () => {
             value: 8,
             icon: Users,
             iconBg: "bg-purple-100 dark:bg-purple-900/20",
-            iconColor: "text-purple-600 dark:text-purple-400",
+            iconColor: "text-primary",
             subtext: "2 new this month",
             trendPositive: false
         }
@@ -102,17 +102,19 @@ export const Home = () => {
 
     return (
         <div className="bg-gray-50 bg-transparent text-gray-900 dark:text-white">
+            <AppTour />
 
-
-            {recentTasks.length !== 0 ? (
-                <div className="flex flex-col items-center justify-center min-h-[600px] px-4">
+            {recentTasks.length == 0 ? (
+                <div className="flex flex-col items-center justify-center min-h-[600px] px-4 text-gray-700 dark:text-slate-200">
                     <h2 className="text-2xl font-bold mb-8 text-center">Getting Started with Your Project</h2>
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 w-full max-w-3xl">
-                        <div className="flex flex-col p-6 border rounded-xl shadow-xs dark:bg-[#1a1a1a] transition-shadow bg-white">
+                        <div
+                            id="step-create-project"
+                            className="flex flex-col p-6 border rounded-xl shadow-xs dark:bg-[#1a1a1a] transition-shadow bg-white"
+                        >
                             <div className="flex relative items-center mb-4 gap-3">
-                                <div className="absolute h-20 w-20 rounded-full bg-primary/80 blur-3xl">
-                                    <Package className="text-primary " />
-                                </div>
+                                <div className="absolute h-20 w-20 rounded-full bg-primary/80 blur-3xl"></div>
+                                <FolderOpen className="text-primary " />
                                 <h3 className="font-semibold text-lg">1. Create Project</h3>
                             </div>
                             <div className="text-xs text-gray-600 dark:text-gray-300">
@@ -120,12 +122,13 @@ export const Home = () => {
                             </div>
                         </div>
 
-                        <div className="flex flex-col p-6 border rounded-xl shadow-xs dark:bg-[#1a1a1a] transition-shadow bg-white">
+                        <div
+                            id="step-create-tasks"
+                            className="flex flex-col p-6 border rounded-xl shadow-xs dark:bg-[#1a1a1a] transition-shadow bg-white"
+                        >
                             <div className="flex items-center mb-4 gap-3">
-
                                 <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
                                     <Folders className="text-primary " />
-
                                 </div>
                                 <h3 className="font-semibold text-lg">2. Create Tasks</h3>
                             </div>
@@ -134,7 +137,10 @@ export const Home = () => {
                             </div>
                         </div>
 
-                        <div className="flex flex-col p-6 border rounded-xl dark:bg-[#1a1a1a] shadow-xs transition-shadow bg-white">
+                        <div
+                            id="step-plan-schedule"
+                            className="flex flex-col p-6 border rounded-xl dark:bg-[#1a1a1a] shadow-xs transition-shadow bg-white"
+                        >
                             <div className="flex items-center mb-4 gap-3">
                                 <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
                                     <Calendar className="text-primary " />
@@ -146,7 +152,10 @@ export const Home = () => {
                             </p>
                         </div>
 
-                        <div className="flex relative flex-col p-6 border rounded-xl dark:bg-[#1a1a1a] shadow-xs transition-shadow bg-white">
+                        <div
+                            id="step-define-workflow"
+                            className="flex relative flex-col p-6 border rounded-xl dark:bg-[#1a1a1a] shadow-xs transition-shadow bg-white"
+                        >
                             <div className="flex items-center mb-4 gap-3">
                                 <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
                                     <GitBranch className="text-primary " />
@@ -156,16 +165,16 @@ export const Home = () => {
                             <p className="text-sm text-gray-600 dark:text-gray-300">
                                 Customize workflows and connect tasks to visualize project flow.
                             </p>
-                            <div className="absolute  h-20 w-20 rounded-full bg-primary/50 blur-3xl"></div>
-
+                            <div className="absolute h-20 w-20 rounded-full bg-primary/50 blur-3xl"></div>
                         </div>
                     </div>
 
                     <Button
+                        id="start-project-button"
                         variant="outline"
-                        className="mt-10 px-6 py-3 gap-2 text-sm font-medium transition-colors"
+                        size={'sm'}
+                        className="mt-10 px-6 py-3 gap-2 text-xs font-medium transition-colors"
                         onClick={() => {
-                            // Navigate to projects page
                             window.location.href = '/projects';
                         }}
                     >
@@ -180,7 +189,7 @@ export const Home = () => {
                                 <Bolt size={18} className="text-primary" />
                             </div>
                             <div className="flex flex-col gap-1">
-                                <div className="text-xs font-medium text-white">
+                                <div className="text-xs font-medium text-gray-900 dark:text-slate-200">
                                     Manage and organize your projects
                                 </div>
                                 <div className="text-xs font-medium text-gray-400">
@@ -191,16 +200,19 @@ export const Home = () => {
                     </div>
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
                         {statsData.map((stat, index) => (
-                            <Card key={index} className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
+                            <Card key={index} className="bg-white shadow-none  dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
                                 <CardContent className="">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{stat.label}</p>
-                                            <p className="text-2xl font-bold mt-2 text-gray-900 dark:text-white">{stat.value}</p>
+                                            <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{stat.label}</div>
+                                            <div className="text-2xl font-bold mt-2 text-gray-900 dark:text-slate-200">{stat.value}</div>
                                         </div>
-                                        <div className={`flex items-center justify-center w-12 h-12 rounded-lg ${stat.iconBg}`}>
-                                            <stat.icon className={`h-6 w-6 ${stat.iconColor}`} />
+                                        <div className="relative flex items-center justify-center w-12 h-12 rounded-lg">
+                                            <div className="absolute inset-0 rounded-full bg-primary/15 blur-md"></div>
+
+                                            <stat.icon className={`relative z-10 h-6 w-6 ${stat.iconColor}`} />
                                         </div>
+
                                     </div>
                                     <div className="flex items-center gap-1 mt-3 text-xs">
                                         {stat.trend ? (
@@ -219,7 +231,7 @@ export const Home = () => {
 
                     <div className="grid gap-6 lg:grid-cols-3">
                         <div className="lg:col-span-2">
-                            <Card className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
+                            <Card className="bg-white dark:bg-[#1a1a1a] shadow-none border-gray-200 dark:border-[#2a2a2a]">
                                 <CardHeader>
                                     <div className="flex items-center justify-between">
                                         <CardTitle className="text-base font-semibold text-gray-900 dark:text-white">Recent Tasks</CardTitle>
@@ -259,7 +271,7 @@ export const Home = () => {
                         </div>
 
                         <div>
-                            <Card className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
+                            <Card className="bg-white dark:bg-[#1a1a1a] shadow-none border-gray-200 dark:border-[#2a2a2a]">
                                 <CardHeader>
                                     <CardTitle className="text-base font-semibold text-gray-900 dark:text-white">Upcoming Deadlines</CardTitle>
                                 </CardHeader>

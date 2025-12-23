@@ -21,12 +21,12 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { useTableSearch, useTableSort } from "@/hooks";
-import { ActivityIcon, ArrowDown, ArrowUp, BarChart2, CheckCheck, CircleArrowOutUpRight, CircleCheck, CirclePlus, Hexagon, Minus, SquarePen, Trash, TrendingDown, TrendingUp, Users, type LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ArrowBigDown, ArrowBigRight, ArrowBigUp, BadgeCheckIcon, BarChart2, CheckCheck, CircleArrowOutUpRight, CircleDashed, CirclePlus, Hexagon, SquarePen, Trash, Users, type LucideIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { TableHeaderRow } from "./tableHeader";
 import { TableSearch } from "./tableSearch";
 import type { CommonTableProps } from "./tableTypes";
-import { cn } from "@/lib/utils";
 
 export function CommonTable<T extends Record<string, unknown>>({
     data,
@@ -73,10 +73,10 @@ export function CommonTable<T extends Record<string, unknown>>({
         string,
         { icon: LucideIcon; color: string }
     > = {
-        "On track": { icon: TrendingUp, color: "text-blue-400" },
-        "Off track": { icon: TrendingDown, color: "text-yellow-400" },
-        "At risk": { icon: ActivityIcon, color: "text-red-400" },
-        "Completed": { icon: CircleCheck, color: "text-green-400" },
+        "On track": { icon: Hexagon, color: "text-blue-400" },
+        "Off track": { icon: CircleDashed, color: "text-yellow-400" },
+        "At risk": { icon: Hexagon, color: "text-red-400" },
+        "Completed": { icon: BadgeCheckIcon, color: "text-green-400" },
     };
 
     // Priority options with icons only
@@ -84,9 +84,9 @@ export function CommonTable<T extends Record<string, unknown>>({
         string,
         { icon: LucideIcon; color: string }
     > = {
-        "Low": { icon: ArrowDown, color: "text-blue-500" },
-        "Medium": { icon: Minus, color: "text-yellow-500" },
-        "High": { icon: ArrowUp, color: "text-red-400" },
+        "Low": { icon: ArrowBigDown, color: "text-blue-500" },
+        "Medium": { icon: ArrowBigRight, color: "text-yellow-500" },
+        "High": { icon: ArrowBigUp, color: "text-red-400" },
     };
     const getEmailSuggestions = (value: string): string[] => {
         if (!value.includes("@")) return [];
@@ -231,7 +231,7 @@ export function CommonTable<T extends Record<string, unknown>>({
                                                     onMouseLeave={() => setHoveredRow(null)}
                                                 >
                                                     {selectable && (
-                                                        <TableCell className="w-12 min-w-[48px] ">
+                                                        <TableCell className="w-12 min-w-12 ">
                                                             <div className={`transition-opacity duration-150 ${isHovered || isSelected ? "opacity-100" : "opacity-0"}`}>
                                                                 <Checkbox
                                                                     checked={isSelected}
