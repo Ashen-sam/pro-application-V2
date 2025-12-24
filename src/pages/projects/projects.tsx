@@ -31,6 +31,7 @@ export const Projects = () => {
         handleAddProject,
         handleAddProjectAndCreateAnother,
         handleDeleteClick,
+        aiGenerationStatus,
         handleDeleteProject,
         setIsTitleDialogOpen,
         handleDialogOpenChange,
@@ -46,15 +47,18 @@ export const Projects = () => {
         isDescriptionDialogOpen,
         descriptionInput,
         setDescriptionInput,
+        handleGenerateDescription,
         handleAddDescriptionClick,
         handleSaveDescription,
         refetch,
+        isTyping,
         selectedRows,
         setSelectedRows,
         isBulkDeleteDialogOpen,
         handleBulkDeleteClick,
         handleBulkDeleteProject,
         handleUpdateProject,
+        isAiLoading,
     } = useProjects();
 
     const tableColumns = useMemo(() => [
@@ -188,12 +192,10 @@ export const Projects = () => {
                             <Folders className="h-10 w-10 text-primary" />
                         </div>
 
-                        {/* Title */}
                         <div className="text-2xl text-zinc-800 dark:text-slate-200 font-semibold tracking-tight">
                             Projects
                         </div>
 
-                        {/* Description */}
                         <div className="text-sm text-muted-foreground leading-relaxed">
                             Projects are larger units of work with a clear outcome, such as a new
                             feature you want to ship. They can be shared across multiple teams and
@@ -347,13 +349,57 @@ export const Projects = () => {
                 }
             >
                 <div className="w-full wrap-break-word overflow-wrap-anywhere">
+                    <div className="flex justify-end mb-2">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleGenerateDescription}
+                            disabled={isAiLoading || isTyping}
+                            className="text-xs gap-1"
+                        >
+                            {isAiLoading || isTyping ? (
+                                <>
+                                    <span className="animate-pulse">✨</span>
+                                    <span>{aiGenerationStatus || "Generating..."}</span>
+                                </>
+                            ) : (
+                                <>
+                                    ✨ Generate with AI
+                                </>
+                            )}
+                        </Button>
+                    </div>
+
+                    {(isAiLoading || isTyping) && (
+                        <div className="mb-3 px-3 py-2 bg-primary/5 border border-primary/10 rounded-md">
+                            <div className="flex items-center gap-2 text-xs text-primary">
+                                <div className="flex gap-1">
+                                    <span className="animate-bounce" style={{ animationDelay: '0ms' }}>●</span>
+                                    <span className="animate-bounce" style={{ animationDelay: '150ms' }}>●</span>
+                                    <span className="animate-bounce" style={{ animationDelay: '300ms' }}>●</span>
+                                </div>
+                                <span className="font-medium">
+                                    {isTyping ? "AI is writing..." : aiGenerationStatus}
+                                </span>
+                            </div>
+                        </div>
+                    )}
+
                     <Textarea
                         value={descriptionInput}
                         onChange={(e) => setDescriptionInput(e.target.value)}
                         placeholder="Write a description, a project brief..."
                         className="min-h-[200px] text-sm resize-none wrap-break-word"
                         style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
+                        disabled={isTyping}
                     />
+
+                    {isTyping && (
+                        <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                            <span className="animate-pulse">▊</span>
+                            <span>Typing...</span>
+                        </div>
+                    )}
                 </div>
             </CommonDialog>
 

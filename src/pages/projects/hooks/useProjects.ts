@@ -9,6 +9,7 @@ import {
   useListProjectsQuery,
   useSendProjectInvitesMutation,
   useUpdateProjectMutation,
+  useGenerateProjectDescriptionMutation,
   type Project as ApiProject,
 } from "../../../features/projectsApi";
 
@@ -149,12 +150,16 @@ export const useProjects = () => {
   const [createProject] = useCreateProjectMutation();
   const [updateProject] = useUpdateProjectMutation();
   const [deleteProject] = useDeleteProjectMutation();
+  const [isTyping, setIsTyping] = useState(false);
+  const [generateDescription, { isLoading: isAiLoading }] =
+    useGenerateProjectDescriptionMutation();
   const [isTitleDialogOpen, setIsTitleDialogOpen] = useState(false);
   const [isDescriptionDialogOpen, setIsDescriptionDialogOpen] = useState(false);
   const [titleProject, setTitleProject] = useState<Project | null>(null);
   const [descriptionProject, setDescriptionProject] = useState<Project | null>(
     null
   );
+  const [aiGenerationStatus, setAiGenerationStatus] = useState<string>("");
   const [titleInput, setTitleInput] = useState("");
   const [descriptionInput, setDescriptionInput] = useState("");
   const [sendProjectInvites] = useSendProjectInvitesMutation();
@@ -427,6 +432,25 @@ export const useProjects = () => {
     closeAllDialogs,
   ]);
 
+  const typeText = (text: string, speed: number = 30) => {
+    return new Promise<void>((resolve) => {
+      let index = 0;
+      setDescriptionInput("");
+      setIsTyping(true);
+
+      const interval = setInterval(() => {
+        if (index < text.length) {
+          setDescriptionInput((prev) => prev + text.charAt(index));
+          index++;
+        } else {
+          clearInterval(interval);
+          setIsTyping(false);
+          resolve();
+        }
+      }, speed);
+    });
+  };
+
   const handleBulkDeleteClick = useCallback(() => {
     if (selectedRows.length === 0) return;
     setIsBulkDeleteDialogOpen(true);
@@ -485,8 +509,32 @@ export const useProjects = () => {
     });
     setIsEditDialogOpen(true);
   }, []);
+  const handleGenerateDescription = async () => {
+    if (!descriptionProject?.name) {
+      showToast.error("Project name is required", "validation-error");
+      return;
+    }
 
-  // FIXED: Inline update with immediate optimistic UI + toast
+    try {
+      setAiGenerationStatus("Thinking");
+
+      const res = await generateDescription({
+        projectName: descriptionProject.name,
+        projectType: "Project Management Tool",
+      }).unwrap();
+
+      if (res?.description) {
+        setAiGenerationStatus("Writing");
+        await typeText(res.description, 20);
+        setAiGenerationStatus("");
+        showToast.success("Description generated successfully", "ai-success");
+      }
+    } catch (error: any) {
+      setAiGenerationStatus("");
+      setIsTyping(false);
+      console.error("AI generation failed:", error);
+    }
+  };
   const handleInlineUpdateProject = useCallback(
     async (updatedRow: Project) => {
       if (!updatedRow || !updatedRow.project_id) return;
@@ -496,17 +544,14 @@ export const useProjects = () => {
       );
       if (!originalProject) return;
 
-      // Optimistic update: Update local state immediately
       setProjects((prev) =>
         prev.map((p) =>
           p.project_id === updatedRow.project_id ? { ...p, ...updatedRow } : p
         )
       );
 
-      // Show immediate success toast
       showToast.success("Project updated", "inline-update-success");
 
-      // Prepare update payload
       const updatePayload: Partial<Record<string, unknown>> = {};
 
       if (updatedRow.name !== originalProject.name) {
@@ -522,8 +567,6 @@ export const useProjects = () => {
         updatePayload.priority = updatedRow.priority;
       }
 
-      // FIXED: Handle date range object
-      // FIXED: Handle date range object - check dateRange field, not dueDate
       if (
         updatedRow.dateRange &&
         typeof updatedRow.dateRange === "object" &&
@@ -559,7 +602,6 @@ export const useProjects = () => {
           data: updatePayload,
         }).unwrap();
 
-        // Replace with server response
         setProjects((prev) =>
           prev.map((p) =>
             p.project_id === updatedRow.project_id
@@ -568,7 +610,6 @@ export const useProjects = () => {
           )
         );
       } catch (error: unknown) {
-        // Rollback on error
         setProjects((prev) =>
           prev.map((p) =>
             p.project_id === updatedRow.project_id ? originalProject : p
@@ -733,7 +774,6 @@ export const useProjects = () => {
     [resetForm]
   );
 
-  // FIXED: handleEditTitle with immediate feedback
   const handleEditTitle = useCallback((row: Project) => {
     setTitleProject(row);
     setTitleInput(row.name || "");
@@ -743,23 +783,19 @@ export const useProjects = () => {
   const handleSaveTitle = useCallback(async () => {
     if (!titleProject) return;
 
-    // Close dialog immediately for snappy UX
     setIsTitleDialogOpen(false);
     const projectToUpdate = titleProject;
     const newTitle = titleInput;
 
-    // Clear state
     setTitleProject(null);
     setTitleInput("");
 
-    // Perform the update
     await handleInlineUpdateProject({
       ...projectToUpdate,
       name: newTitle,
     });
   }, [titleProject, titleInput, handleInlineUpdateProject]);
 
-  // FIXED: handleAddDescriptionClick with immediate feedback
   const handleAddDescriptionClick = useCallback((row: Project) => {
     setDescriptionProject(row);
     setDescriptionInput(row.description || "");
@@ -769,16 +805,13 @@ export const useProjects = () => {
   const handleSaveDescription = useCallback(async () => {
     if (!descriptionProject) return;
 
-    // Close dialog immediately for snappy UX
     setIsDescriptionDialogOpen(false);
     const projectToUpdate = descriptionProject;
     const newDescription = descriptionInput;
 
-    // Clear state
     setDescriptionProject(null);
     setDescriptionInput("");
 
-    // Perform the update
     await handleInlineUpdateProject({
       ...projectToUpdate,
       description: newDescription,
@@ -809,6 +842,7 @@ export const useProjects = () => {
     setSelectedRows,
     setIsAddDialogOpen,
     setIsEditDialogOpen,
+    isTyping,
     setIsDeleteDialogOpen,
     closeAllDialogs,
     resetForm,
@@ -842,5 +876,8 @@ export const useProjects = () => {
     isBulkDeleteDialogOpen,
     handleBulkDeleteClick,
     handleBulkDeleteProject,
+    handleGenerateDescription,
+    aiGenerationStatus,
+    isAiLoading,
   };
 };

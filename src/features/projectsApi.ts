@@ -110,7 +110,6 @@ export const projectApi = baseApi.injectEndpoints({
       query: () => "/projects",
       keepUnusedDataFor: 300,
       transformResponse: (response: ListProjectsResponse) => {
-        // Handle error responses
         if (!response.success || !response.projects) {
           return [];
         }
@@ -261,15 +260,13 @@ export const projectApi = baseApi.injectEndpoints({
 
     deleteProject: builder.mutation<DeleteProjectResponse, number | number[]>({
       query: (projectIdOrIds) => {
-        // Check if it's an array (bulk delete)
         if (Array.isArray(projectIdOrIds)) {
           return {
-            url: `/projects/${projectIdOrIds[0]}`, // Use first ID for route
+            url: `/projects/${projectIdOrIds[0]}`,
             method: "DELETE",
             body: { projectIds: projectIdOrIds },
           };
         }
-        // Single delete
         return {
           url: `/projects/${projectIdOrIds}`,
           method: "DELETE",
@@ -381,6 +378,37 @@ export const projectApi = baseApi.injectEndpoints({
         }
       },
     }),
+    generateProjectDescription: builder.mutation<
+      { success: boolean; description: string },
+      { projectName: string; projectType?: string }
+    >({
+      query: (body) => ({
+        url: "/ai/project-description",
+        method: "POST",
+        body,
+      }),
+      transformResponse: (response: {
+        success: boolean;
+        description: string;
+      }) => {
+        if (!response.success) {
+          throw new Error("AI generation failed");
+        }
+        return response;
+      },
+      transformErrorResponse: (response: {
+        status: number;
+        data?: { success: boolean; error?: { message?: string } };
+      }) => {
+        return {
+          status: response.status,
+          data: response.data || {
+            success: false,
+            error: { message: "Failed to generate description" },
+          },
+        };
+      },
+    }),
   }),
 });
 
@@ -395,4 +423,5 @@ export const {
   useListProjectMembersQuery,
   useAddProjectMemberMutation,
   useSendProjectInvitesMutation,
+  useGenerateProjectDescriptionMutation,
 } = projectApi;

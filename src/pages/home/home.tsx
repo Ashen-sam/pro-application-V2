@@ -104,7 +104,7 @@ export const Home = () => {
         <div className="bg-gray-50 bg-transparent text-gray-900 dark:text-white">
             <AppTour />
 
-            {recentTasks.length == 0 ? (
+            {recentTasks.length !== 0 ? (
                 <div className="flex flex-col items-center justify-center min-h-[600px] px-4 text-gray-700 dark:text-slate-200">
                     <h2 className="text-2xl font-bold mb-8 text-center">Getting Started with Your Project</h2>
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 w-full max-w-3xl">
@@ -115,7 +115,7 @@ export const Home = () => {
                             <div className="flex relative items-center mb-4 gap-3">
                                 <div className="absolute h-20 w-20 rounded-full bg-primary/80 blur-3xl"></div>
                                 <FolderOpen className="text-primary " />
-                                <h3 className="font-semibold text-lg">1. Create Project</h3>
+                                <div className="font-semibold text-lg">1. Create Project</div>
                             </div>
                             <div className="text-xs text-gray-600 dark:text-gray-300">
                                 Add and organize tasks for your projects. Keep track of progress easily.
@@ -209,8 +209,10 @@ export const Home = () => {
                                         </div>
                                         <div className="relative flex items-center justify-center w-12 h-12 rounded-lg">
                                             <div className="absolute inset-0 rounded-full bg-primary/15 blur-md"></div>
+                                            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/4">
+                                                <stat.icon className={`relative z-10 h-6 w-6 ${stat.iconColor}`} />
+                                            </div>
 
-                                            <stat.icon className={`relative z-10 h-6 w-6 ${stat.iconColor}`} />
                                         </div>
 
                                     </div>

@@ -390,7 +390,7 @@ export const CalendarCommon = ({
                                     <Calendar size={18} className="text-primary" />
                                 </div>
                                 <div className="flex flex-col gap-1">
-                                    <div className="text-xs font-medium  text-gray-900 dark:text-slate-200">
+                                    <div className="text-xs font-medium  text-gray-900 dark:text-slate-200wwww">
                                         Manage and organize your projects
                                     </div>
                                     <div className="text-xs font-medium text-gray-400">
