@@ -59,9 +59,6 @@ export const GlobalLayout = () => {
         }
     }, [user]);
 
-    const handleLogoutClick = () => {
-        setShowLogoutDialog(true);
-    };
 
     const handleLogoutConfirm = () => {
         localStorage.clear();
@@ -73,7 +70,6 @@ export const GlobalLayout = () => {
         setShowLogoutDialog(false);
     };
 
-    const pathnames = location.pathname.split("/").filter((x) => x);
 
     return (
         <div className="items-center justify-center min-h-screen  flex-col w-full relative   dark:bg-[#141414] ">

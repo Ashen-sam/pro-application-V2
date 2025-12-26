@@ -13,9 +13,17 @@ import {
 import { AuthLayout, Login, Register } from "@/pages/auth";
 import { ClerkCallback } from "@/pages/auth/ClerkCallback";
 import CalendarPage from "@/pages/calendar/calendar";
+import { Landing } from "@/pages/landing/landing";
+import { Flow } from "@/pages/projectFlows/flow";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
 export const router = createBrowserRouter([
+    // 🌟 Landing page (public, no auth required)
+    {
+        path: "/",
+        element: <Landing />,
+    },
+
     // 🔐 Public pages (authentication routes)
     {
         element: <AuthLayout />,
@@ -35,12 +43,13 @@ export const router = createBrowserRouter([
             </div>
         ),
         children: [
-            { index: true, element: <Navigate to="/home" replace /> },
             { path: "/home", element: <Home />, handle: { title: "Home" } },
             { path: "/projects", element: <Projects />, handle: { title: "Projects" } },
             { path: "/calendar", element: <CalendarPage />, handle: { title: "Calendar" } },
             { path: "/settings", element: <Settings />, handle: { title: "Settings" } },
             { path: "/project-flow", element: <ProjectFlow />, handle: { title: "Project Flow" } },
+            { path: "/flow", element: <Flow />, handle: { title: "Project Flow" } },
+
             {
                 path: "/projects/:projectId",
                 element: <ProjectInfo />,
@@ -53,6 +62,6 @@ export const router = createBrowserRouter([
         ],
     },
 
-    // Redirect unknown routes to login
-    { path: "*", element: <Navigate to="/login" replace /> },
+    // Redirect unknown routes to landing page
+    { path: "*", element: <Navigate to="/" replace /> },
 ]);
