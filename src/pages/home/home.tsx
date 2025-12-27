@@ -1,10 +1,9 @@
-// src/pages/Home.tsx
-
+import { LinearLoader } from "@/components/common/CommonLoader";
+import { SectionToolbar } from "@/components/common/SectionToolbar";
 import { AppTour } from "@/components/tour/Apptour";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { differenceInDays, format, parseISO } from "date-fns";
 import {
     AlertCircle,
@@ -65,18 +64,9 @@ export const Home = () => {
     // Loading State
     if (isLoading) {
         return (
-            <div className="bg-transparent text-gray-900 dark:text-white">
-                <div className="max-w-7xl mx-auto space-y-6">
-                    <Skeleton className="h-20 w-full rounded-lg" />
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {[1, 2, 3].map((i) => (
-                            <Skeleton key={i} className="h-32 w-full rounded-lg" />
-                        ))}
-                    </div>
-                    <div className="grid gap-6 lg:grid-cols-3">
-                        <Skeleton className="lg:col-span-2 h-96 w-full rounded-lg" />
-                        <Skeleton className="h-96 w-full rounded-lg" />
-                    </div>
+            <div className="bg-transparent text-gray-900 dark:text-white ">
+                <div className="min-h-[500px]">
+                    <LinearLoader />
                 </div>
             </div>
         );
@@ -136,7 +126,7 @@ export const Home = () => {
     ];
 
     return (
-        <div className="bg-gray-50 bg-transparent text-gray-900 dark:text-white">
+        <div className=" bg-transparent text-gray-900 dark:text-white">
             <AppTour />
 
             {!hasProjects ? (
@@ -218,32 +208,14 @@ export const Home = () => {
                     </Button>
                 </div>
             ) : (
-                <div className="max-w-7xl mx-auto space-y-6">
-                    <div className="w-full flex items-center justify-between px-6 py-4 bg-primary/10 rounded-lg border border-primary/20">
-                        <div className="flex gap-4">
-                            <div className="flex mt-1 justify-center rounded-lg">
-                                <Bolt size={20} className="text-primary" />
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <div className="text-sm font-semibold text-gray-900 dark:text-slate-200">
-                                    Dashboard Overview
-                                </div>
-                                <div className="text-xs text-gray-600 dark:text-gray-400">
-                                    Manage and organize your projects efficiently
-                                </div>
-                            </div>
-                        </div>
-                        <Button
-                            onClick={() => refetch()}
-                            size="sm"
-                            variant="ghost"
-                            className="text-xs"
-                        >
-                            Refresh
-                        </Button>
-                    </div>
-
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="max-w-7xl mx-auto ">
+                    <SectionToolbar
+                        title="Manage and organize your projects"
+                        subtitle="Manage projects efficiently"
+                        icon={<Bolt size={18} />}
+                        primaryDisabled={isLoading}
+                    />
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
                         {statsData.map((stat, index) => (
                             <Card key={index} className="bg-white shadow-sm dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] hover:shadow-md transition-shadow">
                                 <CardContent className="pt-6">
@@ -278,7 +250,7 @@ export const Home = () => {
                         ))}
                     </div>
 
-                    <div className="grid gap-6 lg:grid-cols-3">
+                    <div className="grid gap-6 lg:grid-cols-3 mt-3">
                         <div className="lg:col-span-2">
                             <Card className="bg-white dark:bg-[#1a1a1a] shadow-sm border-gray-200 dark:border-[#2a2a2a]">
                                 <CardHeader>
@@ -287,9 +259,9 @@ export const Home = () => {
                                             Recent Tasks
                                         </CardTitle>
                                         <Button
-                                            variant="link"
-                                            className="text-blue-600 dark:text-blue-400 p-0 h-auto text-sm hover:underline"
-                                            onClick={() => window.location.href = '/tasks'}
+                                            variant="outline"
+                                            size={'sm'}
+                                            className=" p-0 text-xs h-auto "
                                         >
                                             View All <ArrowRight className="h-3 w-3 ml-1" />
                                         </Button>
@@ -298,7 +270,7 @@ export const Home = () => {
                                 <CardContent>
                                     {dashboardData?.recentTasks.length === 0 ? (
                                         <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                                            <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                                            <Folders className="h-12 w-12 mx-auto mb-3 opacity-50" />
                                             <p className="text-sm">No recent tasks found</p>
                                             <Button
                                                 size="sm"

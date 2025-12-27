@@ -4,6 +4,8 @@ export interface User {
   name: string;
   email: string;
   created_at: string;
+  profile_picture?: string;
+  full_name?: string;
 }
 
 // Auth related types

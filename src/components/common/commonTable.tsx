@@ -61,6 +61,11 @@ export function CommonTable<T extends Record<string, unknown>>({
     const filteredData = searchable ? filterData(data, columns) : data;
     const sortedData = sortData(filteredData, columns);
 
+    interface DateRange {
+        from: Date | string;
+        to: Date | string;
+    }
+
     const EMAIL_DOMAINS = [
         "gmail.com",
         "yahoo.com",
@@ -455,25 +460,23 @@ export function CommonTable<T extends Record<string, unknown>>({
                                                                                 <Calendar
                                                                                     mode="range"
                                                                                     selected={
-                                                                                        row.dateRange && typeof row.dateRange === 'object'
+                                                                                        row.dateRange && typeof row.dateRange === 'object' && 'from' in row.dateRange
                                                                                             ? {
-                                                                                                from: row.dateRange.from ? new Date(row.dateRange.from) : undefined,
-                                                                                                to: row.dateRange.to ? new Date(row.dateRange.to) : undefined
+                                                                                                from: (row.dateRange as DateRange).from ? new Date((row.dateRange as DateRange).from) : undefined,
+                                                                                                to: (row.dateRange as DateRange).to ? new Date((row.dateRange as DateRange).to) : undefined
                                                                                             }
                                                                                             : undefined
                                                                                     }
                                                                                     onSelect={async (dateRange) => {
                                                                                         if (dateRange?.from && dateRange?.to) {
-                                                                                            // Update both dueDate AND dateRange fields
                                                                                             await handleUpdateField(row, "dateRange", {
-                                                                                                from: new Date(dateRange.from),
-                                                                                                to: new Date(dateRange.to)
+                                                                                                from: dateRange.from.toISOString(),
+                                                                                                to: dateRange.to.toISOString()
                                                                                             });
                                                                                             setDatePopover({ open: false, rowId: null });
                                                                                         } else if (dateRange?.from) {
-                                                                                            // Store partial selection
                                                                                             await handleUpdateField(row, "dateRange", {
-                                                                                                from: new Date(dateRange.from),
+                                                                                                from: dateRange.from.toISOString(),
                                                                                                 to: undefined
                                                                                             });
                                                                                         }
@@ -481,7 +484,7 @@ export function CommonTable<T extends Record<string, unknown>>({
                                                                                     numberOfMonths={2}
                                                                                     initialFocus
                                                                                 />
-                                                                                {row.dateRange && (
+                                                                                {row.dateRange !== null && row.dateRange !== undefined && (
                                                                                     <div className="p-3 border-t">
                                                                                         <button
                                                                                             onClick={async () => {

@@ -11,10 +11,9 @@ import {
     Task,
 } from "@/pages";
 import { AuthLayout, Login, Register } from "@/pages/auth";
-import { ClerkCallback } from "@/pages/auth/ClerkCallback";
 import CalendarPage from "@/pages/calendar/calendar";
 import { Landing } from "@/pages/landing/landing";
-import { Flow } from "@/pages/projectFlows/flow";
+// import { Flow } from "@/pages/projectFlows/flow";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
 export const router = createBrowserRouter([
@@ -30,7 +29,6 @@ export const router = createBrowserRouter([
         children: [
             { path: "/login", element: <Login /> },
             { path: "/register", element: <Register /> },
-            { path: "/auth/callback", element: <ClerkCallback /> },
         ],
     },
 
@@ -48,7 +46,7 @@ export const router = createBrowserRouter([
             { path: "/calendar", element: <CalendarPage />, handle: { title: "Calendar" } },
             { path: "/settings", element: <Settings />, handle: { title: "Settings" } },
             { path: "/project-flow", element: <ProjectFlow />, handle: { title: "Project Flow" } },
-            { path: "/flow", element: <Flow />, handle: { title: "Project Flow" } },
+            // { path: "/flow", element: <Flow />, handle: { title: "Project Flow" } },
 
             {
                 path: "/projects/:projectId",

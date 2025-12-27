@@ -2,6 +2,7 @@ import { CommonDialog } from '@/components/common/commonDialog';
 import { CommonDialogFooter } from '@/components/common/commonDialogFooter';
 import { LinearLoader } from '@/components/common/CommonLoader';
 import { showToast } from '@/components/common/commonToast';
+import { SectionToolbar } from '@/components/common/SectionToolbar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,14 +12,23 @@ import { useDeleteUserMutation, useGetUserByIdQuery, useUpdateUserMutation } fro
 import { Camera, Loader2, SettingsIcon, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+interface ProfileData {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    address: string;
+    bio: string;
+}
+
 export const Settings = () => {
     const currentUserId = parseInt(localStorage.getItem('userId') || '1');
     const { data: currentUser, isLoading: isLoadingUser, error: userError } = useGetUserByIdQuery(currentUserId);
     const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
     const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
     const [deleteConfirmEmail, setDeleteConfirmEmail] = useState('');
-    const [emailError, setEmailError] = useState('');
-    const [profileData, setProfileData] = useState({
+    const [, setEmailError] = useState('');
+    const [profileData, setProfileData] = useState<ProfileData>({
         firstName: '',
         lastName: '',
         email: '',
@@ -28,6 +38,7 @@ export const Settings = () => {
     });
     const [profileImage, setProfileImage] = useState('https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop');
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
     useEffect(() => {
         if (currentUser) {
             // Split full_name into firstName and lastName if it exists
@@ -36,7 +47,9 @@ export const Settings = () => {
                 firstName: nameParts[0] || '',
                 lastName: nameParts.slice(1).join(' ') || '',
                 email: currentUser.email || '',
-
+                phone: '',
+                address: '',
+                bio: ''
             });
 
             // Set profile image if available
@@ -46,16 +59,16 @@ export const Settings = () => {
         }
     }, [currentUser]);
 
-    const handleProfileChange = (field, value) => {
+    const handleProfileChange = (field: keyof ProfileData, value: string) => {
         setProfileData(prev => ({ ...prev, [field]: value }));
     };
 
-    const handleImageUpload = (e) => {
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setProfileImage(reader.result);
+                setProfileImage(reader.result as string);
                 showToast.success("Profile picture updated", "profile-picture-success");
             };
             reader.onerror = () => {
@@ -127,22 +140,12 @@ export const Settings = () => {
     return (
         <div className="">
             <div className="">
-                <div className="w-full flex items-center justify-between px-4 py-3 bg-primary/10 rounded-lg border border-primary/12">
-                    <div className="flex  gap-3 ">
-                        <div className="flex mt-px justify-center  rounded-lg ">
-                            <SettingsIcon size={18} className="text-primary" />
-                        </div>
-                        <div className="flex flex-col gap-1">
-                            <div className="text-xs font-medium  text-gray-900 dark:text-slate-200">
-                                Manage and organize your projects
-                            </div>
-                            <div className="text-xs font-medium text-gray-400">
-                                Manage  projects efficiently
-                            </div>
-                        </div>
-                    </div>
+                <SectionToolbar
+                    title="Manage and organize your projects"
+                    subtitle="Manage projects efficiently"
+                    icon={<SettingsIcon size={18} />}
 
-                </div>
+                />
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
                     <div className=" gap-0 rounded-md backdrop-blur-xl bg-white/70 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a]  overflow-hidden">

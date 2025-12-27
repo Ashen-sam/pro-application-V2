@@ -14,7 +14,7 @@ import { useNavigate } from "react-router";
 export const ProfileTop = () => {
     const navigate = useNavigate();
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
-    const [userName, setUserName] = useState("");
+    const [, setUserName] = useState("");
     const [initials, setInitials] = useState("");
 
     const userId = localStorage.getItem("userId");

@@ -2,26 +2,31 @@ import {
     // Core Actions
     Activity, AlarmClock, AlertCircle, AlertTriangle, Anchor, Apple, AtSign,
     Award, BarChart, Battery, Bell, Bookmark, Box, Briefcase, Brush, Bug,
+    Calculator,
     Calendar, Camera, Car, CheckCircle, CheckSquare, ClipboardCheck,
-    ClipboardList, Clock, Cloud, CloudDownload, CloudUpload, Code, Coffee,
+    ClipboardList,
+    ClipboardX,
+    Clock, Cloud, CloudDownload, CloudUpload, Code, Coffee,
     Coins, Columns, Compass, Copy, Cpu, CreditCard, Database, DollarSign,
     Download, Droplet, Edit, Eye, EyeOff, Factory, FileCode, FileSpreadsheet,
-    FileText, Film, Filter, Flag, Folder, FolderOpen, Frame, Gauge, Gift,
+    FileText, Film, Filter, Flag, Folder, FolderOpen, Frame,
+    Gamepad,
+    Gauge, Gift,
     GitBranch, GitCommit, GitMerge, Globe, GraduationCap, Grid, Hammer,
     HardDrive, HardHat, Heart, HelpCircle, Home, Info, Key, Layers, Layout,
     LayoutDashboard, Leaf, Lightbulb, LineChart, Link, List, Lock, Mail,
     Map, MapPin, MessageCircle, MessageSquare, Mic, Microscope, MinusCircle,
     Monitor, Moon, Music, Navigation, Package, Palette, PanelBottom, PanelTop,
     Pause, Pen, PenTool, Phone, PieChart, Pill, Play, PlusCircle, Receipt,
-    RefreshCw, Rows, Ruler, Save, Search, Send, Server, Settings, Shapes,
+    RefreshCw, Rows, Ruler, Save, Search, Send, Server,
+    SettingsIcon,
+    Shapes,
     Share2, Shield, ShieldCheck, ShoppingBag, ShoppingCart, Sidebar,
     Sliders, Smartphone, Smile, SortAsc, SortDesc, Star, Stethoscope,
     StopCircle, Sun, Table, Target, Terminal, Thermometer, Timer, Trash,
     TrendingDown, TrendingUp, Truck, Type, Unlock, Upload, User, UserCheck,
     UserPlus, Users, UserX, Video, Wallet, Warehouse, Workflow, Wrench,
-    XCircle, Zap, ZapOff, Figma, Gamepad, ClipboardX,
-    SettingsIcon,
-    Calculator
+    XCircle, Zap, ZapOff
 } from "lucide-react";
 
 export const availableIcons = {

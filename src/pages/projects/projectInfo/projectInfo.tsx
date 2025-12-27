@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bolt, CalendarDays, Folders } from "lucide-react";
+import { useState } from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 
 export const ProjectInfo = () => {

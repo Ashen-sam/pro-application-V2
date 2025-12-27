@@ -20,6 +20,7 @@ import { Calendar, CalendarPlus, ChevronLeft, ChevronRight, Clock, Package, Pale
 import { useState } from "react";
 import { CommonDialog } from "./commonDialog";
 import { CommonDialogFooter } from "./commonDialogFooter";
+import { SectionToolbar } from "./SectionToolbar";
 
 export interface CalendarEvent {
     id: string;
@@ -57,16 +58,12 @@ export const CalendarCommon = ({
     onAddEvent,
     onDateChange,
     onColorChange,
-    showHeaderCommon,
-    showAddButton = true,
     showTodayButton = true,
     className = "",
     highlightToday = true,
     maxEventsPerDay = 3,
     showHeader = true,
-    // headerTitle = "Calendar",
-    // headerDescription = "Manage and organize your projects",
-    // showHeaderIcon = true,
+
 }: CalendarProps) => {
     const [currentDate, setCurrentDate] = useState(initialDate);
     const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -78,7 +75,7 @@ export const CalendarCommon = ({
     const [newEventDate, setNewEventDate] = useState("");
     const [newEventTime, setNewEventTime] = useState("");
     const [newEventColor, setNewEventColor] = useState("text-blue-600");
-    const [newEventDescription, setNewEventDescription] = useState("");
+    const [newEventDescription,] = useState("");
 
     const getDaysInMonth = (date: Date) => {
         const year = date.getFullYear();
@@ -142,15 +139,7 @@ export const CalendarCommon = ({
         onEventClick?.(event);
     };
 
-    const handleOpenAddDialog = () => {
-        // Reset form
-        setNewEventTitle("");
-        setNewEventDate("");
-        setNewEventTime("");
-        setNewEventColor("text-blue-600");
-        setNewEventDescription("");
-        setIsAddDialogOpen(true);
-    };
+
 
     const handleAddEventSubmit = () => {
         if (!newEventTitle || !newEventDate || !newEventTime) {
@@ -288,7 +277,7 @@ export const CalendarCommon = ({
                 <div
                     key={day}
                     className={cn(
-                        "min-h-[120px] border-r border-b p-3 dark:bg-[#282828]  hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors relative",
+                        "min-h-[120px] border-r border-b p-3 dark:bg-[#1a1a1a]  hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors relative",
                         isTodayDate && "bg-blue-50/30"
                     )}
                 >
@@ -384,26 +373,16 @@ export const CalendarCommon = ({
             {showHeader && (
                 <div className="mb-4">
                     <div className="w-full flex items-center justify-between">
-                        <div className="w-full flex items-center justify-between px-4 py-3 bg-primary/10 rounded-lg border border-primary/12">
-                            <div className="flex  gap-3 ">
-                                <div className="flex mt-px justify-center  rounded-lg ">
-                                    <Calendar size={18} className="text-primary" />
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                    <div className="text-xs font-medium  text-gray-900 dark:text-slate-200wwww">
-                                        Manage and organize your projects
-                                    </div>
-                                    <div className="text-xs font-medium text-gray-400">
-                                        Manage  projects efficiently
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-3">
+                        <SectionToolbar
+                            title="Manage and organize your projects"
+                            subtitle="Manage projects efficiently"
+                            icon={<Calendar size={18} />}
+                            children={<div className="flex items-center gap-3">
                                 <div className="flex items-center border rounded-lg">
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="h-9 w-9 rounded-r-none"
+                                        className=" rounded-r-none"
                                         onClick={previousMonth}
                                     >
                                         <ChevronLeft className="" />
@@ -412,7 +391,7 @@ export const CalendarCommon = ({
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            className="h-9 px-4 text-xs rounded-none border-x"
+                                            className=" text-xs rounded-none border-x"
                                             onClick={goToToday}
                                         >
                                             Today
@@ -421,24 +400,14 @@ export const CalendarCommon = ({
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="h-9 w-9 rounded-l-none"
+                                        className=" rounded-l-none"
                                         onClick={nextMonth}
                                     >
                                         <ChevronRight className="" />
                                     </Button>
                                 </div>
-                            </div>
-                        </div>
-
-                        {/* <div className="flex items-center justify-between gap-4">
-                            {showAddButton && (
-                                <Button size="sm" className="h-9 text-sm" onClick={handleOpenAddDialog}>
-                                    <CalendarPlus className="h-4 w-4" />
-                                    Event
-                                </Button>
-                            )}
-
-                        </div> */}
+                            </div>}
+                        />
                     </div>
                 </div>
             )}

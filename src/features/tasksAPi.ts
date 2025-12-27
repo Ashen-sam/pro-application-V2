@@ -102,7 +102,7 @@ export const taskApi = baseApi.injectEndpoints({
 
     getTaskById: builder.query<TaskResponse, number>({
       query: (taskId) => `/tasks/${taskId}`,
-      providesTags: (result, error, taskId) => [{ type: "Task", id: taskId }],
+      providesTags: (_result, _error, taskId) => [{ type: "Task", id: taskId }],
     }),
 
     createTask: builder.mutation<TaskResponse, CreateTaskRequest>({
@@ -123,7 +123,7 @@ export const taskApi = baseApi.injectEndpoints({
         method: "PUT",
         body,
       }),
-      invalidatesTags: (result, error, { taskId }) => [
+      invalidatesTags: (_result, _error, { taskId }) => [
         { type: "Task", id: taskId },
         { type: "Task", id: "LIST" },
       ],
@@ -134,7 +134,7 @@ export const taskApi = baseApi.injectEndpoints({
         url: `/tasks/${taskId}`,
         method: "DELETE",
       }),
-      invalidatesTags: (result, error, taskId) => [
+      invalidatesTags: (_result, _error, taskId) => [
         { type: "Task", id: taskId },
         { type: "Task", id: "LIST" },
         { type: "TaskAssignment", id: "LIST" },
@@ -143,7 +143,7 @@ export const taskApi = baseApi.injectEndpoints({
 
     listTaskAssignments: builder.query<TaskAssignmentsResponse, number>({
       query: (taskId) => `/tasks/${taskId}/assignments`,
-      providesTags: (result, error, taskId) => [
+      providesTags: (_result, _error, taskId) => [
         { type: "TaskAssignment", id: taskId },
         { type: "TaskAssignment", id: "LIST" },
       ],
@@ -158,7 +158,7 @@ export const taskApi = baseApi.injectEndpoints({
         method: "POST",
         body: { user_id },
       }),
-      invalidatesTags: (result, error, { taskId }) => [
+      invalidatesTags: (_result, _error, { taskId }) => [
         { type: "TaskAssignment", id: taskId },
         { type: "TaskAssignment", id: "LIST" },
       ],

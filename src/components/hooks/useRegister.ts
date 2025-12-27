@@ -1,6 +1,6 @@
-import { useSignUpMutation } from "@/features/auth/authApi";
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
+import { useRegisterMutation } from "../../features/auth/authApi";
 
 export const useRegister = () => {
   const [fullName, setFullName] = useState("");
@@ -12,7 +12,7 @@ export const useRegister = () => {
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
-  const [signUp, { isLoading }] = useSignUpMutation();
+  const [signUp, { isLoading }] = useRegisterMutation();
 
   const validateForm = () => {
     if (!fullName.trim()) {

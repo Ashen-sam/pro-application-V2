@@ -27,3 +27,8 @@ export interface TableAction<T> {
   onClick: (row: T) => void;
   icon?: React.ReactNode;
 }
+
+export interface SortConfig {
+  key: string;
+  direction: "asc" | "desc";
+}

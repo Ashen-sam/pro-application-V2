@@ -12,6 +12,7 @@ import { AlertCircle, CalendarPlus, FileText, FolderOpen, Folders, PackagePlus, 
 import { useMemo } from "react";
 import { ProjectForm } from "../../components/common/projectForm";
 import { useProjects, type Project } from "../projects/hooks/useProjects";
+import { SectionToolbar } from "@/components/common/SectionToolbar";
 
 export const Projects = () => {
     const {
@@ -216,41 +217,21 @@ export const Projects = () => {
 
             ) : (
                 <div className="space-y-4">
-                    <div className="w-full flex items-center justify-between px-4 py-3 bg-primary/8 rounded-lg border border-primary/12">
-                        <div className="flex  gap-3 ">
-                            <div className="flex mt-px justify-center  rounded-lg ">
-                                <FolderOpen size={18} className="text-primary" />
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <div className="text-xs font-medium  dark:text-slate-200 text-gray-700">
-                                    Manage and organize your projects ({projects.length})
-                                </div>
-                                <div className="text-xs font-medium text-gray-400">
-                                    Manage  projects efficiently
-                                </div>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                className="gap-2  text-xs bg-transparent   hover:bg-gray-800"
-                                onClick={() => setIsAddDialogOpen(true)}
-                                disabled={isLoading}
-                            >
-                                <Plus size={16} />
-                                Project
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className="gap-2 text-xs bg-transparent border-gray-700 text-white hover:bg-gray-800"
-                                disabled={selectedRows.length === 0}
-                                onClick={handleBulkDeleteClick}
-                            >
-                                <Trash2 size={16} />
+                    <SectionToolbar
+                        title="Manage and organize your projects"
+                        subtitle="Manage projects efficiently"
+                        count={projects.length}
+                        icon={<FolderOpen size={18} />}
+                        primaryActionLabel="Project"
+                        primaryActionIcon={<Plus size={16} />}
+                        onPrimaryAction={() => setIsAddDialogOpen(true)}
+                        primaryDisabled={isLoading}
+                        secondaryActionIcon={<Trash2 size={16} />}
+                        onSecondaryAction={handleBulkDeleteClick}
+                        secondaryDisabled={selectedRows.length === 0}
+                    />
 
-                            </Button>
-                        </div>
-                    </div>
+
                     <CommonTable
                         selectable
                         rowKey="project_id"

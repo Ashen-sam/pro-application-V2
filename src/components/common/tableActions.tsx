@@ -37,11 +37,7 @@ export function TableActions<T>({ row, actions }: TableActionsProps<T>) {
                                 e.stopPropagation();
                                 action.onClick(row);
                             }}
-                            className={
-                                action.variant === "destructive"
-                                    ? "text-destructive focus:text-destructive"
-                                    : ""
-                            }
+
                         >
                             {action.icon && <span className="mr-2 ">{action.icon}</span>}
                             {action.label}

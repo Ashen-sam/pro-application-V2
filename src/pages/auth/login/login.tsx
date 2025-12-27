@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { showToast } from "@/components/common/commonToast";
 import { Button } from "@/components/ui/button";
 import {
     Card,
@@ -11,12 +10,10 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { showToast } from "@/components/common/commonToast";
 import { useLoginMutation } from "@/features/auth/authApi";
-import { SignInButton } from "@clerk/clerk-react";
 import { Loader2 } from "lucide-react";
-import GithubIcon from "../../../../public/github.png";
-import GoogleIcon from "../../../../public/search.png";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 export const Login = () => {
     const navigate = useNavigate();
@@ -138,28 +135,6 @@ export const Login = () => {
                 </form>
             </CardContent>
             <CardFooter className="flex-col gap-2">
-                <div className="flex gap-2 w-full">
-                    <SignInButton mode="modal" fallbackRedirectUrl="/home">
-                        <Button
-                            variant="outline"
-                            className="flex-1 p-4 flex items-center gap-2"
-                            disabled={isLoading}
-                        >
-                            <img src={GoogleIcon} width={18} height={18} alt="google" />
-                            Google
-                        </Button>
-                    </SignInButton>
-                    <SignInButton mode="modal" fallbackRedirectUrl="/home">
-                        <Button
-                            variant="outline"
-                            className="flex-1 p-4 flex items-center gap-2"
-                            disabled={isLoading}
-                        >
-                            <img src={GithubIcon} width={20} height={20} alt="github" />
-                            GitHub
-                        </Button>
-                    </SignInButton>
-                </div>
                 <div className="mt-4 text-center text-sm">
                     Don&apos;t have an account?{" "}
                     <Link to="/register" className="underline underline-offset-4">

@@ -1,7 +1,7 @@
 import type { Column, SortConfig } from "@/components/common/tableTypes";
 import { useState } from "react";
 
-export function useTableSort<T>() {
+export function useTableSort<T extends Record<string, unknown>>() {
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
 
   const handleSort = (key: string) => {
@@ -25,6 +25,11 @@ export function useTableSort<T>() {
     return [...data].sort((a, b) => {
       const aValue = column.accessor(a);
       const bValue = column.accessor(b);
+
+      // Handle null/undefined values
+      if (aValue == null && bValue == null) return 0;
+      if (aValue == null) return 1;
+      if (bValue == null) return -1;
 
       if (aValue < bValue) {
         return sortConfig.direction === "asc" ? -1 : 1;

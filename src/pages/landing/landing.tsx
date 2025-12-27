@@ -143,7 +143,7 @@ export const Landing = () => {
             x: -20,
             scale: 0.95
         },
-        visible: (index) => ({
+        visible: (index: number) => ({
             opacity: 1,
             x: 0,
             scale: 1,

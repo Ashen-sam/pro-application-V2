@@ -1,5 +1,4 @@
 // TaskTable.tsx
-import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,7 +14,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { CalendarPlus, CircleCheck, CirclePlus, Plus, Trash2, UserRoundPlus, X } from "lucide-react";
+import { CalendarPlus, CirclePlus, Trash2, UserRoundPlus, X } from "lucide-react";
 import * as React from "react";
 import { ProjectStatusCommon, type StatusType } from "./ProjectStatusCommon";
 import { ProjectPriorityCommon, type PriorityType } from "./projectPriorityCommon";

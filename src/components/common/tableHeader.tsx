@@ -1,9 +1,9 @@
 import { TableHead } from "@/components/ui/table";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
-import type { SortConfig, TableColumn } from "./tableTypes";
+import type { SortConfig, Column } from "./tableTypes";
 
 interface TableHeaderRowProps<T> {
-    columns: TableColumn<T>[];
+    columns: Column<T>[];
     sortConfig: SortConfig | null;
     onSort: (key: string) => void;
     hasActions: boolean;
@@ -33,10 +33,10 @@ export function TableHeaderRow<T>({
                     key={column.key}
                     className={`
                         ${column.sortable ? "cursor-pointer select-none hover:bg-slate-100" : ""}
-                        ${column.width || ""}
+                       
                     `}
                     onClick={() => column.sortable && onSort(column.key)}
-                    style={column.width ? { width: column.width } : undefined}
+
                 >
                     <div className="flex items-center">
                         <span>{column.header}</span>

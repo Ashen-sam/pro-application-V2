@@ -1,64 +1,15 @@
-import {
-    Breadcrumb,
-    BreadcrumbItem,
-    BreadcrumbLink,
-    BreadcrumbList,
-    BreadcrumbPage,
-    BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
-import { useGetUserByIdQuery } from "@/features/auth/authApi";
+import { ProfileTop } from "@/pages/settings/profileTop/profileTop";
 import { LogOut } from "lucide-react";
-import { Fragment, useEffect, useState } from "react";
-import { Link, Outlet, useLocation, useNavigate } from "react-router";
+import { useState } from "react";
+import { Outlet, useNavigate } from "react-router";
 import { CommonDialog } from "../common/commonDialog";
 import { CommonDialogFooter } from "../common/commonDialogFooter";
 import { Sidebar } from "./sideBar";
-import { ProfileTop } from "@/pages/settings/profileTop/profileTop";
 
-const breadcrumbLabels: Record<string, string> = {
-    "/": "Home",
-    "/home": "Overview",
-    "/projects": "Projects",
-    "/board": "Board",
-    "/calendar": "Calendar",
-    "/reports": "Reports",
-    "/tasks": "Tasks",
-    "/milestones": "Milestones",
-    "/timeline": "Timeline",
-    "/settings": "Settings",
-    "/project-flow": "Flow",
-};
 
 export const GlobalLayout = () => {
-    const location = useLocation();
     const navigate = useNavigate();
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
-    const [userName, setUserName] = useState("");
-    const [initials, setInitials] = useState("");
-
-    const userId = localStorage.getItem("userId");
-    const { data: user } = useGetUserByIdQuery(Number(userId), {
-        skip: !userId,
-    });
-
-    useEffect(() => {
-        if (user) {
-            setUserName(user.name);
-            const userInitials = user.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-                .toUpperCase();
-            setInitials(userInitials);
-        }
-    }, [user]);
-
 
     const handleLogoutConfirm = () => {
         localStorage.clear();

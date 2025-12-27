@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useGetProjectByIdQuery, useListProjectMembersQuery } from "@/features/projectsApi";
-import { Check, Loader2, Package } from "lucide-react";
+import { Check, Package } from "lucide-react";
 import { useMemo } from "react";
 import { useOutletContext } from "react-router";
 

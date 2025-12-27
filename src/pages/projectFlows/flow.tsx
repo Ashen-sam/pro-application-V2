@@ -1,398 +1,302 @@
-import React, { useState, useCallback } from 'react';
-import ReactFlow, {
-    MiniMap,
-    Controls,
-    Background,
-    useNodesState,
-    useEdgesState,
-    addEdge,
-    Panel,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
+// import { Menu, X } from 'lucide-react';
+// import { useCallback, useState } from 'react';
+// import ReactFlow, {
+//     addEdge,
+//     Background,
+//     Controls,
+//     MiniMap,
+//     Panel,
+//     useEdgesState,
+//     useNodesState,
+// } from 'reactflow';
+// import 'reactflow/dist/style.css';
 
-const nodeCategories = {
-    frontend: {
-        label: 'Frontend',
-        color: '#3b82f6',
-        items: [
-            { id: 'react-app', shape: 'default' },
-            { id: 'vue-app', shape: 'default' },
-            { id: 'mobile-app', shape: 'default' },
-            { id: 'admin-dashboard', shape: 'default' },
-        ]
-    },
-    backend: {
-        label: 'Backend',
-        color: '#10b981',
-        items: [
-            { id: 'rest-api', shape: 'default' },
-            { id: 'graphql-api', shape: 'default' },
-            { id: 'microservice', shape: 'default' },
-            { id: 'serverless', shape: 'default' },
-        ]
-    },
-    database: {
-        label: 'Database',
-        color: '#f59e0b',
-        items: [
-            { id: 'postgresql', shape: 'default' },
-            { id: 'mongodb', shape: 'default' },
-            { id: 'redis', shape: 'default' },
-            { id: 'mysql', shape: 'default' },
-        ]
-    },
-    auth: {
-        label: 'Authentication',
-        color: '#8b5cf6',
-        items: [
-            { id: 'auth-service', shape: 'default' },
-            { id: 'oauth', shape: 'default' },
-            { id: 'jwt', shape: 'default' },
-            { id: 'api-gateway', shape: 'default' },
-        ]
-    },
-    external: {
-        label: 'External Services',
-        color: '#ec4899',
-        items: [
-            { id: 'payment', shape: 'default' },
-            { id: 'email', shape: 'default' },
-            { id: 'sms', shape: 'default' },
-            { id: 'storage', shape: 'default' },
-            { id: 'cdn', shape: 'default' },
-        ]
-    },
-    messaging: {
-        label: 'Messaging',
-        color: '#14b8a6',
-        items: [
-            { id: 'rabbitmq', shape: 'default' },
-            { id: 'kafka', shape: 'default' },
-            { id: 'websocket', shape: 'default' },
-        ]
-    },
-    infrastructure: {
-        label: 'Infrastructure',
-        color: '#64748b',
-        items: [
-            { id: 'load-balancer', shape: 'default' },
-            { id: 'nginx', shape: 'default' },
-            { id: 'docker', shape: 'default' },
-            { id: 'kubernetes', shape: 'default' },
-        ]
-    },
-    monitoring: {
-        label: 'Monitoring',
-        color: '#ef4444',
-        items: [
-            { id: 'logging', shape: 'default' },
-            { id: 'analytics', shape: 'default' },
-            { id: 'error-tracking', shape: 'default' },
-        ]
-    }
-};
+// const shapeOptions = [
+//     { value: 'default', label: '◻ Rectangle' },
+//     { value: 'input', label: '◁ Triangle' },
+//     { value: 'output', label: '▷ Arrow' },
+// ];
 
-const shapeOptions = [
-    { value: 'default', label: 'Rectangle' },
-    { value: 'input', label: 'Input' },
-    { value: 'output', label: 'Output' },
-];
+// const initialNodes = [];
+// const initialEdges = [];
 
-const connectionTypes = [
-    { value: 'http', label: 'HTTP/REST', style: { stroke: '#3b82f6', strokeWidth: 2 } },
-    { value: 'websocket', label: 'WebSocket', style: { stroke: '#10b981', strokeWidth: 2, strokeDasharray: '5,5' } },
-    { value: 'database', label: 'Database Query', style: { stroke: '#f59e0b', strokeWidth: 2 } },
-    { value: 'message', label: 'Message Queue', style: { stroke: '#8b5cf6', strokeWidth: 2, strokeDasharray: '10,5' } },
-    { value: 'auth', label: 'Auth Flow', style: { stroke: '#ec4899', strokeWidth: 2 } },
-];
+// export const Flow = () => {
+//     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+//     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+//     const [selectedShape, setSelectedShape] = useState('default');
+//     const [nodeIdCounter, setNodeIdCounter] = useState(1);
+//     const [nodeName, setNodeName] = useState('');
+//     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-const initialNodes = [];
-const initialEdges = [];
+//     const onConnect = useCallback(
+//         (params) => {
+//             setEdges((eds) => addEdge({
+//                 ...params,
+//                 style: { stroke: '#64748b', strokeWidth: 2 },
+//             }, eds));
+//         },
+//         [setEdges]
+//     );
 
-export const Flow = () => {
-    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-    const [selectedCategory, setSelectedCategory] = useState('frontend');
-    const [selectedConnection, setSelectedConnection] = useState('http');
-    const [selectedShape, setSelectedShape] = useState('default');
-    const [nodeIdCounter, setNodeIdCounter] = useState(1);
-    const [nodeName, setNodeName] = useState('');
+//     const addNode = () => {
+//         if (!nodeName.trim()) {
+//             alert('Please enter a node name');
+//             return;
+//         }
 
-    const onConnect = useCallback(
-        (params) => {
-            const connectionStyle = connectionTypes.find(ct => ct.value === selectedConnection);
-            setEdges((eds) => addEdge({
-                ...params,
-                label: connectionStyle?.label || 'Connection',
-                style: connectionStyle?.style || {},
-            }, eds));
-        },
-        [setEdges, selectedConnection]
-    );
+//         const newNode = {
+//             id: `node-${nodeIdCounter}`,
+//             type: selectedShape,
+//             data: { label: nodeName.trim() },
+//             position: { x: Math.random() * 400 + 100, y: Math.random() * 300 + 150 },
+//             style: {
+//                 background: '#3b82f6',
+//                 color: 'white',
+//                 border: '2px solid #2563eb',
+//                 padding: 10,
+//                 borderRadius: 5,
+//                 minWidth: 120,
+//                 fontSize: '12px',
+//             }
+//         };
+//         setNodes((nds) => [...nds, newNode]);
+//         setNodeIdCounter(nodeIdCounter + 1);
+//         setNodeName('');
+//     };
 
-    const addNode = () => {
-        if (!nodeName.trim()) {
-            alert('Please enter a node name');
-            return;
-        }
+//     const deleteSelectedNodes = () => {
+//         setNodes((nds) => nds.filter(node => !node.selected));
+//         setEdges((eds) => eds.filter(edge => {
+//             const sourceExists = nodes.some(n => n.id === edge.source && !n.selected);
+//             const targetExists = nodes.some(n => n.id === edge.target && !n.selected);
+//             return sourceExists && targetExists;
+//         }));
+//     };
 
-        const category = nodeCategories[selectedCategory];
-        const newNode = {
-            id: `node-${nodeIdCounter}`,
-            type: selectedShape,
-            data: { label: nodeName.trim() },
-            position: { x: Math.random() * 400 + 50, y: Math.random() * 300 + 50 },
-            style: {
-                background: category.color,
-                color: 'white',
-                border: `2px solid ${category.color}`,
-                padding: 10,
-                borderRadius: 5,
-                minWidth: 120,
-            }
-        };
-        setNodes((nds) => [...nds, newNode]);
-        setNodeIdCounter(nodeIdCounter + 1);
-        setNodeName('');
-    };
+//     const clearCanvas = () => {
+//         setNodes([]);
+//         setEdges([]);
+//     };
 
-    const deleteSelectedNodes = () => {
-        setNodes((nds) => nds.filter(node => !node.selected));
-        setEdges((eds) => eds.filter(edge => {
-            const sourceExists = nodes.some(n => n.id === edge.source && !n.selected);
-            const targetExists = nodes.some(n => n.id === edge.target && !n.selected);
-            return sourceExists && targetExists;
-        }));
-    };
+//     const exportDiagram = () => {
+//         const diagramData = { nodes, edges };
+//         const dataStr = JSON.stringify(diagramData, null, 2);
+//         const dataBlob = new Blob([dataStr], { type: 'application/json' });
+//         const url = URL.createObjectURL(dataBlob);
+//         const link = document.createElement('a');
+//         link.href = url;
+//         link.download = 'architecture-diagram.json';
+//         link.click();
+//         URL.revokeObjectURL(url);
+//     };
 
-    const clearCanvas = () => {
-        setNodes([]);
-        setEdges([]);
-    };
+//     const hasSelectedNodes = nodes.some(node => node.selected);
 
-    const exportDiagram = () => {
-        const diagramData = { nodes, edges };
-        const dataStr = JSON.stringify(diagramData, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(dataBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'architecture-diagram.json';
-        link.click();
-        URL.revokeObjectURL(url);
-    };
+//     return (
+//         <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'row', position: 'relative' }}>
+//             <div style={{
+//                 position: 'absolute',
+//                 left: 0,
+//                 top: 0,
+//                 height: '100vh',
+//                 width: isSidebarOpen ? '280px' : '0',
+//                 transition: 'width 0.3s ease',
+//                 zIndex: 100,
+//                 overflow: 'hidden'
+//             }}>
+//                 <div style={{
+//                     background: 'rgba(30, 41, 59, 0.75)',
+//                     backdropFilter: 'blur(10px)',
+//                     color: 'white',
+//                     padding: '24px 16px',
+//                     boxShadow: '2px 0 12px rgba(0,0,0,0.15)',
+//                     display: 'flex',
+//                     flexDirection: 'column',
+//                     gap: '20px',
+//                     width: '280px',
+//                     height: '100%',
+//                     overflowY: 'auto',
+//                     overflowX: 'hidden'
+//                 }}>
+//                     <h2 style={{ margin: '0 0 10px 0', fontSize: '18px', fontWeight: '600' }}>Diagram Builder</h2>
 
-    const hasSelectedNodes = nodes.some(node => node.selected);
+//                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+//                         <label style={{ fontSize: '12px', fontWeight: '500' }}>Shape:</label>
+//                         <select
+//                             value={selectedShape}
+//                             onChange={(e) => setSelectedShape(e.target.value)}
+//                             style={{
+//                                 width: '100%',
+//                                 padding: '8px 12px',
+//                                 borderRadius: '6px',
+//                                 border: 'none',
+//                                 background: '#334155',
+//                                 color: 'white',
+//                                 cursor: 'pointer',
+//                                 fontSize: '12px'
+//                             }}
+//                         >
+//                             {shapeOptions.map((shape) => (
+//                                 <option key={shape.value} value={shape.value}>{shape.label}</option>
+//                             ))}
+//                         </select>
+//                     </div>
 
-    return (
-        <div style={{ width: '100vw', height: '100vh', display: 'flex' }}>
-            {/* Sidebar */}
-            <div style={{
-                width: '280px',
-                background: '#1f2937',
-                color: 'white',
-                padding: '20px',
-                overflowY: 'auto',
-                boxShadow: '2px 0 5px rgba(0,0,0,0.1)'
-            }}>
-                <h2 style={{ marginTop: 0, fontSize: '20px', marginBottom: '20px' }}>Architecture Components</h2>
+//                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+//                         <label style={{ fontSize: '12px', fontWeight: '500' }}>Name:</label>
+//                         <input
+//                             type="text"
+//                             value={nodeName}
+//                             onChange={(e) => setNodeName(e.target.value)}
+//                             onKeyPress={(e) => {
+//                                 if (e.key === 'Enter') {
+//                                     addNode();
+//                                 }
+//                             }}
+//                             placeholder="Enter node name..."
+//                             style={{
+//                                 width: '100%',
+//                                 padding: '8px 12px',
+//                                 borderRadius: '6px',
+//                                 border: 'none',
+//                                 background: '#334155',
+//                                 color: 'white',
+//                                 fontSize: '12px',
+//                                 boxSizing: 'border-box'
+//                             }}
+//                         />
+//                     </div>
 
-                {/* Category Selector */}
-                <div style={{ marginBottom: '20px' }}>
-                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 'bold' }}>
-                        Category:
-                    </label>
-                    <select
-                        value={selectedCategory}
-                        onChange={(e) => setSelectedCategory(e.target.value)}
-                        style={{
-                            width: '100%',
-                            padding: '8px',
-                            borderRadius: '4px',
-                            border: 'none',
-                            background: '#374151',
-                            color: 'white'
-                        }}
-                    >
-                        {Object.entries(nodeCategories).map(([key, cat]) => (
-                            <option key={key} value={key}>{cat.label}</option>
-                        ))}
-                    </select>
-                </div>
+//                     <button
+//                         onClick={addNode}
+//                         style={{
+//                             width: '100%',
+//                             padding: '10px 20px',
+//                             background: '#3b82f6',
+//                             border: 'none',
+//                             borderRadius: '6px',
+//                             color: 'white',
+//                             cursor: 'pointer',
+//                             fontSize: '12px',
+//                             fontWeight: '600',
+//                             transition: 'background 0.2s'
+//                         }}
+//                         onMouseOver={(e) => e.target.style.background = '#2563eb'}
+//                         onMouseOut={(e) => e.target.style.background = '#3b82f6'}
+//                     >
+//                         + Add Node
+//                     </button>
 
-                {/* Shape Selector */}
-                <div style={{ marginBottom: '20px' }}>
-                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 'bold' }}>
-                        Shape:
-                    </label>
-                    <select
-                        value={selectedShape}
-                        onChange={(e) => setSelectedShape(e.target.value)}
-                        style={{
-                            width: '100%',
-                            padding: '8px',
-                            borderRadius: '4px',
-                            border: 'none',
-                            background: '#374151',
-                            color: 'white'
-                        }}
-                    >
-                        {shapeOptions.map((shape) => (
-                            <option key={shape.value} value={shape.value}>{shape.label}</option>
-                        ))}
-                    </select>
-                </div>
+//                     <div style={{ borderTop: '1px solid #475569', margin: '10px 0' }}></div>
 
-                {/* Node Name Input */}
-                <div style={{ marginBottom: '20px' }}>
-                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 'bold' }}>
-                        Node Name:
-                    </label>
-                    <input
-                        type="text"
-                        value={nodeName}
-                        onChange={(e) => setNodeName(e.target.value)}
-                        onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                                addNode();
-                            }
-                        }}
-                        placeholder="Enter node name..."
-                        style={{
-                            width: '100%',
-                            padding: '8px',
-                            borderRadius: '4px',
-                            border: 'none',
-                            background: '#374151',
-                            color: 'white',
-                            boxSizing: 'border-box'
-                        }}
-                    />
-                </div>
+//                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+//                         {hasSelectedNodes && (
+//                             <button
+//                                 onClick={deleteSelectedNodes}
+//                                 style={{
+//                                     width: '100%',
+//                                     padding: '8px 16px',
+//                                     background: '#f97316',
+//                                     border: 'none',
+//                                     borderRadius: '6px',
+//                                     color: 'white',
+//                                     cursor: 'pointer',
+//                                     fontSize: '12px',
+//                                     fontWeight: '500'
+//                                 }}
+//                             >
+//                                 Delete Selected
+//                             </button>
+//                         )}
+//                         <button
+//                             onClick={exportDiagram}
+//                             style={{
+//                                 width: '100%',
+//                                 padding: '8px 16px',
+//                                 background: '#059669',
+//                                 border: 'none',
+//                                 borderRadius: '6px',
+//                                 color: 'white',
+//                                 cursor: 'pointer',
+//                                 fontSize: '12px',
+//                                 fontWeight: '500'
+//                             }}
+//                         >
+//                             Export
+//                         </button>
+//                         <button
+//                             onClick={clearCanvas}
+//                             style={{
+//                                 width: '100%',
+//                                 padding: '8px 16px',
+//                                 background: '#dc2626',
+//                                 border: 'none',
+//                                 borderRadius: '6px',
+//                                 color: 'white',
+//                                 cursor: 'pointer',
+//                                 fontSize: '12px',
+//                                 fontWeight: '500'
+//                             }}
+//                         >
+//                             Clear
+//                         </button>
+//                     </div>
+//                 </div>
+//             </div>
 
-                {/* Add Node Button */}
-                <div style={{ marginBottom: '30px' }}>
-                    <button
-                        onClick={addNode}
-                        style={{
-                            width: '100%',
-                            padding: '12px',
-                            background: nodeCategories[selectedCategory].color,
-                            border: 'none',
-                            borderRadius: '4px',
-                            color: 'white',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        + Add Node
-                    </button>
-                </div>
+//             <button
+//                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+//                 style={{
+//                     position: 'absolute',
+//                     top: '16px',
+//                     left: isSidebarOpen ? '296px' : '16px',
+//                     zIndex: 1000,
+//                     padding: '8px',
+//                     background: 'rgba(59, 130, 246, 0.9)',
+//                     backdropFilter: 'blur(10px)',
+//                     border: 'none',
+//                     borderRadius: '6px',
+//                     color: 'white',
+//                     cursor: 'pointer',
+//                     display: 'flex',
+//                     alignItems: 'center',
+//                     justifyContent: 'center',
+//                     transition: 'all 0.3s ease',
+//                     boxShadow: '0 2px 12px rgba(0,0,0,0.2)'
+//                 }}
+//                 onMouseOver={(e) => e.currentTarget.style.background = 'rgba(37, 99, 235, 0.9)'}
+//                 onMouseOut={(e) => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.9)'}
+//             >
+//                 {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+//             </button>
 
-                {/* Connection Type */}
-                <div style={{ marginBottom: '30px' }}>
-                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 'bold' }}>
-                        Connection Type:
-                    </label>
-                    <select
-                        value={selectedConnection}
-                        onChange={(e) => setSelectedConnection(e.target.value)}
-                        style={{
-                            width: '100%',
-                            padding: '8px',
-                            borderRadius: '4px',
-                            border: 'none',
-                            background: '#374151',
-                            color: 'white'
-                        }}
-                    >
-                        {connectionTypes.map((ct) => (
-                            <option key={ct.value} value={ct.value}>{ct.label}</option>
-                        ))}
-                    </select>
-                    <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '8px' }}>
-                        Drag from one node to another to connect
-                    </p>
-                </div>
-
-                {/* Actions */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {hasSelectedNodes && (
-                        <button
-                            onClick={deleteSelectedNodes}
-                            style={{
-                                padding: '10px',
-                                background: '#f97316',
-                                border: 'none',
-                                borderRadius: '4px',
-                                color: 'white',
-                                cursor: 'pointer',
-                                fontSize: '14px'
-                            }}
-                        >
-                            Delete Selected
-                        </button>
-                    )}
-                    <button
-                        onClick={exportDiagram}
-                        style={{
-                            padding: '10px',
-                            background: '#059669',
-                            border: 'none',
-                            borderRadius: '4px',
-                            color: 'white',
-                            cursor: 'pointer',
-                            fontSize: '14px'
-                        }}
-                    >
-                        Export Diagram
-                    </button>
-                    <button
-                        onClick={clearCanvas}
-                        style={{
-                            padding: '10px',
-                            background: '#dc2626',
-                            border: 'none',
-                            borderRadius: '4px',
-                            color: 'white',
-                            cursor: 'pointer',
-                            fontSize: '14px'
-                        }}
-                    >
-                        Clear Canvas
-                    </button>
-                </div>
-            </div>
-
-            {/* Canvas */}
-            <div style={{ flex: 1 }}>
-                <ReactFlow
-                    nodes={nodes}
-                    edges={edges}
-                    onNodesChange={onNodesChange}
-                    onEdgesChange={onEdgesChange}
-                    onConnect={onConnect}
-                    fitView
-                >
-                    <Controls />
-                    <MiniMap />
-                    <Background variant="dots" gap={12} size={1} />
-                    <Panel position="top-left">
-                        <div style={{
-                            background: 'white',
-                            padding: '10px 15px',
-                            borderRadius: '5px',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                        }}>
-                            <h3 style={{ margin: 0, fontSize: '16px' }}>Software Architecture Designer</h3>
-                            <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#666' }}>
-                                Name and add components, then connect them
-                            </p>
-                        </div>
-                    </Panel>
-                </ReactFlow>
-            </div>
-        </div>
-    );
-}
+//             <div style={{ flex: 1, background: 'transparent' }}>
+//                 <ReactFlow
+//                     nodes={nodes}
+//                     edges={edges}
+//                     onNodesChange={onNodesChange}
+//                     onEdgesChange={onEdgesChange}
+//                     onConnect={onConnect}
+//                     fitView
+//                 >
+//                     <Controls />
+//                     <MiniMap />
+//                     <Background variant="dots" gap={12} size={1} color="#cbd5e1" />
+//                     <Panel position="top-left" style={{ marginTop: '60px', marginLeft: isSidebarOpen ? '300px' : '60px', transition: 'margin-left 0.3s ease' }}>
+//                         <div style={{
+//                             background: 'rgba(255, 255, 255, 0.95)',
+//                             padding: '10px 15px',
+//                             borderRadius: '8px',
+//                             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+//                             border: '1px solid #e2e8f0'
+//                         }}>
+//                             <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>
+//                                 💡 Drag from one node to another to connect them
+//                             </p>
+//                         </div>
+//                     </Panel>
+//                 </ReactFlow>
+//             </div>
+//         </div>
+//     );
+// }
