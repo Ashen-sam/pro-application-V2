@@ -5,6 +5,7 @@ import { Outlet, useNavigate } from "react-router";
 import { CommonDialog } from "../common/commonDialog";
 import { CommonDialogFooter } from "../common/commonDialogFooter";
 import { Sidebar } from "./sideBar";
+import logo from '../../../public/Screenshot_2025-12-27_164922-removebg-preview.png'
 
 
 export const GlobalLayout = () => {
@@ -23,12 +24,15 @@ export const GlobalLayout = () => {
 
 
     return (
-        <div className="items-center justify-center min-h-screen  flex-col w-full relative   dark:bg-[#141414] ">
+        <div className="items-center justify-center min-h-screen   flex-col w-full relative   dark:bg-[#141414] ">
             <div className="flex justify-center gap-5   pt-28   overflow-hidden bg-background  dark:bg-[#141414]  max-w-7xl m-auto">
                 {/* Sidebar */}
                 <Sidebar />
                 <div className="absolute right-0 top-2" >
                     <ProfileTop />
+                </div>
+                <div className={`text-base font-medium absolute top-5 left-8 `}>
+                    <img src={logo} width={45} height={80} alt="boardy logo" />
                 </div>
 
                 {/* Main Content Area */}
@@ -122,8 +126,6 @@ export const GlobalLayout = () => {
                         </div>
                     </main>
                 </div >
-
-                {/* Logout Dialog */}
                 <CommonDialog
                     className="min-w-[400px]"
                     open={showLogoutDialog}

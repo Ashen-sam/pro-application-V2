@@ -11,7 +11,7 @@ import {
     FolderOpen,
     Settings
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ModeToggle } from "../common/mode-toggle";
 import type { SidebarProps } from "./types";
@@ -28,12 +28,20 @@ const workspaceItems = [
 
 export const Sidebar = ({ className }: SidebarProps) => {
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [userData, setUserData] = useState({ name: '', email: '' });
     const location = useLocation();
 
     const isActive = (path: string) =>
         path === "/"
             ? location.pathname === "/"
             : location.pathname === path || location.pathname.startsWith(path + "/");
+    useEffect(() => {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        setUserData({
+            name: user.userName || user.name || 'Guest User',
+            email: user.userEmail || user.email || 'No email'
+        });
+    }, []);
     return (
         <div
             id="sidebar-navigation"
@@ -60,10 +68,10 @@ export const Sidebar = ({ className }: SidebarProps) => {
             {!isCollapsed && (
                 <div className="px-4 py-4">
                     <div className="text-sm font-semibold text-gray-900 dark:text-slate-200">
-                        Ashen Samarasekera
+                        {userData.name}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-muted-foreground">
-                        Free Plan · iamashen27@gmail.com
+                        Free Plan · {userData.email}
                     </div>
                 </div>
             )}
@@ -103,7 +111,7 @@ export const Sidebar = ({ className }: SidebarProps) => {
                 <Separator className="my-3 bg-gray-200 dark:bg-white/10" />
                 <div className="px-2">
                     {!isCollapsed && (
-                        <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-muted-foreground">
+                        <p className="px-3 pb-2 text-xs font-semibold  tracking-wide text-gray-500 dark:text-muted-foreground">
                             Work Space
                         </p>
                     )}
