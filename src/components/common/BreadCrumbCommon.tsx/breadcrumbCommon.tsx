@@ -39,13 +39,8 @@ export const BreadcrumbCommon = ({
 }: BreadcrumbCommonProps) => {
     const location = useLocation();
     const pathnames = location.pathname.split("/").filter((x) => x);
-
-    // Merge default labels with custom labels
     const breadcrumbLabels = { ...defaultBreadcrumbLabels, ...customLabels };
-
-    // Default separator
     const defaultSeparator = <ChevronRight size={14} className="text-gray-400" />;
-
     return (
         <Breadcrumb className={className}>
             <BreadcrumbList className="flex items-center">

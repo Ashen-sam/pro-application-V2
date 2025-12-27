@@ -1,4 +1,3 @@
-// TaskTable.tsx
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,6 +17,7 @@ import { CalendarPlus, CirclePlus, Trash2, UserRoundPlus, X } from "lucide-react
 import * as React from "react";
 import { ProjectStatusCommon, type StatusType } from "./ProjectStatusCommon";
 import { ProjectPriorityCommon, type PriorityType } from "./projectPriorityCommon";
+import type { DateRange } from "react-day-picker";
 
 export interface Task {
     id: number;
@@ -147,8 +147,8 @@ const DatePopover = React.memo<{
     const [open, setOpen] = React.useState(false);
 
     // Parse the date range from value (format: "YYYY-MM-DD to YYYY-MM-DD")
-    const parseValue = (val: string | null | undefined) => {
-        if (!val) return { from: undefined, to: undefined };
+    const parseValue = (val: string | null | undefined): DateRange | undefined => {
+        if (!val) return undefined;
         if (val.includes(' to ')) {
             const [start, end] = val.split(' to ');
             return {
@@ -159,12 +159,11 @@ const DatePopover = React.memo<{
         return { from: new Date(val), to: undefined };
     };
 
-    const [dateRange, setDateRange] = React.useState<{
-        from: Date | undefined;
-        to: Date | undefined;
-    }>(parseValue(value));
+    const [dateRange, setDateRange] = React.useState<DateRange | undefined>(
+        parseValue(value)
+    );
 
-    const handleSelect = React.useCallback((range: { from: Date | undefined; to: Date | undefined } | undefined) => {
+    const handleSelect = React.useCallback((range: DateRange | undefined) => {
         if (!range) return;
 
         setDateRange(range);
@@ -183,15 +182,15 @@ const DatePopover = React.memo<{
 
     const handleClear = React.useCallback((e: React.MouseEvent) => {
         e.stopPropagation();
-        setDateRange({ from: undefined, to: undefined });
+        setDateRange(undefined);
         onChange('');
         setOpen(false);
     }, [onChange]);
 
     const formatDateRange = () => {
-        if (dateRange.from && dateRange.to) {
+        if (dateRange?.from && dateRange?.to) {
             return `${dateRange.from.toLocaleDateString()} - ${dateRange.to.toLocaleDateString()}`;
-        } else if (dateRange.from) {
+        } else if (dateRange?.from) {
             return `${dateRange.from.toLocaleDateString()} - ...`;
         }
         return 'Select date range';
@@ -205,7 +204,7 @@ const DatePopover = React.memo<{
                     <span className="text-gray-600 dark:text-gray-400 truncate">
                         {formatDateRange()}
                     </span>
-                    {dateRange.from && (
+                    {dateRange?.from && (
                         <X
                             size={14}
                             className="ml-auto text-gray-400 hover:text-gray-600"
@@ -321,11 +320,11 @@ const DebouncedInput = React.memo<{
     placeholder: string;
     type?: string;
     onChange: (value: string) => void;
-    inputRef?: React.RefObject<HTMLInputElement>;
+    inputRef?: React.RefObject<HTMLInputElement | null>;
     className?: string;
 }>(({ defaultValue, placeholder, type = "text", onChange, inputRef, className }) => {
     const [value, setValue] = React.useState(defaultValue || "");
-    const timeoutRef = React.useRef<ReturnType<typeof setTimeout>>();
+    const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
     React.useEffect(() => {
         setValue(defaultValue || "");
@@ -464,7 +463,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
         priority: true,
     },
 }) => {
-    const newTaskRef = React.useRef<HTMLInputElement>(null);
+    const newTaskRef = React.useRef<HTMLInputElement | null>(null);
 
     const normalizedColumns = React.useMemo<Required<NonNullable<TaskTableProps['columns']>>>(() => ({
         name: columns.name ?? true,

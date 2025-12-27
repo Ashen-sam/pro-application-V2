@@ -1,8 +1,9 @@
-import { ProjectPriorityCommon, ProjectStatusCommon } from '@/components';
+import { ProjectPriorityCommon, ProjectStatusCommon, type PriorityType, type StatusType } from '@/components';
 import { CircularProgress } from '@/components/common/cicularProgress';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { motion } from 'framer-motion';
+import type { Variants } from 'framer-motion';
 import {
     Bolt,
     Calendar,
@@ -24,7 +25,15 @@ import { useEffect, useState } from 'react';
 export const Landing = () => {
     const [scrollY, setScrollY] = useState(0);
     const [darkMode, setDarkMode] = useState(true);
-
+    interface Project {
+        id: number;
+        name: string;
+        status: StatusType;
+        priority: PriorityType;
+        progress: number;
+        dueDate: string;
+        members: string[]; // or Member[] if you have a Member type
+    }
     useEffect(() => {
         const handleScroll = () => setScrollY(window.scrollY);
         window.addEventListener('scroll', handleScroll);
@@ -65,7 +74,7 @@ export const Landing = () => {
     ];
 
 
-    const sampleProjects = [
+    const sampleProjects: Project[] = [
         {
             id: 1,
             name: "Web Development",
@@ -136,26 +145,24 @@ export const Landing = () => {
         }
     ];
 
-    // Professional animation variants
-    const sidebarItemVariants = {
+    const sidebarItemVariants: Variants = {
         hidden: {
             opacity: 0,
             x: -20,
             scale: 0.95
         },
-        visible: (index: number) => ({
+        visible: {
             opacity: 1,
             x: 0,
             scale: 1,
             transition: {
-                delay: 1.2 + index * 0.08,
                 duration: 0.5,
-                ease: [0.25, 0.46, 0.45, 0.94]
+                ease: "easeOut"
             }
-        })
+        }
     };
 
-    const containerVariants = {
+    const containerVariants: Variants = {
         hidden: { opacity: 0 },
         visible: {
             opacity: 1,
@@ -166,7 +173,7 @@ export const Landing = () => {
         }
     };
 
-    const itemVariants = {
+    const itemVariants: Variants = {
         hidden: { opacity: 0, y: 20 },
         visible: {
             opacity: 1,
@@ -178,7 +185,7 @@ export const Landing = () => {
         }
     };
 
-    const fadeInUp = {
+    const fadeInUp: Variants = {
         hidden: { opacity: 0, y: 40 },
         visible: {
             opacity: 1,
@@ -361,6 +368,11 @@ export const Landing = () => {
                                                                     initial="hidden"
                                                                     animate="visible"
                                                                     variants={sidebarItemVariants}
+                                                                    transition={{
+                                                                        delay: 1.2 + index * 0.08,
+                                                                        duration: 0.5,
+                                                                        ease: [0.25, 0.46, 0.45, 0.94]
+                                                                    }}
                                                                     whileHover={{
                                                                         x: 4,
                                                                         transition: { duration: 0.2, ease: "easeOut" }
