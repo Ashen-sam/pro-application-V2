@@ -4,7 +4,6 @@ import {
     Card,
     CardContent,
     CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
@@ -79,69 +78,70 @@ export const Login = () => {
     };
 
     return (
-        <Card className="w-full min-w-[400px] rounded-sm dark:bg-[#282828]">
-            <CardHeader>
-                <CardTitle>Login to your account</CardTitle>
-                <CardDescription>
-                    Enter your email below to login to your account
+        <Card className="w-full min-w-[400px] rounded-lg border-neutral-200 dark:border-neutral-800 dark:bg-neutral-900">
+            <CardHeader className="space-y-1">
+                <CardTitle className="text-2xl font-semibold">Sign in</CardTitle>
+                <CardDescription className="text-neutral-600 dark:text-neutral-400">
+                    Enter your credentials to continue
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <form onSubmit={handleLogin}>
-                    <div className="flex flex-col gap-6">
-                        <div className="grid gap-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                placeholder="m@example.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                disabled={isLoading}
-                                required
-                            />
-                        </div>
-                        <div className="grid gap-2">
-                            <div className="flex items-center">
-                                <Label htmlFor="password">Password</Label>
-                                <Link
-                                    to="/forgot-password"
-                                    className="ml-auto text-xs text-muted-foreground underline underline-offset-4"
-                                >
-                                    Forgot password?
-                                </Link>
-                            </div>
-                            <Input
-                                id="password"
-                                type="password"
-                                placeholder="Enter your password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                disabled={isLoading}
-                                required
-                            />
-                        </div>
-                        <Button type="submit" className="w-full" disabled={isLoading}>
-                            {isLoading ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Signing in...
-                                </>
-                            ) : (
-                                "Login"
-                            )}
-                        </Button>
+                <form onSubmit={handleLogin} className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="email" className="text-sm font-medium">
+                            Email
+                        </Label>
+                        <Input
+                            id="email"
+                            type="email"
+                            placeholder="name@company.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            disabled={isLoading}
+                            required
+                            className="h-10"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="password" className="text-sm font-medium">
+                            Password
+                        </Label>
+                        <Input
+                            id="password"
+                            type="password"
+                            placeholder="Enter your password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            disabled={isLoading}
+                            required
+                            className="h-10"
+                        />
+                    </div>
+                    <Button
+                        type="submit"
+                        className="w-full h-10 mt-2"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Signing in...
+                            </>
+                        ) : (
+                            "Sign in"
+                        )}
+                    </Button>
+                    <div className="text-center text-sm text-neutral-600 dark:text-neutral-400">
+                        Don't have an account?{" "}
+                        <Link
+                            to="/register"
+                            className="text-neutral-900 dark:text-neutral-100 hover:underline font-medium"
+                        >
+                            Create account
+                        </Link>
                     </div>
                 </form>
             </CardContent>
-            <CardFooter className="flex-col gap-2">
-                <div className="mt-4 text-center text-sm">
-                    Don&apos;t have an account?{" "}
-                    <Link to="/register" className="underline underline-offset-4">
-                        Sign up
-                    </Link>
-                </div>
-            </CardFooter>
         </Card>
     );
 };

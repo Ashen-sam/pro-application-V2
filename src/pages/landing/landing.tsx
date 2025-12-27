@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
+import logo from '../../../public/Screenshot_2025-12-27_164922-removebg-preview.png'
 import {
     Bolt,
     Calendar,
@@ -21,6 +22,7 @@ import {
     TrendingUp
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router';
 
 export const Landing = () => {
     const [scrollY, setScrollY] = useState(0);
@@ -215,7 +217,7 @@ export const Landing = () => {
                 <div className="max-w-[1200px] mx-auto px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-8">
                         <div className={`text-base font-medium ${darkMode ? 'text-white' : 'text-black'}`}>
-                            ProjectFlow
+                            <img src={logo} width={40} height={80} alt="boardy logo" />
                         </div>
                         <div className={`hidden md:flex items-center gap-6 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'
                             }`}>
@@ -239,21 +241,15 @@ export const Landing = () => {
                         >
                             {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                         </motion.button>
-                        <Button
-                            variant="ghost"
+                        <Link
+                            to={'/login'}
                             className={`hidden sm:flex text-sm ${darkMode
                                 ? 'text-white hover:text-white hover:bg-white/10 bg-transparent'
                                 : 'text-black hover:text-black hover:bg-gray-100 bg-transparent'
                                 }`}
                         >
                             Log in
-                        </Button>
-                        <Button className={`text-sm ${darkMode
-                            ? 'bg-white hover:bg-gray-200 text-black'
-                            : 'bg-black hover:bg-gray-800 text-white'
-                            }`}>
-                            Sign up
-                        </Button>
+                        </Link>
                     </div>
                 </div>
             </motion.nav>
@@ -269,7 +265,7 @@ export const Landing = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.8, delay: 0.2 }}
                                 className={`text-5xl md:text-6xl lg:text-7xl font-normal tracking-tight mb-6 leading-[1.1] ${darkMode ? 'text-white' : 'text-black'}`}>
-                                ProjectFlow is a purpose-built tool for planning and building products
+                                Boardy is a purpose built tool for planning and building products
                             </motion.h1>
 
                             <motion.p
@@ -328,7 +324,10 @@ export const Landing = () => {
                                             app.projectflow.com
                                         </div>
                                     </div>
-                                    <div className="flex gap-10 h-[500px] mt-20 px-10">
+                                    <div className="flex gap-10 h-[500px] mt-20 px-10 relative">
+                                        <div className={`text-base font-medium absolute -top-16 right-155  ${darkMode ? 'text-white' : 'text-black'}`}>
+                                            <img src={logo} width={27} height={80} alt="boardy logo" />
+                                        </div>
                                         <div className={`w-40 ${darkMode ? 'dark:bg-transparent text-white' : 'bg-white text-black'} ${darkMode ? 'border-white/10' : 'border-gray-200'} flex flex-col`}>
                                             <motion.div
                                                 className="px-4 border-white/10"

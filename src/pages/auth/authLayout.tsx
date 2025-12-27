@@ -2,7 +2,7 @@ import { Outlet } from "react-router";
 
 export const AuthLayout = () => {
     return (
-        <div className="min-h-screen  flex  justify-center items-center relative overflow-hidden dark:bg-zinc-900">
+        <div className="min-h-screen  flex  justify-center items-center relative overflow-hidden dark:bg-[#141414] ">
             <div
                 className="absolute inset-0 opacity-20"
                 style={{
