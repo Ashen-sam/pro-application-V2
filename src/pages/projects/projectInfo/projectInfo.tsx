@@ -80,7 +80,7 @@ export const ProjectInfo = () => {
                             : 'slideInFromLeft 0.3s ease-out'
                     }}
                 >
-                    <Outlet context={{ userId, projectId: Number(projectId) }} />
+                    <Outlet context={{ userId, projectId: (projectId) }} />
                 </div>
             </div>
 

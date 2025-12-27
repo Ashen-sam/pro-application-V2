@@ -5,6 +5,7 @@ export interface Task {
   project_id: number;
   title?: string;
   description?: string;
+  project_uuid?: string;
   status?: StatusType;
   priority?: string;
   due_date?: string;
@@ -50,18 +51,20 @@ export interface ErrorResponse {
   message?: string;
 }
 export interface CreateTaskRequest {
-  project_id: number;
   title?: string;
   description?: string;
   status?: string;
   priority?: string;
   due_date?: string | null;
+  project_id?: number; // ✅ Make optional
+  project_uuid?: string;
 }
 
 export interface UpdateTaskRequest {
   title?: string;
   description?: string;
   status?: string;
+  project_uuid?: string;
   priority?: string;
   due_date?: string;
   project_id?: number;
@@ -75,7 +78,7 @@ export interface AssignUserRequest {
  * Query Parameters Interfaces
  */
 export interface ListTasksParams {
-  projectId?: number;
+  projectId?: number | string;
 }
 
 /**

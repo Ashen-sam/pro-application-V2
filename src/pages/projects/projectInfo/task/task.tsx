@@ -4,8 +4,8 @@ import { useTasks } from "@/pages/projects/hooks/useTasks";
 import { useOutletContext } from "react-router";
 
 type OverviewContext = {
-    userId: string | number;
-    projectId: string | number;
+    userId: number; // ✅ Changed from string | number
+    projectId: number;
 };
 
 export const Task = () => {

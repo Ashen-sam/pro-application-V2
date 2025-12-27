@@ -21,8 +21,12 @@ const mapApiTaskToUiTask = (apiTask: ApiTask): TaskType => ({
 });
 
 // Map UI task to API format (used for both create and update)
-const mapUiTaskToApiTask = (uiTask: Partial<TaskType>, projectId: number) => ({
-  project_id: projectId,
+const mapUiTaskToApiTask = (
+  uiTask: Partial<TaskType>,
+  projectId: number | string
+) => ({
+  project_id: typeof projectId === "number" ? projectId : undefined, // ✅ Only set if numeric
+  project_uuid: typeof projectId === "string" ? projectId : undefined, // ✅ Set if UUID string
   title: uiTask.name || "",
   description: "",
   status: uiTask.status || "On track",
@@ -54,8 +58,9 @@ export const useTasks = ({ projectId }: UseTasksOptions): UseTasksReturn => {
   const [newTaskIds, setNewTaskIds] = useState<Set<number>>(new Set());
 
   // RTK Query hooks
+  // Update the useListTasksQuery call to handle both types
   const { data: tasksData, isLoading } = useListTasksQuery(
-    { projectId: Number(projectId) },
+    { projectId: projectId }, // ✅ Remove Number() conversion, pass as-is
     {
       skip: !projectId,
       refetchOnMountOrArgChange: false,
@@ -107,10 +112,7 @@ export const useTasks = ({ projectId }: UseTasksOptions): UseTasksReturn => {
         if (newTaskIds.has(taskId)) {
           // Only create if task has a name
           if (completeTaskData.name && completeTaskData.name.trim()) {
-            const payload = mapUiTaskToApiTask(
-              completeTaskData,
-              Number(projectId)
-            );
+            const payload = mapUiTaskToApiTask(completeTaskData, projectId);
             const result = await createTask(payload).unwrap();
             showToast.success("Task added successfully", "asd");
 
@@ -139,10 +141,7 @@ export const useTasks = ({ projectId }: UseTasksOptions): UseTasksReturn => {
           }
         } else {
           // Update existing task
-          const payload = mapUiTaskToApiTask(
-            completeTaskData,
-            Number(projectId)
-          );
+          const payload = mapUiTaskToApiTask(completeTaskData, projectId);
           await updateTask({
             taskId,
             body: payload,
@@ -240,10 +239,7 @@ export const useTasks = ({ projectId }: UseTasksOptions): UseTasksReturn => {
             if (!currentTask) return;
 
             const completeTaskData = { ...currentTask, [field]: value };
-            const payload = mapUiTaskToApiTask(
-              completeTaskData,
-              Number(projectId)
-            );
+            const payload = mapUiTaskToApiTask(completeTaskData, projectId);
 
             await updateTask({
               taskId,

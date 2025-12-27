@@ -13,7 +13,7 @@ import { useMemo } from "react";
 import { useOutletContext } from "react-router";
 
 interface OverviewContext {
-    projectId: string;
+    projectId: number;
 }
 
 
@@ -21,12 +21,14 @@ export const Overview = () => {
     const { projectId } = useOutletContext<OverviewContext>();
 
     const { data: projectData, isLoading: isProjectLoading, error: projectError } = useGetProjectByIdQuery(
-        Number(projectId),
+        projectId,
         { skip: !projectId }
     );
+    console.log('API Error:', projectError); // ✅ Check what error is returned
+    console.log('Requesting projectId:', projectId);
 
     const { data: membersData, isLoading: isMembersLoading } = useListProjectMembersQuery(
-        Number(projectId),
+        projectId, // ✅ Use string directly
         { skip: !projectId }
     );
 

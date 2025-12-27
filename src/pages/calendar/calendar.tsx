@@ -7,7 +7,8 @@ import { useGetCalendarDataQuery } from "../../features/calendarApi";
 const COLOR_STORAGE_KEY = "calendar_project_colors";
 
 // Get color from localStorage
-const getStoredColor = (projectId: number, type: 'start' | 'end'): string | null => {
+// Update getStoredColor to accept number | string
+const getStoredColor = (projectId: number | string, type: 'start' | 'end'): string | null => {
     try {
         const stored = localStorage.getItem(COLOR_STORAGE_KEY);
         if (stored) {
@@ -43,11 +44,12 @@ export default function CalendarPage() {
     // Function to handle color change
     // Modify the handleColorChange function
     const handleColorChange = (eventId: string, color: string) => {
-        // Extract project ID from event ID (e.g., "project-start-123" or "project-end-123")
-        const match = eventId.match(/project-(start|end)-(\d+)/);
+        // ✅ Updated regex to handle UUIDs with hyphens
+        // Matches: "project-start-123" OR "project-start-uuid-with-hyphens"
+        const match = eventId.match(/^project-(start|end)-(.+)$/);
 
         if (match) {
-            const projectId = match[2];
+            const projectId = match[2]; // This will be either numeric ID or UUID
             // Save color for both start and end events of this project
             saveColor(`project-start-${projectId}`, color);
             saveColor(`project-end-${projectId}`, color);
@@ -56,7 +58,7 @@ export default function CalendarPage() {
             saveColor(eventId, color);
         }
 
-        setColorVersion(prev => prev + 1); // Force re-render
+        setColorVersion(prev => prev + 1);
     };
     // Transform API data to CalendarEvent format
     const events: CalendarEvent[] = useMemo(() => {
@@ -78,8 +80,9 @@ export default function CalendarPage() {
 
             // Add start date event
             if (project.start_date) {
-                const eventId = `project-start-${project.project_id}`;
-                const storedColor = getStoredColor(project.project_id, 'start');
+                const eventId = `project-start-${project.project_uuid || project.project_id}`;
+                const storedColor = getStoredColor(project.project_uuid || project.project_id, 'start');
+
 
                 transformedEvents.push({
                     id: eventId,
@@ -93,8 +96,8 @@ export default function CalendarPage() {
 
             // Add end date event
             if (project.end_date) {
-                const eventId = `project-end-${project.project_id}`;
-                const storedColor = getStoredColor(project.project_id, 'end');
+                const eventId = `project-end-${project.project_uuid || project.project_id}`;
+                const storedColor = getStoredColor(project.project_uuid || project.project_id, 'end');
 
                 transformedEvents.push({
                     id: eventId,

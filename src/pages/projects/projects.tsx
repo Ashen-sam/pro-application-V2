@@ -96,8 +96,16 @@ export const Projects = () => {
                     );
                 }
 
-                const fromDate = row.dateRange.from ? format(new Date(row.dateRange.from), "MMM dd") : "";
-                const toDate = row.dateRange.to ? format(new Date(row.dateRange.to), "MMM dd, yyyy") : "";
+                // FIX: Parse dates without timezone conversion
+                const fromDate = row.dateRange.from ? (() => {
+                    const d = new Date(row.dateRange.from);
+                    return format(new Date(d.getFullYear(), d.getMonth(), d.getDate()), "MMM dd");
+                })() : "";
+
+                const toDate = row.dateRange.to ? (() => {
+                    const d = new Date(row.dateRange.to);
+                    return format(new Date(d.getFullYear(), d.getMonth(), d.getDate()), "MMM dd, yyyy");
+                })() : "";
 
                 return (
                     <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
@@ -133,7 +141,7 @@ export const Projects = () => {
     ], []);
 
     const handleViewRow = (row: Project) => {
-        handleNavigateToProject(row.project_id);
+        handleNavigateToProject(row.project_uuid || row.project_id);
     };
 
     if (!currentUserId) {
@@ -234,7 +242,7 @@ export const Projects = () => {
 
                     <CommonTable
                         selectable
-                        rowKey="project_id"
+                        rowKey={(row) => row.project_uuid || String(row.project_id)}
                         data={projects}
                         columns={tableColumns}
                         onSelectionChange={setSelectedRows}

@@ -43,7 +43,7 @@ interface FlowProject {
     dueDate: string;
     teamMembers: number;
     progress: number;
-    projectId: number;
+    projectId: number | string;
 }
 
 const statusColors = {

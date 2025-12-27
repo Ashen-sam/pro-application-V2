@@ -6,7 +6,8 @@ export interface User {
 }
 
 export interface Project {
-  project_id: number;
+  project_id: number | string;
+  project_uuid?: string;
   name?: string;
   owner_id: number;
   description?: string;
@@ -20,7 +21,7 @@ export interface Project {
 }
 
 export interface ProjectMember {
-  project_id: number;
+  project_id: number | string;
   user_id: number;
   role: string;
   added_at: string;
@@ -137,7 +138,7 @@ export const projectApi = baseApi.injectEndpoints({
       },
     }),
 
-    getProjectById: builder.query<Project, number>({
+    getProjectById: builder.query<Project, number | string>({
       query: (projectId) => `/projects/${projectId}`,
       transformResponse: (response: GetProjectResponse) => response.project,
       providesTags: (_r, _e, projectId) => [{ type: "Project", id: projectId }],
@@ -201,7 +202,7 @@ export const projectApi = baseApi.injectEndpoints({
 
     updateProject: builder.mutation<
       Project,
-      { projectId: number; data: UpdateProjectRequest }
+      { projectId: number | string; data: UpdateProjectRequest }
     >({
       query: ({ projectId, data }) => ({
         url: `/projects/${projectId}`,
@@ -258,7 +259,10 @@ export const projectApi = baseApi.injectEndpoints({
       },
     }),
 
-    deleteProject: builder.mutation<DeleteProjectResponse, number | number[]>({
+    deleteProject: builder.mutation<
+      DeleteProjectResponse,
+      number | string | (number | string)[]
+    >({
       query: (projectIdOrIds) => {
         if (Array.isArray(projectIdOrIds)) {
           return {
@@ -282,7 +286,10 @@ export const projectApi = baseApi.injectEndpoints({
             "listProjects",
             undefined,
             (draft) => {
-              return draft.filter((p) => !idsToDelete.includes(p.project_id));
+              return draft.filter((p) => {
+                const pId = p.project_uuid || p.project_id;
+                return !idsToDelete.includes(pId);
+              });
             }
           )
         );
@@ -294,7 +301,7 @@ export const projectApi = baseApi.injectEndpoints({
       },
     }),
 
-    listProjectMembers: builder.query<ProjectMember[], number>({
+    listProjectMembers: builder.query<ProjectMember[], number | string>({
       query: (projectId) => `/projects/${projectId}/members`,
       transformResponse: (response: ListProjectMembersResponse) => {
         if (!response.success || !response.members) {
@@ -310,7 +317,7 @@ export const projectApi = baseApi.injectEndpoints({
 
     sendProjectInvites: builder.mutation<
       { success: boolean; message: string; emailsSent?: number },
-      { projectId: number; memberEmails: string[] }
+      { projectId: number | string; memberEmails: string[] }
     >({
       query: ({ projectId, memberEmails }) => ({
         url: `/projects/${projectId}/invites`,
@@ -333,7 +340,7 @@ export const projectApi = baseApi.injectEndpoints({
 
     addProjectMember: builder.mutation<
       ProjectMember,
-      { projectId: number; data: AddProjectMemberRequest }
+      { projectId: number | string; data: AddProjectMemberRequest }
     >({
       query: ({ projectId, data }) => ({
         url: `/projects/${projectId}/members`,

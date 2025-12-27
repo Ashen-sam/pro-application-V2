@@ -23,7 +23,7 @@ import {
 import { useTableSearch, useTableSort } from "@/hooks";
 import { cn } from "@/lib/utils";
 import { ArrowBigDown, ArrowBigRight, ArrowBigUp, BadgeCheckIcon, BarChart2, CheckCheck, CircleArrowOutUpRight, CircleDashed, CirclePlus, Hexagon, SquarePen, Trash, Users, type LucideIcon } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { TableHeaderRow } from "./tableHeader";
 import { TableSearch } from "./tableSearch";
 import type { CommonTableProps } from "./tableTypes";
@@ -105,18 +105,23 @@ export function CommonTable<T extends Record<string, unknown>>({
         setSelectedRows(new Set());
     }, [data]);
 
+
+    const getRowId = useCallback((row: T): unknown => {
+        return typeof rowKey === 'function' ? rowKey(row) : row[rowKey];
+    }, [rowKey]);
     useEffect(() => {
         if (onSelectionChange) {
             const selected = sortedData.filter((row) =>
-                selectedRows.has(row[rowKey])
+                selectedRows.has(getRowId(row))
             );
             onSelectionChange(selected);
         }
-    }, [selectedRows, sortedData, onSelectionChange, rowKey]);
+    }, [selectedRows]);
+
 
     const handleSelectAll = (checked: boolean) => {
         if (checked) {
-            setSelectedRows(new Set(sortedData.map((r) => r[rowKey])));
+            setSelectedRows(new Set(sortedData.map((r) => getRowId(r))));
         } else {
             setSelectedRows(new Set());
         }
@@ -141,10 +146,11 @@ export function CommonTable<T extends Record<string, unknown>>({
 
     const isAllSelected =
         sortedData.length > 0 &&
-        sortedData.every((row) => selectedRows.has(row[rowKey]));
+        sortedData.every((row) => selectedRows.has(getRowId(row)));
+
 
     const isSomeSelected =
-        sortedData.some((row) => selectedRows.has(row[rowKey])) &&
+        sortedData.some((row) => selectedRows.has(getRowId(row))) &&
         !isAllSelected;
 
     const statusOptions: StatusType[] = ["On track", "At risk", "Off track", "Completed"];
@@ -220,7 +226,7 @@ export function CommonTable<T extends Record<string, unknown>>({
                                 </TableRow>
                             ) : (
                                 sortedData.map((row) => {
-                                    const rowId = row[rowKey];
+                                    const rowId = getRowId(row);
                                     const isSelected = selectedRows.has(rowId);
                                     const isHovered = hoveredRow === rowId;
 
@@ -469,14 +475,17 @@ export function CommonTable<T extends Record<string, unknown>>({
                                                                                     }
                                                                                     onSelect={async (dateRange) => {
                                                                                         if (dateRange?.from && dateRange?.to) {
+                                                                                            const fromDate = new Date(dateRange.from.getFullYear(), dateRange.from.getMonth(), dateRange.from.getDate());
+                                                                                            const toDate = new Date(dateRange.to.getFullYear(), dateRange.to.getMonth(), dateRange.to.getDate());
                                                                                             await handleUpdateField(row, "dateRange", {
-                                                                                                from: dateRange.from.toISOString(),
-                                                                                                to: dateRange.to.toISOString()
+                                                                                                from: fromDate.toISOString(),
+                                                                                                to: toDate.toISOString()
                                                                                             });
                                                                                             setDatePopover({ open: false, rowId: null });
                                                                                         } else if (dateRange?.from) {
+                                                                                            const fromDate = new Date(dateRange.from.getFullYear(), dateRange.from.getMonth(), dateRange.from.getDate());
                                                                                             await handleUpdateField(row, "dateRange", {
-                                                                                                from: dateRange.from.toISOString(),
+                                                                                                from: fromDate.toISOString(),
                                                                                                 to: undefined
                                                                                             });
                                                                                         }
@@ -517,7 +526,6 @@ export function CommonTable<T extends Record<string, unknown>>({
                                             </ContextMenuTrigger>
 
                                             <ContextMenuContent className="text-xs w-52 space-y-1 p-2 bg-white dark:bg-[#191919]  border-gray-200 dark:border-[#383b42]">
-                                                {/* View */}
                                                 <ContextMenuItem className="group gap-3  text-[13px]" onSelect={() => onViewRow?.(row)}>
                                                     <CircleArrowOutUpRight
                                                         className=" h-4 w-4 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-white transition-colors"

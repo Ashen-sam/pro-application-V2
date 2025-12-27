@@ -35,6 +35,7 @@ const getErrorMessage = (error: unknown): string => {
 
 export interface Project extends ApiProject, Record<string, unknown> {
   status: StatusType;
+  project_uuid?: string;
   priority: PriorityType;
   progress: number;
   dueDate: string;
@@ -99,11 +100,19 @@ const mapApiPriorityToUi = (apiPriority?: string): PriorityType => {
 };
 
 const transformApiProject = (apiProject: ApiProject): Project => {
+  // FIX: Parse dates without timezone offset
   const startDate = apiProject.start_date
-    ? new Date(apiProject.start_date)
+    ? (() => {
+        const d = new Date(apiProject.start_date);
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      })()
     : new Date();
+
   const endDate = apiProject.end_date
-    ? new Date(apiProject.end_date)
+    ? (() => {
+        const d = new Date(apiProject.end_date);
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      })()
     : (() => {
         const date = new Date();
         date.setMonth(date.getMonth() + 1);
@@ -199,6 +208,13 @@ export const useProjects = () => {
     }, 300);
   }, [resetForm]);
 
+  const formatDateForApi = (date: Date | string): string => {
+    const d = typeof date === "string" ? new Date(date) : date;
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
   const handleAddProjectAndCreateAnother = useCallback(async () => {
     if (!currentUserId) {
       showToast.error("User not authenticated", "auth-error");
@@ -245,8 +261,8 @@ export const useProjects = () => {
         to: formData.dateRange.to!,
       },
       owner_id: currentUserId,
-      start_date: formData.dateRange.from!.toISOString(),
-      end_date: formData.dateRange.to!.toISOString(),
+      start_date: formatDateForApi(formData.dateRange.from!),
+      end_date: formatDateForApi(formData.dateRange.to!),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       memberEmails: formData.memeberEmails.filter(
@@ -260,8 +276,8 @@ export const useProjects = () => {
     const createPayload = {
       name: formData.name.trim(),
       description: formData.description.trim(),
-      start_date: formData.dateRange.from.toISOString(),
-      end_date: formData.dateRange.to.toISOString(),
+      start_date: formatDateForApi(formData.dateRange.from),
+      end_date: formatDateForApi(formData.dateRange.to),
       status: mapStatusToApi(formData.status),
       priority: formData.priority,
       owner_id: currentUserId,
@@ -394,7 +410,7 @@ export const useProjects = () => {
 
       if (formData.memeberEmails.length > 0) {
         sendProjectInvites({
-          projectId: result.project_id,
+          projectId: result.project_uuid || result.project_id, // ✅ Use UUID first
           memberEmails: formData.memeberEmails,
         })
           .unwrap()
@@ -461,13 +477,15 @@ export const useProjects = () => {
     isSubmittingRef.current = true;
     setIsLoading(true);
 
-    const projectIds = selectedRows.map((p) => p.project_id);
+    const projectIds = selectedRows.map((p) => p.project_uuid || p.project_id);
     const deletedProjects = [...selectedRows];
 
     setProjects((prev) =>
-      prev.filter((p) => !projectIds.includes(p.project_id))
+      prev.filter((p) => {
+        const pId = p.project_uuid || p.project_id;
+        return !projectIds.includes(pId);
+      })
     );
-
     setIsBulkDeleteDialogOpen(false);
     setSelectedRows([]);
     setTimeout(() => {
@@ -578,10 +596,10 @@ export const useProjects = () => {
           to?: Date | string;
         };
         if (dateRange.from) {
-          updatePayload.start_date = new Date(dateRange.from).toISOString();
+          updatePayload.start_date = formatDateForApi(dateRange.from);
         }
         if (dateRange.to) {
-          updatePayload.end_date = new Date(dateRange.to).toISOString();
+          updatePayload.end_date = formatDateForApi(dateRange.to);
         }
       }
 
@@ -598,7 +616,7 @@ export const useProjects = () => {
 
       try {
         const result = await updateProject({
-          projectId: updatedRow.project_id,
+          projectId: updatedRow.project_uuid || updatedRow.project_id,
           data: updatePayload,
         }).unwrap();
 
@@ -647,8 +665,8 @@ export const useProjects = () => {
       description: formData.description.trim(),
       status: formData.status,
       priority: formData.priority,
-      start_date: formData.dateRange.from!.toISOString(),
-      end_date: formData.dateRange.to!.toISOString(),
+      start_date: formatDateForApi(formData.dateRange.from!),
+      end_date: formatDateForApi(formData.dateRange.to!),
       progress: calculateProgress(
         formData.dateRange.from!,
         formData.dateRange.to!
@@ -679,8 +697,8 @@ export const useProjects = () => {
     const updatePayload = {
       name: formData.name.trim(),
       description: formData.description.trim(),
-      start_date: formData.dateRange.from!.toISOString(),
-      end_date: formData.dateRange.to!.toISOString(),
+      start_date: formatDateForApi(formData.dateRange.from),
+      end_date: formatDateForApi(formData.dateRange.to),
       status: mapStatusToApi(formData.status),
       priority: formData.priority,
       memberEmails: formData.memeberEmails.filter(
@@ -725,11 +743,17 @@ export const useProjects = () => {
     isSubmittingRef.current = true;
     setIsLoading(true);
     const projectName = selectedProject.name;
-    const projectId = selectedProject.project_id;
 
     const deletedProject = selectedProject;
 
-    setProjects((prev) => prev.filter((p) => p.project_id !== projectId));
+    setProjects((prev) =>
+      prev.filter((p) => {
+        const pId = p.project_uuid || p.project_id;
+        const targetId =
+          selectedProject.project_uuid || selectedProject.project_id;
+        return pId !== targetId;
+      })
+    );
 
     closeAllDialogs();
 
@@ -739,7 +763,9 @@ export const useProjects = () => {
     );
 
     try {
-      await deleteProject(projectId).unwrap();
+      await deleteProject(
+        selectedProject.project_uuid || selectedProject.project_id
+      ).unwrap();
     } catch (error: unknown) {
       setProjects((prev) => [deletedProject, ...prev]);
       const errorMessage = getErrorMessage(error) || "Failed to delete project";
@@ -819,10 +845,14 @@ export const useProjects = () => {
   }, [descriptionProject, descriptionInput, handleInlineUpdateProject]);
 
   const handleNavigateToProject = useCallback(
-    (projectId: number) => {
-      navigate(`/projects/${projectId}`);
+    (projectId: number | string) => {
+      const project = projects.find(
+        (p) => p.project_id === projectId || p.project_uuid === projectId
+      );
+      const idToUse = project?.project_uuid || projectId;
+      navigate(`/projects/${idToUse}`);
     },
-    [navigate]
+    [navigate, projects] // ✅ Added projects to dependencies
   );
 
   return {

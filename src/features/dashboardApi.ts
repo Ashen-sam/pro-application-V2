@@ -5,6 +5,7 @@ export interface Project {
   name: string;
   status: string;
   priority: string;
+  project_uuid?: string;
   end_date: string;
   owner_id: number;
   created_at: string;
@@ -12,6 +13,7 @@ export interface Project {
 
 export interface ProjectReference {
   project_id: number;
+  project_uuid?: string;
   name: string;
 }
 
@@ -20,6 +22,7 @@ export interface Task {
   project_id: number;
   name: string;
   description: string | null;
+  project_uuid?: string;
   status: string;
   priority: string;
   due_date: string | null;

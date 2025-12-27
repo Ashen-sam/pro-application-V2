@@ -14,7 +14,7 @@ export interface CommonTableProps<T> {
   className?: string;
   selectable?: boolean;
   onSelectionChange?: (selectedRows: T[]) => void;
-  rowKey?: keyof T;
+  rowKey?: keyof T | ((row: T) => unknown);
   onUpdateProject?: (updatedRow: T) => Promise<void> | void;
   onDeleteRow?: (row: T) => void;
   onViewRow?: (row: T) => void;

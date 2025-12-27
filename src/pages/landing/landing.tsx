@@ -672,7 +672,7 @@ export const Landing = () => {
                                         viewport={{ once: true }}
                                         transition={{ delay: idx * 0.1 }}
                                         className="flex gap-4">
-                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${darkMode ? 'bg-white/10' : 'bg-gray-100'
+                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${darkMode ? 'bg-white/10' : 'bg-gray-100'
                                             }`}>
                                             <div className={darkMode ? 'text-white' : 'text-black'}>
                                                 {feature.icon}

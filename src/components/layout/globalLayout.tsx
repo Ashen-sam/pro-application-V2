@@ -1,43 +1,53 @@
 import { ProfileTop } from "@/pages/settings/profileTop/profileTop";
 import { LogOut } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router";
 import { CommonDialog } from "../common/commonDialog";
 import { CommonDialogFooter } from "../common/commonDialogFooter";
 import { Sidebar } from "./sideBar";
 import logo from '../../../public/Screenshot_2025-12-27_164922-removebg-preview.png'
+import { AnimatePresence } from "framer-motion";
+import { PageLoader } from "../common/pageLoader";
 
 
 export const GlobalLayout = () => {
     const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState(true);
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
-
     const handleLogoutConfirm = () => {
         localStorage.clear();
         setShowLogoutDialog(false);
         navigate("/login", { replace: true });
     };
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setIsLoading(false);
+        }, 1000);
 
+        return () => clearTimeout(timer);
+    }, []);
     const handleLogoutCancel = () => {
         setShowLogoutDialog(false);
     };
-
-
     return (
-        <div className="items-center justify-center min-h-screen   flex-col w-full relative   dark:bg-[#141414] ">
-            <div className="flex justify-center gap-5   pt-28   overflow-hidden bg-background  dark:bg-[#141414]  max-w-7xl m-auto">
-                {/* Sidebar */}
-                <Sidebar />
-                <div className="absolute right-0 top-2" >
-                    <ProfileTop />
-                </div>
-                <div className={`text-base font-medium absolute top-5 left-8 `}>
-                    <img src={logo} width={45} height={80} alt="boardy logo" />
-                </div>
+        <>
+            <AnimatePresence mode="wait">
+                {isLoading && <PageLoader key="loader" />}
+            </AnimatePresence>
+            <div className="items-center justify-center min-h-screen   flex-col w-full relative   dark:bg-[#141414] ">
+                <div className="flex justify-center gap-5   pt-28   overflow-hidden bg-background  dark:bg-[#141414]  max-w-7xl m-auto">
+                    {/* Sidebar */}
+                    <Sidebar />
+                    <div className="absolute right-0 top-2" >
+                        <ProfileTop />
+                    </div>
+                    <div className={`text-base font-medium absolute top-5 left-8 `}>
+                        <img src={logo} width={45} height={80} alt="boardy logo" />
+                    </div>
 
-                {/* Main Content Area */}
-                <div className="flex-1 flex flex-col overflow-hidden ">
-                    {/* <div className="border-b bg-background dark:bg-[#1a1a1a]">
+                    {/* Main Content Area */}
+                    <div className="flex-1 flex flex-col overflow-hidden ">
+                        {/* <div className="border-b bg-background dark:bg-[#1a1a1a]">
                     <div className="px-6 py-3 flex justify-between items-center">
                         <div className="flex items-center gap-3">
                             <Popover>
@@ -78,7 +88,7 @@ export const GlobalLayout = () => {
             </div>
         </div> */}
 
-                    {/* <div className="border-b bg-background dark:bg-[#1a1a1a]">
+                        {/* <div className="border-b bg-background dark:bg-[#1a1a1a]">
                     <div className="px-6 py-2.5">
                         <Breadcrumb>
                             <BreadcrumbList className="flex items-center">
@@ -119,35 +129,36 @@ export const GlobalLayout = () => {
                     </div>
                 </div> */}
 
-                    {/* Main Content */}
-                    <main className="flex-1 overflow-auto bg-background dark:bg-[#141414] ">
-                        <div className="p-3">
-                            <Outlet />
+                        {/* Main Content */}
+                        <main className="flex-1 overflow-auto bg-background dark:bg-[#141414] ">
+                            <div className="p-3">
+                                <Outlet />
+                            </div>
+                        </main>
+                    </div >
+                    <CommonDialog
+                        className="min-w-[400px]"
+                        open={showLogoutDialog}
+                        onOpenChange={setShowLogoutDialog}
+                        title="Confirm Logout"
+                        icon={< LogOut className="text-primary" size={20} />}
+                        size="sm"
+                        footer={
+                            < CommonDialogFooter
+                                info="You will need to sign in again to access your account."
+                                onCancel={handleLogoutCancel}
+                                onConfirm={handleLogoutConfirm}
+                                cancelText="Cancel"
+                                confirmText="Logout"
+                            />
+                        }
+                    >
+                        <div className="text-sm text-muted-foreground">
+                            Are you sure you want to logout? Logging out will end your current session, and you will need to sign in again to continue using your account.
                         </div>
-                    </main>
+                    </CommonDialog >
                 </div >
-                <CommonDialog
-                    className="min-w-[400px]"
-                    open={showLogoutDialog}
-                    onOpenChange={setShowLogoutDialog}
-                    title="Confirm Logout"
-                    icon={< LogOut className="text-primary" size={20} />}
-                    size="sm"
-                    footer={
-                        < CommonDialogFooter
-                            info="You will need to sign in again to access your account."
-                            onCancel={handleLogoutCancel}
-                            onConfirm={handleLogoutConfirm}
-                            cancelText="Cancel"
-                            confirmText="Logout"
-                        />
-                    }
-                >
-                    <div className="text-sm text-muted-foreground">
-                        Are you sure you want to logout? Logging out will end your current session, and you will need to sign in again to continue using your account.
-                    </div>
-                </CommonDialog >
-            </div >
-        </div>
+            </div>
+        </>
     );
 };

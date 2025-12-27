@@ -59,7 +59,7 @@ export const Calendar = () => {
                     // Store additional data for reference
                     metadata: {
                         taskId: task.task_id,
-                        projectId: task.project_id,
+                        projectId: task.project_uuid || task.project_id,
                         projectName: task.projects?.name,
                         status: task.status,
                         priority: task.priority,

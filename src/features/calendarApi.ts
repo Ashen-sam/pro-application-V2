@@ -1,7 +1,8 @@
 import baseApi from "@/store/baseAPI";
 
 export interface CalendarProject {
-  project_id: number;
+  project_id: number | string;
+  project_uuid?: string;
   name: string;
   description?: string | null;
   status: string;
@@ -16,7 +17,8 @@ export interface CalendarProject {
 
 export interface CalendarTask {
   task_id: number;
-  project_id: number;
+  project_id: number | string;
+  project_uuid?: string;
   name: string;
   description?: string | null;
   status: string;
@@ -24,7 +26,8 @@ export interface CalendarTask {
   due_date?: string | null;
   created_at: string;
   projects: {
-    project_id: number;
+    project_id: number | string;
+    project_uuid?: string;
     name: string;
   } | null;
   assigned_at?: string;
@@ -102,9 +105,9 @@ export const calendarApi = baseApi.injectEndpoints({
 
         return [
           { type: "Calendar", id: "LIST" },
-          ...result.projects.map(({ project_id }) => ({
+          ...result.projects.map(({ project_uuid, project_id }) => ({
             type: "Calendar" as const,
-            id: `PROJECT_${project_id}`,
+            id: `PROJECT_${project_uuid || project_id}`, // ✅ Use UUID first
           })),
           ...result.tasks.map(({ task_id }) => ({
             type: "Calendar" as const,
