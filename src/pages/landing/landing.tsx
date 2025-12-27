@@ -11,15 +11,20 @@ import {
     ChevronLeft,
     FolderArchive,
     FolderOpen,
+    Folders,
     GitBranch,
+    Github,
     Layers,
+    Linkedin,
+    Mail,
     Moon,
     Plus,
     Settings,
     Sun,
     Target,
     Trash2,
-    TrendingUp
+    TrendingUp,
+    Twitter
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
@@ -61,7 +66,7 @@ export const Landing = () => {
         {
             title: "Task Scheduling",
             description: "Schedule tasks directly on your calendar and set deadlines with visual timelines.",
-            icon: <Target className="w-5 h-5" />
+            icon: <Folders className="w-5 h-5" />
         },
         {
             title: "Project Milestones",
@@ -122,6 +127,29 @@ export const Landing = () => {
             dueDate: "Jan 15 - Jan 25, 2026",
             members: []
         },
+    ];
+
+    const footerLinks = {
+        product: [
+            { label: 'Features', href: '#' },
+            { label: 'Pricing', href: '#' },
+            { label: 'Security', href: '#' },
+            { label: 'Roadmap', href: '#' }
+        ],
+        company: [
+            { label: 'About', href: '#' },
+            { label: 'Blog', href: '#' },
+            { label: 'Careers', href: '#' },
+            { label: 'Contact', href: '#' }
+        ],
+
+    };
+
+    const socialLinks = [
+        { icon: Twitter, href: '#', label: 'Twitter' },
+        { icon: Github, href: '#', label: 'GitHub' },
+        { icon: Linkedin, href: '#', label: 'LinkedIn' },
+        { icon: Mail, href: '#', label: 'Email' }
     ];
 
     const workflows = [
@@ -214,7 +242,7 @@ export const Landing = () => {
                         : 'bg-white/80 backdrop-blur-xl border-b border-gray-200'
                     : 'bg-transparent'
                     }`}>
-                <div className="max-w-[1200px] mx-auto px-6 py-4 flex items-center justify-between">
+                <div className="max-w-[1200px] mx-auto px-6  py-4 flex items-center justify-between">
                     <div className="flex items-center gap-8">
                         <div className={`text-base font-medium ${darkMode ? 'text-white' : 'text-black'}`}>
                             <img src={logo} width={40} height={80} alt="boardy logo" />
@@ -265,7 +293,7 @@ export const Landing = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.8, delay: 0.2 }}
                                 className={`text-5xl md:text-6xl lg:text-7xl font-normal tracking-tight mb-6 leading-[1.1] ${darkMode ? 'text-white' : 'text-black'}`}>
-                                Boardy is a purpose built tool for planning and building products
+                                <span className='italic font-semibold pr-2'>Boardy</span> is a  built tool for planning and building products
                             </motion.h1>
 
                             <motion.p
@@ -283,7 +311,7 @@ export const Landing = () => {
                                 transition={{ duration: 0.8, delay: 0.6 }}
                                 className="flex flex-wrap items-center gap-4">
                                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                    <Button className={`text-sm px-6 py-6 ${darkMode ? 'bg-white hover:bg-gray-200 text-black' : 'bg-black hover:bg-gray-800 text-white'}`}>
+                                    <Button className={`text-sm px-6 py-6 ${darkMode ? 'bg-white hover:bg-gray-200 dark:text-black' : 'bg-black hover:bg-gray-800 text-white'}`}>
                                         Start building
                                     </Button>
                                 </motion.div>
@@ -291,7 +319,7 @@ export const Landing = () => {
                                     <Button
                                         variant="ghost"
                                         className={`text-sm px-6 py-6 ${darkMode ? 'hover:bg-white/10 text-white' : 'hover:bg-gray-100 text-black'}`}>
-                                        New: Linear agent for Slack →
+                                        Still Development
                                     </Button>
                                 </motion.div>
                             </motion.div>
@@ -779,6 +807,101 @@ export const Landing = () => {
                     </div>
                 </motion.div>
             </section>
+            <div className=" flex flex-col dark:bg-[#141414]">
+
+
+                {/* Footer */}
+                <footer className="border-t dark:border-white/10">
+                    <div className="max-w-[1200px] mx-auto px-6 py-12">
+                        {/* Main Footer Content */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 mb-12">
+                            {/* Brand Column */}
+                            <div className="col-span-2">
+                                <h3 className="text-xl font-semibold italic mb-3 dark:text-white">
+                                    Boardy
+                                </h3>
+                                <p className="text-sm mb-4 dark:text-gray-400">
+                                    The built tool for planning and building products. Streamline your workflow.
+                                </p>
+                                <div className="flex gap-3">
+                                    {socialLinks.map((social) => {
+                                        const Icon = social.icon;
+                                        return (
+                                            <a
+                                                key={social.label}
+                                                href={social.href}
+                                                aria-label={social.label}
+                                                className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors dark:bg-white/10 dark:hover:bg-white/20 dark:text-gray-400 dark:hover:text-white"
+                                            >
+                                                <Icon className="w-4 h-4" />
+                                            </a>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Product Links */}
+                            <div>
+                                <h4 className="text-sm font-medium mb-3 dark:text-white">
+                                    Product
+                                </h4>
+                                <ul className="space-y-2">
+                                    {footerLinks.product.map((link) => (
+                                        <li key={link.label}>
+                                            <a
+                                                href={link.href}
+                                                className="text-sm transition-colors dark:text-gray-400 dark:hover:text-white"
+                                            >
+                                                {link.label}
+                                            </a>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                            {/* Company Links */}
+                            <div>
+                                <h4 className="text-sm font-medium mb-3 dark:text-white">
+                                    Company
+                                </h4>
+                                <ul className="space-y-2">
+                                    {footerLinks.company.map((link) => (
+                                        <li key={link.label}>
+                                            <a
+                                                href={link.href}
+                                                className="text-sm transition-colors dark:text-gray-400 dark:hover:text-white"
+                                            >
+                                                {link.label}
+                                            </a>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+
+                        {/* Bottom Bar */}
+                        <div className="pt-8 border-t dark:border-white/10 flex flex-col sm:flex-row justify-between items-center gap-4">
+                            <p className="text-sm dark:text-gray-400">
+                                © 2025 Boardy. All rights reserved.
+                            </p>
+                            <div className="flex gap-6">
+                                <a
+                                    href="#"
+                                    className="text-sm transition-colors dark:text-gray-400 dark:hover:text-white"
+                                >
+                                    Privacy Policy
+                                </a>
+                                <a
+                                    href="#"
+                                    className="text-sm transition-colors dark:text-gray-400 dark:hover:text-white"
+                                >
+                                    Terms of Service
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
         </div>
     );
 }
