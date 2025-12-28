@@ -1,26 +1,32 @@
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bolt, CalendarDays, Folders } from "lucide-react";
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 
 export const ProjectInfo = () => {
     const navigate = useNavigate();
-    const { projectId } = useParams();
+    const { projectId } = useParams<{ projectId: string }>();
     const location = useLocation();
     const userId = parseInt(localStorage.getItem('userId') || '10');
-    const [direction, setDirection] = useState(0);
+    const [direction, setDirection] = useState<number>(0);
+    const [hoverStyle, setHoverStyle] = useState<{
+        opacity?: number;
+        left?: number;
+        width?: number;
+    }>({});
+    const tabsListRef = useRef<HTMLDivElement>(null);
 
-    const tabs = ["overview", "tasks", "calendar"];
+    const tabs = ["overview", "tasks", "calendar"] as const;
+    type TabValue = typeof tabs[number];
 
     // Determine active tab based on current route
-    const getActiveTab = () => {
+    const getActiveTab = (): TabValue => {
         const path = location.pathname;
         if (path.includes("/tasks")) return "tasks";
         if (path.includes("/calendar")) return "calendar";
         return "overview";
     };
 
-    const handleTabChange = (value: string) => {
+    const handleTabChange = (value: TabValue) => {
         const currentIndex = tabs.indexOf(getActiveTab());
         const newIndex = tabs.indexOf(value);
         setDirection(newIndex > currentIndex ? 1 : -1);
@@ -38,35 +44,73 @@ export const ProjectInfo = () => {
         }
     };
 
+    const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
+        const button = e.currentTarget;
+        const tabsList = tabsListRef.current;
+
+        if (tabsList) {
+            const tabsListRect = tabsList.getBoundingClientRect();
+            const buttonRect = button.getBoundingClientRect();
+
+            setHoverStyle({
+                opacity: 1,
+                left: buttonRect.left - tabsListRect.left,
+                width: buttonRect.width,
+            });
+        }
+    };
+
+    const handleMouseLeave = () => {
+        setHoverStyle({ opacity: 0 });
+    };
+
+    const tabsConfig: Array<{ value: TabValue; icon: typeof Bolt; label: string }> = [
+        { value: "overview", icon: Bolt, label: "Overview" },
+        { value: "tasks", icon: Folders, label: "Tasks" },
+        { value: "calendar", icon: CalendarDays, label: "Calendar" }
+    ];
+
     return (
-        <div className=" ">
+        <div className="">
             <div className="border-b">
                 <div className="">
-                    <Tabs value={getActiveTab()} onValueChange={handleTabChange}>
-                        <TabsList className="h-auto p-0 bg-transparent border-0  gap-1">
-                            <TabsTrigger
-                                value="overview"
-                                className="rounded-none  px-4 py-3 dark:data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground data-[state=inactive]:border-b-2 data-[state=inactive]:border-transparent hover:text-primary transition-all duration-200 gap-2 border-0 shadow-none"
+                    <div
+                        ref={tabsListRef}
+                        className="h-auto p-0 bg-transparent border-0 gap-1 relative inline-flex"
+                        onMouseLeave={handleMouseLeave}
+                    >
+                        {/* Vercel-style hover indicator */}
+                        <div
+                            className="absolute bottom-0 h-full bg-muted/50 rounded-t-sm transition-all duration-200 ease-out pointer-events-none"
+                            style={{
+                                opacity: hoverStyle.opacity || 0,
+                                left: `${hoverStyle.left || 0}px`,
+                                width: `${hoverStyle.width || 0}px`,
+                                zIndex: 0,
+                            }}
+                        />
+
+                        {tabsConfig.map(({ value, icon: Icon, label }) => (
+                            <button
+                                key={value}
+                                onClick={() => handleTabChange(value)}
+                                onMouseEnter={handleMouseEnter}
+                                className={`
+                                    rounded-none px-4 py-3 
+                                    ${getActiveTab() === value
+                                        ? 'bg-transparent border-b-2 border-primary dark:border-primary'
+                                        : 'bg-transparent text-muted-foreground border-b-2 border-transparent'
+                                    }
+                                    transition-all duration-200 
+                                    gap-2 border-0 shadow-none relative z-10
+                                    flex items-center
+                                `}
                             >
-                                <Bolt className="" />
-                                <span className="text-xs font-medium">Overview</span>
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="tasks"
-                                className="rounded-none dark:data-[state=active]:border-primary px-4 py-3 data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground data-[state=inactive]:border-b-2 data-[state=inactive]:border-transparent hover:text-primary transition-all duration-200 gap-2 border-0 shadow-none"
-                            >
-                                <Folders className="" />
-                                <span className="text-xs font-medium">Tasks</span>
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="calendar"
-                                className="rounded-none dark:data-[state=active]:border-primary px-4 py-3 data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground data-[state=inactive]:border-b-2 data-[state=inactive]:border-transparent hover:text-primary transition-all duration-200 gap-2 border-0 shadow-none"
-                            >
-                                <CalendarDays className="" />
-                                <span className="text-xs font-medium">Calendar</span>
-                            </TabsTrigger>
-                        </TabsList>
-                    </Tabs>
+                                <Icon className="w-4 h-4" />
+                                <span className="text-xs font-medium">{label}</span>
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
@@ -80,7 +124,7 @@ export const ProjectInfo = () => {
                             : 'slideInFromLeft 0.3s ease-out'
                     }}
                 >
-                    <Outlet context={{ userId, projectId: (projectId) }} />
+                    <Outlet context={{ userId, projectId }} />
                 </div>
             </div>
 

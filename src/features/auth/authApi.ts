@@ -6,36 +6,19 @@ import type {
   UserResponse,
   UsersListResponse,
   DeleteUserResponse,
-  RegisterRequest,
-  LoginRequest,
-  AuthResponse,
   SearchUsersResponse,
 } from "../interfaces/userInterface";
 
 export const userApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    // ============ AUTH ENDPOINTS ============
-
-    // POST /auth/register - Register new user
-    register: builder.mutation<AuthResponse, RegisterRequest>({
-      query: (body) => ({
-        url: "/auth/register",
-        method: "POST",
-        body,
-      }),
-      invalidatesTags: [{ type: "User", id: "LIST" }],
-    }),
-
-    // POST /auth/login - Login user
-    login: builder.mutation<AuthResponse, LoginRequest>({
-      query: (body) => ({
-        url: "/auth/login",
-        method: "POST",
-        body,
-      }),
-    }),
-
     // ============ USER ENDPOINTS ============
+
+    // GET /users/me - Get current user profile
+    getCurrentUser: builder.query<User, void>({
+      query: () => "/users/me",
+      transformResponse: (response: UserResponse) => response.user,
+      providesTags: [{ type: "User", id: "CURRENT" }],
+    }),
 
     // GET /users - List all users
     getUsers: builder.query<User[], void>({
@@ -60,6 +43,14 @@ export const userApi = baseApi.injectEndpoints({
       providesTags: (_result, _error, userId) => [{ type: "User", id: userId }],
     }),
 
+    // GET /users/clerk/:clerkId - Get user by Clerk ID
+    getUserByClerkId: builder.query<User, string>({
+      query: (clerkId) => `/users/clerk/${clerkId}`,
+      transformResponse: (response: UserResponse) => response.user,
+      providesTags: (result) =>
+        result ? [{ type: "User", id: result.user_id }] : [],
+    }),
+
     // GET /users/search?q=query - Search users by email
     searchUsersByEmail: builder.query<User[], string>({
       query: (query) => `/users/search?q=${encodeURIComponent(query)}`,
@@ -75,7 +66,7 @@ export const userApi = baseApi.injectEndpoints({
           : [],
     }),
 
-    // POST /users - Create new user (admin endpoint)
+    // POST /users - Create new user (sync from Clerk)
     createUser: builder.mutation<User, CreateUserRequest>({
       query: (body) => ({
         url: "/users",
@@ -86,7 +77,7 @@ export const userApi = baseApi.injectEndpoints({
       invalidatesTags: [{ type: "User", id: "LIST" }],
     }),
 
-    // PUT /users/:userId - Update user
+    // PUT /users/:userId - Update user profile
     updateUser: builder.mutation<
       User,
       { userId: number; data: UpdateUserRequest }
@@ -100,10 +91,11 @@ export const userApi = baseApi.injectEndpoints({
       invalidatesTags: (_result, _error, { userId }) => [
         { type: "User", id: userId },
         { type: "User", id: "LIST" },
+        { type: "User", id: "CURRENT" },
       ],
     }),
 
-    // DELETE /users/:userId - Delete user
+    // DELETE /users/:userId - Delete user account
     deleteUser: builder.mutation<DeleteUserResponse, number>({
       query: (userId) => ({
         url: `/users/${userId}`,
@@ -112,6 +104,7 @@ export const userApi = baseApi.injectEndpoints({
       invalidatesTags: (_result, _error, userId) => [
         { type: "User", id: userId },
         { type: "User", id: "LIST" },
+        { type: "User", id: "CURRENT" },
       ],
     }),
   }),
@@ -119,15 +112,14 @@ export const userApi = baseApi.injectEndpoints({
 
 // Export hooks for usage in components
 export const {
-  // Auth hooks
-  useRegisterMutation,
-  useLoginMutation,
-
   // User hooks
+  useGetCurrentUserQuery,
+  useLazyGetCurrentUserQuery,
   useGetUsersQuery,
   useGetUserByIdQuery,
+  useGetUserByClerkIdQuery,
   useSearchUsersByEmailQuery,
-  useLazySearchUsersByEmailQuery, // For manual triggering
+  useLazySearchUsersByEmailQuery,
   useCreateUserMutation,
   useUpdateUserMutation,
   useDeleteUserMutation,

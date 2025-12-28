@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { useUser } from "@clerk/clerk-react";
 import {
     Bolt,
     Calendar,
@@ -11,7 +12,7 @@ import {
     FolderOpen,
     Settings
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ModeToggle } from "../common/mode-toggle";
 import type { SidebarProps } from "./types";
@@ -28,20 +29,15 @@ const workspaceItems = [
 
 export const Sidebar = ({ className }: SidebarProps) => {
     const [isCollapsed, setIsCollapsed] = useState(false);
-    const [userData, setUserData] = useState({ name: '', email: '' });
     const location = useLocation();
 
     const isActive = (path: string) =>
         path === "/"
             ? location.pathname === "/"
             : location.pathname === path || location.pathname.startsWith(path + "/");
-    useEffect(() => {
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        setUserData({
-            name: user.userName || user.name || 'Guest User',
-            email: user.userEmail || user.email || 'No email'
-        });
-    }, []);
+
+
+    const { user } = useUser();
     return (
         <div
             id="sidebar-navigation"
@@ -68,10 +64,10 @@ export const Sidebar = ({ className }: SidebarProps) => {
             {!isCollapsed && (
                 <div className="px-4 py-4">
                     <div className="text-sm font-semibold text-gray-900 dark:text-slate-200">
-                        {userData.name}
+                        {user?.fullName || user?.firstName || 'Guest User'}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-muted-foreground">
-                        Free Plan · {userData.email}
+                        Free Plan · {user?.primaryEmailAddress?.emailAddress || 'No email'}
                     </div>
                 </div>
             )}

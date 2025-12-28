@@ -31,7 +31,7 @@ export const SectionToolbar: React.FC<SectionToolbarProps> = ({
     children
 }) => {
     return (
-        <div className="relative w-full flex items-center justify-between px-4 py-3 rounded-lg border border-primary/20 bg-primary/8 overflow-hidden">
+        <div className="relative w-full flex items-center justify-between px-4 py-3 rounded-lg border border-primary/20 bg-primary/6 overflow-hidden">
             <div
                 className="absolute inset-0 pointer-events-none"
                 style={{

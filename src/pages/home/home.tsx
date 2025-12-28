@@ -4,6 +4,7 @@ import { AppTour } from "@/components/tour/Apptour";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useGetDashboardDataQuery } from "@/features/dashboardApi";
 import { differenceInDays, format, parseISO } from "date-fns";
 import {
     AlertCircle,
@@ -15,13 +16,13 @@ import {
     FolderOpen,
     Folders,
     GitBranch,
-    Package,
     TrendingUp,
     Users
 } from "lucide-react";
-import { useGetDashboardDataQuery } from "../../features/dashboardApi";
+import { useNavigate } from "react-router-dom";
 
 export const Home = () => {
+    const navigate = useNavigate();
     const { data, isLoading, isError, refetch } = useGetDashboardDataQuery();
 
     const getPriorityColor = (priority: string) => {
@@ -99,9 +100,9 @@ export const Home = () => {
         {
             label: "Total Projects",
             value: dashboardData?.totalProjects || 0,
-            icon: Package,
-            iconBg: "bg-blue-100 dark:bg-blue-900/20",
-            iconColor: "text-primary",
+            icon: FolderOpen,
+            iconBg: "bg-orange-100 dark:bg-orange-900/20",
+            iconColor: "text-orange-400",
             trend: `${dashboardData?.completedProjects || 0} completed`,
             trendPositive: true
         },
@@ -110,7 +111,7 @@ export const Home = () => {
             value: dashboardData?.completedProjects || 0,
             icon: CheckCircle2,
             iconBg: "bg-green-100 dark:bg-green-900/20",
-            iconColor: "text-primary",
+            iconColor: "text-green-400",
             trend: `${Math.round(((dashboardData?.completedProjects || 0) / (dashboardData?.totalProjects || 1)) * 100)}% completion rate`,
             trendPositive: true
         },
@@ -118,8 +119,8 @@ export const Home = () => {
             label: "Team Members",
             value: dashboardData?.totalTeamMembers || 0,
             icon: Users,
-            iconBg: "bg-purple-100 dark:bg-purple-900/20",
-            iconColor: "text-primary",
+            iconBg: "bg-purple-100 dark:bg-blue-900/20",
+            iconColor: "text-blue-400",
             subtext: "Active collaborators",
             trendPositive: false
         }
@@ -199,9 +200,7 @@ export const Home = () => {
                         variant="outline"
                         size="lg"
                         className="mt-10 px-8 py-3 gap-2 text-sm font-medium transition-colors"
-                        onClick={() => {
-                            window.location.href = '/projects';
-                        }}
+                        onClick={() => navigate('/projects')}
                     >
                         Start your first project
                         <ArrowRight className="h-4 w-4" />
@@ -218,7 +217,7 @@ export const Home = () => {
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
                         {statsData.map((stat, index) => (
                             <Card key={index} className="bg-white shadow-sm dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] hover:shadow-md transition-shadow">
-                                <CardContent className="pt-6">
+                                <CardContent className="">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
@@ -229,8 +228,7 @@ export const Home = () => {
                                             </div>
                                         </div>
                                         <div className="relative flex items-center justify-center w-14 h-14 rounded-lg">
-                                            <div className="absolute inset-0 rounded-full bg-primary/15 blur-md"></div>
-                                            <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-primary/10">
+                                            <div className={`flex items-center justify-center w-12 h-12 rounded-lg ${stat.iconBg}  `}>
                                                 <stat.icon className={`relative z-10 h-6 w-6 ${stat.iconColor}`} />
                                             </div>
                                         </div>
@@ -262,6 +260,7 @@ export const Home = () => {
                                             variant="outline"
                                             size={'sm'}
                                             className=" p-0 text-xs h-auto "
+                                            onClick={() => navigate('/projects')}
                                         >
                                             View All <ArrowRight className="h-3 w-3 ml-1" />
                                         </Button>
@@ -276,7 +275,7 @@ export const Home = () => {
                                                 size="sm"
                                                 variant="outline"
                                                 className="mt-4"
-                                                onClick={() => window.location.href = '/tasks'}
+                                                onClick={() => navigate('/projects')}
                                             >
                                                 Create Task
                                             </Button>

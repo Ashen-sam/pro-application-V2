@@ -56,6 +56,7 @@ export interface GetProjectResponse extends ApiResponse {
 export interface CreateProjectResponse extends ApiResponse {
   project: Project;
   membersAdded?: number;
+  emailsSent?: number;
 }
 
 export interface UpdateProjectResponse extends ApiResponse {
@@ -119,9 +120,9 @@ export const projectApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ project_id }) => ({
+              ...result.map(({ project_uuid, project_id }) => ({
                 type: "Project" as const,
-                id: project_id,
+                id: project_uuid || project_id,
               })),
               { type: "Project", id: "LIST" },
             ]
@@ -138,10 +139,12 @@ export const projectApi = baseApi.injectEndpoints({
       },
     }),
 
-    getProjectById: builder.query<Project, number | string>({
-      query: (projectId) => `/projects/${projectId}`,
+    getProjectById: builder.query<Project, string>({
+      query: (projectUuid) => `/projects/${projectUuid}`,
       transformResponse: (response: GetProjectResponse) => response.project,
-      providesTags: (_r, _e, projectId) => [{ type: "Project", id: projectId }],
+      providesTags: (_r, _e, projectUuid) => [
+        { type: "Project", id: projectUuid },
+      ],
     }),
 
     createProject: builder.mutation<Project, CreateProjectRequest>({
@@ -152,9 +155,10 @@ export const projectApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: CreateProjectResponse) => response.project,
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-        const tempId = Date.now();
+        const tempId = `temp-${Date.now()}`;
         const optimisticProject: Project = {
           project_id: tempId,
+          project_uuid: tempId,
           name: arg.name,
           description: arg.description,
           status: arg.status,
@@ -184,7 +188,9 @@ export const projectApi = baseApi.injectEndpoints({
               "listProjects",
               undefined,
               (draft) => {
-                const index = draft.findIndex((p) => p.project_id === tempId);
+                const index = draft.findIndex(
+                  (p) => p.project_uuid === tempId || p.project_id === tempId
+                );
                 if (index !== -1) {
                   draft[index] = {
                     ...data,
@@ -198,11 +204,12 @@ export const projectApi = baseApi.injectEndpoints({
           patch.undo();
         }
       },
+      invalidatesTags: [{ type: "Project", id: "LIST" }],
     }),
 
     updateProject: builder.mutation<
       Project,
-      { projectId: number | string; data: UpdateProjectRequest }
+      { projectId: string; data: UpdateProjectRequest }
     >({
       query: ({ projectId, data }) => ({
         url: `/projects/${projectId}`,
@@ -216,16 +223,22 @@ export const projectApi = baseApi.injectEndpoints({
             "listProjects",
             undefined,
             (draft) => {
-              const project = draft.find((p) => p.project_id === projectId);
+              const project = draft.find(
+                (p) =>
+                  p.project_uuid === projectId ||
+                  String(p.project_id) === String(projectId)
+              );
               if (project) {
                 Object.assign(project, data);
                 if (data.memberEmails !== undefined) {
                   project.memberEmails = data.memberEmails;
                 }
+                project.updated_at = new Date().toISOString();
               }
             }
           )
         );
+
         const patchSingle = dispatch(
           projectApi.util.updateQueryData(
             "getProjectById",
@@ -235,9 +248,11 @@ export const projectApi = baseApi.injectEndpoints({
               if (data.memberEmails !== undefined) {
                 draft.memberEmails = data.memberEmails;
               }
+              draft.updated_at = new Date().toISOString();
             }
           )
         );
+
         try {
           const { data: updatedProject } = await queryFulfilled;
           dispatch(
@@ -245,7 +260,11 @@ export const projectApi = baseApi.injectEndpoints({
               "listProjects",
               undefined,
               (draft) => {
-                const project = draft.find((p) => p.project_id === projectId);
+                const project = draft.find(
+                  (p) =>
+                    p.project_uuid === projectId ||
+                    String(p.project_id) === String(projectId)
+                );
                 if (project) {
                   Object.assign(project, updatedProject);
                 }
@@ -257,29 +276,30 @@ export const projectApi = baseApi.injectEndpoints({
           patchSingle.undo();
         }
       },
+      invalidatesTags: (_result, _error, { projectId }) => [
+        { type: "Project", id: projectId },
+        { type: "Project", id: "LIST" },
+      ],
     }),
 
-    deleteProject: builder.mutation<
-      DeleteProjectResponse,
-      number | string | (number | string)[]
-    >({
-      query: (projectIdOrIds) => {
-        if (Array.isArray(projectIdOrIds)) {
+    deleteProject: builder.mutation<DeleteProjectResponse, string | string[]>({
+      query: (projectUuidOrUuids) => {
+        if (Array.isArray(projectUuidOrUuids)) {
           return {
-            url: `/projects/${projectIdOrIds[0]}`,
+            url: `/projects/${projectUuidOrUuids[0]}`,
             method: "DELETE",
-            body: { projectIds: projectIdOrIds },
+            body: { projectIds: projectUuidOrUuids },
           };
         }
         return {
-          url: `/projects/${projectIdOrIds}`,
+          url: `/projects/${projectUuidOrUuids}`,
           method: "DELETE",
         };
       },
-      async onQueryStarted(projectIdOrIds, { dispatch, queryFulfilled }) {
-        const idsToDelete = Array.isArray(projectIdOrIds)
-          ? projectIdOrIds
-          : [projectIdOrIds];
+      async onQueryStarted(projectUuidOrUuids, { dispatch, queryFulfilled }) {
+        const uuidsToDelete = Array.isArray(projectUuidOrUuids)
+          ? projectUuidOrUuids
+          : [projectUuidOrUuids];
 
         const patch = dispatch(
           projectApi.util.updateQueryData(
@@ -287,37 +307,47 @@ export const projectApi = baseApi.injectEndpoints({
             undefined,
             (draft) => {
               return draft.filter((p) => {
-                const pId = p.project_uuid || p.project_id;
-                return !idsToDelete.includes(pId);
+                const pId = p.project_uuid || String(p.project_id);
+                return !uuidsToDelete.includes(pId);
               });
             }
           )
         );
+
         try {
           await queryFulfilled;
         } catch {
           patch.undo();
         }
       },
+      invalidatesTags: (_result, _error, projectUuidOrUuids) => {
+        const uuids = Array.isArray(projectUuidOrUuids)
+          ? projectUuidOrUuids
+          : [projectUuidOrUuids];
+        return [
+          ...uuids.map((id) => ({ type: "Project" as const, id })),
+          { type: "Project", id: "LIST" },
+        ];
+      },
     }),
 
-    listProjectMembers: builder.query<ProjectMember[], number | string>({
-      query: (projectId) => `/projects/${projectId}/members`,
+    listProjectMembers: builder.query<ProjectMember[], string>({
+      query: (projectUuid) => `/projects/${projectUuid}/members`,
       transformResponse: (response: ListProjectMembersResponse) => {
         if (!response.success || !response.members) {
           return [];
         }
         return response.members;
       },
-      providesTags: (_r, _e, projectId) => [
-        { type: "ProjectMember", id: `PROJECT_${projectId}` },
+      providesTags: (_r, _e, projectUuid) => [
+        { type: "ProjectMember", id: `PROJECT_${projectUuid}` },
         { type: "ProjectMember", id: "LIST" },
       ],
     }),
 
     sendProjectInvites: builder.mutation<
       { success: boolean; message: string; emailsSent?: number },
-      { projectId: number | string; memberEmails: string[] }
+      { projectId: string; memberEmails: string[] }
     >({
       query: ({ projectId, memberEmails }) => ({
         url: `/projects/${projectId}/invites`,
@@ -340,7 +370,7 @@ export const projectApi = baseApi.injectEndpoints({
 
     addProjectMember: builder.mutation<
       ProjectMember,
-      { projectId: number | string; data: AddProjectMemberRequest }
+      { projectId: string; data: AddProjectMemberRequest }
     >({
       query: ({ projectId, data }) => ({
         url: `/projects/${projectId}/members`,
@@ -357,6 +387,7 @@ export const projectApi = baseApi.injectEndpoints({
           added_at: new Date().toISOString(),
           users: { name: "Pending...", email: "" },
         };
+
         const patch = dispatch(
           projectApi.util.updateQueryData(
             "listProjectMembers",
@@ -366,6 +397,7 @@ export const projectApi = baseApi.injectEndpoints({
             }
           )
         );
+
         try {
           const { data: realMember } = await queryFulfilled;
           dispatch(
@@ -384,7 +416,12 @@ export const projectApi = baseApi.injectEndpoints({
           patch.undo();
         }
       },
+      invalidatesTags: (_result, _error, { projectId }) => [
+        { type: "ProjectMember", id: `PROJECT_${projectId}` },
+        { type: "ProjectMember", id: "LIST" },
+      ],
     }),
+
     generateProjectDescription: builder.mutation<
       { success: boolean; description: string },
       { projectName: string; projectType?: string }

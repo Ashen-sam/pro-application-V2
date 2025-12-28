@@ -13,7 +13,7 @@ import { useMemo } from "react";
 import { useOutletContext } from "react-router";
 
 interface OverviewContext {
-    projectId: number;
+    projectId: string;
 }
 
 

@@ -74,9 +74,5 @@ export const dashboardApi = baseApi.injectEndpoints({
   overrideExisting: false,
 });
 
-// ===========================
-// EXPORT HOOKS
-// ===========================
-
 export const { useGetDashboardDataQuery, useLazyGetDashboardDataQuery } =
   dashboardApi;

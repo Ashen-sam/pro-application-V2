@@ -17,7 +17,6 @@ import { SectionToolbar } from "@/components/common/SectionToolbar";
 export const Projects = () => {
     const {
         projects,
-        currentUserId,
         isFetching,
         isError,
         isAddDialogOpen,
@@ -58,7 +57,7 @@ export const Projects = () => {
         isBulkDeleteDialogOpen,
         handleBulkDeleteClick,
         handleBulkDeleteProject,
-        handleUpdateProject,
+        handleInlineUpdateProject,
         isAiLoading,
     } = useProjects();
 
@@ -67,7 +66,6 @@ export const Projects = () => {
             key: "name",
             header: "Project Name",
             accessor: (row: Project) => row.name,
-
         },
         {
             key: "status",
@@ -96,7 +94,6 @@ export const Projects = () => {
                     );
                 }
 
-                // FIX: Parse dates without timezone conversion
                 const fromDate = row.dateRange.from ? (() => {
                     const d = new Date(row.dateRange.from);
                     return format(new Date(d.getFullYear(), d.getMonth(), d.getDate()), "MMM dd");
@@ -144,18 +141,6 @@ export const Projects = () => {
         handleNavigateToProject(row.project_uuid || row.project_id);
     };
 
-    if (!currentUserId) {
-        return (
-            <div className="flex items-center justify-center min-h-[700px]">
-                <div className="text-center space-y-4">
-                    <p className="text-sm text-muted-foreground">
-                        Please log in to view your projects
-                    </p>
-                </div>
-            </div>
-        );
-    }
-
     if (isFetching) {
         return (
             <div className="flex items-center justify-center min-h-[700px]">
@@ -194,10 +179,8 @@ export const Projects = () => {
             {projects.length === 0 ? (
                 <div className="flex items-center justify-center min-h-[700px]">
                     <div className="flex flex-col items-center max-w-md text-center space-y-4 px-6">
-
                         <div className="relative flex items-center justify-center">
                             <div className="absolute h-20 w-20 rounded-full bg-primary/80 blur-3xl"></div>
-
                             <Folders className="h-10 w-10 text-primary" />
                         </div>
 
@@ -222,7 +205,6 @@ export const Projects = () => {
                         </div>
                     </div>
                 </div>
-
             ) : (
                 <div className="space-y-4">
                     <SectionToolbar
@@ -239,14 +221,13 @@ export const Projects = () => {
                         secondaryDisabled={selectedRows.length === 0}
                     />
 
-
                     <CommonTable
                         selectable
                         rowKey={(row) => row.project_uuid || String(row.project_id)}
                         data={projects}
                         columns={tableColumns}
                         onSelectionChange={setSelectedRows}
-                        onUpdateProject={handleUpdateProject}
+                        onUpdateProject={handleInlineUpdateProject}
                         onViewRow={handleViewRow}
                         onDeleteRow={handleDeleteClick}
                         onAddDescription={handleAddDescriptionClick}

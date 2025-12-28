@@ -1,8 +1,9 @@
 import { showToast } from "@/components/common/commonToast";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import type { PriorityType, StatusType } from "@/components";
 import { initialFormData } from "@/components/common/projectForm";
+import { useUser } from "@clerk/clerk-react";
 import {
   useCreateProjectMutation,
   useDeleteProjectMutation,
@@ -12,6 +13,7 @@ import {
   useGenerateProjectDescriptionMutation,
   type Project as ApiProject,
 } from "../../../features/projectsApi";
+import { useGetCurrentUserQuery } from "@/features/auth/authApi";
 
 interface ApiErrorResponse {
   data?: {
@@ -47,16 +49,6 @@ export interface Project extends ApiProject, Record<string, unknown> {
     to: Date;
   };
 }
-
-const getCurrentUserId = (): number | null => {
-  try {
-    const userId = localStorage.getItem("userId");
-    return userId ? Number(userId) : null;
-  } catch (error) {
-    console.error("Error reading userId from localStorage:", error);
-    return null;
-  }
-};
 
 const formatDate = (date: Date): string => {
   return date.toLocaleDateString("en-US", {
@@ -100,7 +92,6 @@ const mapApiPriorityToUi = (apiPriority?: string): PriorityType => {
 };
 
 const transformApiProject = (apiProject: ApiProject): Project => {
-  // FIX: Parse dates without timezone offset
   const startDate = apiProject.start_date
     ? (() => {
         const d = new Date(apiProject.start_date);
@@ -144,16 +135,22 @@ const mapStatusToApi = (uiStatus: StatusType): string => {
 export const useProjects = () => {
   const navigate = useNavigate();
   const isSubmittingRef = useRef(false);
-  const [currentUserId] = useState<number | null>(() => getCurrentUserId());
+
+  const { user: clerkUser, isLoaded: clerkLoaded } = useUser();
+  const { data: dbUser } = useGetCurrentUserQuery(undefined, {
+    skip: !clerkLoaded,
+  });
+  const currentUserId =
+    dbUser?.user_id || (clerkUser?.id ? Number(clerkUser.id) : null);
 
   const {
     data: projectsData,
-    isFetching,
+    isFetching: isInitialFetching,
     refetch,
     isError,
     error,
   } = useListProjectsQuery(undefined, {
-    skip: !currentUserId,
+    skip: !clerkLoaded || !currentUserId,
   });
 
   const [createProject] = useCreateProjectMutation();
@@ -180,17 +177,22 @@ export const useProjects = () => {
   const [formData, setFormData] = useState(initialFormData);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [selectedRows, setSelectedRows] = useState<Project[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+
+  // Only show fetching on initial load
+  const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
+  const isFetching = isInitialFetching && !hasInitiallyLoaded;
 
   useEffect(() => {
     if (projectsData && Array.isArray(projectsData)) {
       const transformedProjects = projectsData.map(transformApiProject);
       setProjects(transformedProjects);
-    } else {
+      setHasInitiallyLoaded(true);
+    } else if (!isInitialFetching) {
       setProjects([]);
+      setHasInitiallyLoaded(true);
     }
-  }, [projectsData]);
+  }, [projectsData, isInitialFetching]);
 
   const resetForm = useCallback(() => {
     setFormData(initialFormData);
@@ -215,9 +217,18 @@ export const useProjects = () => {
     const day = String(d.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
+
   const handleAddProjectAndCreateAnother = useCallback(async () => {
+    if (!clerkLoaded) {
+      showToast.error("Loading authentication...", "auth-loading");
+      return;
+    }
+
     if (!currentUserId) {
-      showToast.error("User not authenticated", "auth-error");
+      showToast.error(
+        "User ID not found. Please refresh the page.",
+        "auth-error"
+      );
       return;
     }
 
@@ -237,11 +248,11 @@ export const useProjects = () => {
     }
 
     isSubmittingRef.current = true;
-    setIsLoading(true);
 
-    const tempId = Date.now();
+    const tempId = `temp-${Date.now()}`;
     const optimisticProject: Project = {
       project_id: tempId,
+      project_uuid: tempId,
       name: formData.name.trim(),
       description: formData.description.trim(),
       status: formData.status,
@@ -270,8 +281,10 @@ export const useProjects = () => {
       ),
     };
 
+    // Optimistic update
     setProjects((prev) => [optimisticProject, ...prev]);
     showToast.success("Project created successfully", "create-success");
+    resetForm();
 
     const createPayload = {
       name: formData.name.trim(),
@@ -280,7 +293,7 @@ export const useProjects = () => {
       end_date: formatDateForApi(formData.dateRange.to),
       status: mapStatusToApi(formData.status),
       priority: formData.priority,
-      owner_id: currentUserId,
+      owner_id: Number(currentUserId),
       memberEmails: formData.memeberEmails.filter(
         (email) => email.trim() !== ""
       ),
@@ -289,15 +302,18 @@ export const useProjects = () => {
     try {
       const result = await createProject(createPayload).unwrap();
 
+      // Replace temporary project with real one
       setProjects((prev) =>
         prev.map((p) =>
-          p.project_id === tempId ? transformApiProject(result) : p
+          p.project_uuid === tempId || p.project_id === tempId
+            ? transformApiProject(result)
+            : p
         )
       );
 
-      if (formData.memeberEmails.length > 0) {
+      if (formData.memeberEmails.length > 0 && result.project_uuid) {
         sendProjectInvites({
-          projectId: result.project_id,
+          projectId: result.project_uuid,
           memberEmails: formData.memeberEmails,
         })
           .unwrap()
@@ -315,21 +331,36 @@ export const useProjects = () => {
             );
           });
       }
-
-      resetForm();
     } catch (error: unknown) {
-      setProjects((prev) => prev.filter((p) => p.project_id !== tempId));
+      // Rollback on error
+      setProjects((prev) =>
+        prev.filter((p) => p.project_uuid !== tempId && p.project_id !== tempId)
+      );
       const errorMessage = getErrorMessage(error) || "Failed to create project";
       showToast.error(errorMessage, "create-error");
     } finally {
       isSubmittingRef.current = false;
-      setIsLoading(false);
     }
-  }, [formData, currentUserId, createProject, sendProjectInvites, resetForm]);
+  }, [
+    formData,
+    currentUserId,
+    createProject,
+    sendProjectInvites,
+    resetForm,
+    clerkLoaded,
+  ]);
 
   const handleAddProject = useCallback(async () => {
+    if (!clerkLoaded) {
+      showToast.error("Loading authentication...", "auth-loading");
+      return;
+    }
+
     if (!currentUserId) {
-      showToast.error("User not authenticated", "auth-error");
+      showToast.error(
+        "User ID not found. Please refresh the page.",
+        "auth-error"
+      );
       return;
     }
 
@@ -349,11 +380,11 @@ export const useProjects = () => {
     }
 
     isSubmittingRef.current = true;
-    setIsLoading(true);
 
-    const tempId = Date.now();
+    const tempId = `temp-${Date.now()}`;
     const optimisticProject: Project = {
       project_id: tempId,
+      project_uuid: tempId,
       name: formData.name.trim(),
       description: formData.description.trim(),
       status: formData.status,
@@ -382,6 +413,7 @@ export const useProjects = () => {
       ),
     };
 
+    // Optimistic update
     setProjects((prev) => [optimisticProject, ...prev]);
     closeAllDialogs();
     showToast.success("Project created successfully", "create-success");
@@ -389,11 +421,11 @@ export const useProjects = () => {
     const createPayload = {
       name: formData.name.trim(),
       description: formData.description.trim(),
-      start_date: formData.dateRange.from.toISOString(),
-      end_date: formData.dateRange.to.toISOString(),
+      start_date: formatDateForApi(formData.dateRange.from),
+      end_date: formatDateForApi(formData.dateRange.to),
       status: mapStatusToApi(formData.status),
       priority: formData.priority,
-      owner_id: currentUserId,
+      owner_id: Number(currentUserId),
       memberEmails: formData.memeberEmails.filter(
         (email) => email.trim() !== ""
       ),
@@ -402,15 +434,18 @@ export const useProjects = () => {
     try {
       const result = await createProject(createPayload).unwrap();
 
+      // Replace temporary project with real one
       setProjects((prev) =>
         prev.map((p) =>
-          p.project_id === tempId ? transformApiProject(result) : p
+          p.project_uuid === tempId || p.project_id === tempId
+            ? transformApiProject(result)
+            : p
         )
       );
 
-      if (formData.memeberEmails.length > 0) {
+      if (formData.memeberEmails.length > 0 && result.project_uuid) {
         sendProjectInvites({
-          projectId: result.project_uuid || result.project_id, // ✅ Use UUID first
+          projectId: result.project_uuid,
           memberEmails: formData.memeberEmails,
         })
           .unwrap()
@@ -432,13 +467,15 @@ export const useProjects = () => {
           });
       }
     } catch (error: unknown) {
-      setProjects((prev) => prev.filter((p) => p.project_id !== tempId));
+      // Rollback on error
+      setProjects((prev) =>
+        prev.filter((p) => p.project_uuid !== tempId && p.project_id !== tempId)
+      );
       console.error("Failed to create project:", error);
       const errorMessage = getErrorMessage(error) || "Failed to create project";
       showToast.error(errorMessage, "create-error");
     } finally {
       isSubmittingRef.current = false;
-      setIsLoading(false);
     }
   }, [
     formData,
@@ -446,6 +483,7 @@ export const useProjects = () => {
     createProject,
     sendProjectInvites,
     closeAllDialogs,
+    clerkLoaded,
   ]);
 
   const typeText = (text: string, speed: number = 30) => {
@@ -475,15 +513,17 @@ export const useProjects = () => {
   const handleBulkDeleteProject = useCallback(async () => {
     if (isSubmittingRef.current || selectedRows.length === 0) return;
     isSubmittingRef.current = true;
-    setIsLoading(true);
 
-    const projectIds = selectedRows.map((p) => p.project_uuid || p.project_id);
+    const projectUuids = selectedRows.map(
+      (p) => p.project_uuid || String(p.project_id)
+    );
     const deletedProjects = [...selectedRows];
 
+    // Optimistic update
     setProjects((prev) =>
       prev.filter((p) => {
-        const pId = p.project_uuid || p.project_id;
-        return !projectIds.includes(pId);
+        const pId = p.project_uuid || String(p.project_id);
+        return !projectUuids.includes(pId);
       })
     );
     setIsBulkDeleteDialogOpen(false);
@@ -494,20 +534,20 @@ export const useProjects = () => {
     }, 300);
 
     showToast.success(
-      `Successfully deleted ${projectIds.length} project(s)`,
+      `Successfully deleted ${projectUuids.length} project(s)`,
       "bulk-delete-success"
     );
 
     try {
-      await deleteProject(projectIds).unwrap();
+      await deleteProject(projectUuids).unwrap();
     } catch (error: unknown) {
+      // Rollback on error
       setProjects((prev) => [...deletedProjects, ...prev]);
       const errorMessage =
         getErrorMessage(error) || "Failed to delete projects";
       showToast.error(errorMessage, "bulk-delete-error");
     } finally {
       isSubmittingRef.current = false;
-      setIsLoading(false);
     }
   }, [selectedRows, deleteProject, resetForm]);
 
@@ -527,6 +567,7 @@ export const useProjects = () => {
     });
     setIsEditDialogOpen(true);
   }, []);
+
   const handleGenerateDescription = async () => {
     if (!descriptionProject?.name) {
       showToast.error("Project name is required", "validation-error");
@@ -547,25 +588,36 @@ export const useProjects = () => {
         setAiGenerationStatus("");
         showToast.success("Description generated successfully", "ai-success");
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       setAiGenerationStatus("");
       setIsTyping(false);
       console.error("AI generation failed:", error);
     }
   };
+
   const handleInlineUpdateProject = useCallback(
     async (updatedRow: Project) => {
-      if (!updatedRow || !updatedRow.project_id) return;
+      if (!updatedRow || (!updatedRow.project_uuid && !updatedRow.project_id))
+        return;
 
-      const originalProject = projects.find(
-        (p) => p.project_id === updatedRow.project_id
-      );
+      const originalProject = projects.find((p) => {
+        const pId = p.project_uuid || String(p.project_id);
+        const targetId =
+          updatedRow.project_uuid || String(updatedRow.project_id);
+        return pId === targetId;
+      });
+
       if (!originalProject) return;
 
+      // Optimistic update
       setProjects((prev) =>
-        prev.map((p) =>
-          p.project_id === updatedRow.project_id ? { ...p, ...updatedRow } : p
-        )
+        prev.map((p) => {
+          const pId = p.project_uuid || String(p.project_id);
+          const targetId =
+            updatedRow.project_uuid || String(updatedRow.project_id);
+          return pId === targetId ? { ...p, ...updatedRow } : p;
+        })
       );
 
       showToast.success("Project updated", "inline-update-success");
@@ -615,23 +667,31 @@ export const useProjects = () => {
       }
 
       try {
+        const projectUuid =
+          updatedRow.project_uuid || String(updatedRow.project_id);
         const result = await updateProject({
-          projectId: updatedRow.project_uuid || updatedRow.project_id,
+          projectId: projectUuid,
           data: updatePayload,
         }).unwrap();
 
+        // Update with server response
         setProjects((prev) =>
-          prev.map((p) =>
-            p.project_id === updatedRow.project_id
-              ? transformApiProject(result)
-              : p
-          )
+          prev.map((p) => {
+            const pId = p.project_uuid || String(p.project_id);
+            const targetId =
+              updatedRow.project_uuid || String(updatedRow.project_id);
+            return pId === targetId ? transformApiProject(result) : p;
+          })
         );
       } catch (error: unknown) {
+        // Rollback on error
         setProjects((prev) =>
-          prev.map((p) =>
-            p.project_id === updatedRow.project_id ? originalProject : p
-          )
+          prev.map((p) => {
+            const pId = p.project_uuid || String(p.project_id);
+            const targetId =
+              updatedRow.project_uuid || String(updatedRow.project_id);
+            return pId === targetId ? originalProject : p;
+          })
         );
         const errorMessage =
           getErrorMessage(error) || "Failed to update project";
@@ -655,7 +715,6 @@ export const useProjects = () => {
       return;
     }
     isSubmittingRef.current = true;
-    setIsLoading(true);
 
     const originalProject = selectedProject;
 
@@ -685,10 +744,14 @@ export const useProjects = () => {
       updated_at: new Date().toISOString(),
     };
 
+    // Optimistic update
     setProjects((prev) =>
-      prev.map((p) =>
-        p.project_id === selectedProject.project_id ? updatedProject : p
-      )
+      prev.map((p) => {
+        const pId = p.project_uuid || String(p.project_id);
+        const targetId =
+          selectedProject.project_uuid || String(selectedProject.project_id);
+        return pId === targetId ? updatedProject : p;
+      })
     );
 
     closeAllDialogs();
@@ -707,29 +770,36 @@ export const useProjects = () => {
     };
 
     try {
+      const projectUuid =
+        selectedProject.project_uuid || String(selectedProject.project_id);
       const result = await updateProject({
-        projectId: selectedProject.project_id,
+        projectId: projectUuid,
         data: updatePayload,
       }).unwrap();
 
+      // Update with server response
       setProjects((prev) =>
-        prev.map((p) =>
-          p.project_id === selectedProject.project_id
-            ? transformApiProject(result)
-            : p
-        )
+        prev.map((p) => {
+          const pId = p.project_uuid || String(p.project_id);
+          const targetId =
+            selectedProject.project_uuid || String(selectedProject.project_id);
+          return pId === targetId ? transformApiProject(result) : p;
+        })
       );
     } catch (error: unknown) {
+      // Rollback on error
       setProjects((prev) =>
-        prev.map((p) =>
-          p.project_id === selectedProject.project_id ? originalProject : p
-        )
+        prev.map((p) => {
+          const pId = p.project_uuid || String(p.project_id);
+          const targetId =
+            selectedProject.project_uuid || String(selectedProject.project_id);
+          return pId === targetId ? originalProject : p;
+        })
       );
       const errorMessage = getErrorMessage(error) || "Failed to update project";
       showToast.error(errorMessage, "update-error");
     } finally {
       isSubmittingRef.current = false;
-      setIsLoading(false);
     }
   }, [formData, selectedProject, updateProject, closeAllDialogs]);
 
@@ -741,16 +811,16 @@ export const useProjects = () => {
   const handleDeleteProject = useCallback(async () => {
     if (isSubmittingRef.current || !selectedProject) return;
     isSubmittingRef.current = true;
-    setIsLoading(true);
     const projectName = selectedProject.name;
 
     const deletedProject = selectedProject;
 
+    // Optimistic update
     setProjects((prev) =>
       prev.filter((p) => {
-        const pId = p.project_uuid || p.project_id;
+        const pId = p.project_uuid || String(p.project_id);
         const targetId =
-          selectedProject.project_uuid || selectedProject.project_id;
+          selectedProject.project_uuid || String(selectedProject.project_id);
         return pId !== targetId;
       })
     );
@@ -763,16 +833,16 @@ export const useProjects = () => {
     );
 
     try {
-      await deleteProject(
-        selectedProject.project_uuid || selectedProject.project_id
-      ).unwrap();
+      const projectUuid =
+        selectedProject.project_uuid || String(selectedProject.project_id);
+      await deleteProject(projectUuid).unwrap();
     } catch (error: unknown) {
+      // Rollback on error
       setProjects((prev) => [deletedProject, ...prev]);
       const errorMessage = getErrorMessage(error) || "Failed to delete project";
       showToast.error(errorMessage, "delete-error");
     } finally {
       isSubmittingRef.current = false;
-      setIsLoading(false);
     }
   }, [selectedProject, deleteProject, closeAllDialogs]);
 
@@ -847,67 +917,72 @@ export const useProjects = () => {
   const handleNavigateToProject = useCallback(
     (projectId: number | string) => {
       const project = projects.find(
-        (p) => p.project_id === projectId || p.project_uuid === projectId
+        (p) =>
+          p.project_id === projectId || p.project_uuid === String(projectId)
       );
-      const idToUse = project?.project_uuid || projectId;
-      navigate(`/projects/${idToUse}`);
+      if (project) {
+        const uuid = project.project_uuid || String(project.project_id);
+        navigate(`/projects/${uuid}`);
+      }
     },
-    [navigate, projects] // ✅ Added projects to dependencies
+    [projects, navigate]
   );
 
   return {
     projects,
     currentUserId,
-    isFetching,
+    isLoading: false, // Never show loading for CRUD operations
     isError,
     error,
-    isAddDialogOpen,
-    isEditDialogOpen,
-    isDeleteDialogOpen,
-    selectedProject,
     formData,
+    setFormData,
+    isAddDialogOpen,
+    setIsAddDialogOpen,
+    isEditDialogOpen,
+    setIsEditDialogOpen,
+    isDeleteDialogOpen,
+    setIsDeleteDialogOpen,
+    isBulkDeleteDialogOpen,
+    setIsBulkDeleteDialogOpen,
+    selectedProject,
+    setSelectedProject,
     isCalendarOpen,
-    isLoading,
+    isFetching, // Only shows on initial load
+    setIsCalendarOpen,
     selectedRows,
     setSelectedRows,
-    setIsAddDialogOpen,
-    setIsEditDialogOpen,
+    isTitleDialogOpen,
+    setIsTitleDialogOpen,
+    isDescriptionDialogOpen,
+    setIsDescriptionDialogOpen,
+    titleProject,
+    setTitleProject,
+    descriptionProject,
+    setDescriptionProject,
+    titleInput,
+    setTitleInput,
+    descriptionInput,
+    setDescriptionInput,
     isTyping,
-    setIsDeleteDialogOpen,
-    closeAllDialogs,
-    resetForm,
-    setFormData,
-    setIsCalendarOpen,
+    aiGenerationStatus,
+    isAiLoading,
     handleAddProject,
     handleAddProjectAndCreateAnother,
     handleEditClick,
-    handleUpdateProject: handleInlineUpdateProject,
     handleModalUpdateProject,
+    handleInlineUpdateProject,
     handleDeleteClick,
     handleDeleteProject,
-    handleDialogOpenChange,
-    handleNavigateToProject,
-    setTitleProject,
-    setIsTitleDialogOpen,
-    handleSaveDescription,
-    descriptionInput,
-    setDescriptionInput,
-    isDescriptionDialogOpen,
-    handleAddDescriptionClick,
-    handleSaveTitle,
-    titleInput,
-    setTitleInput,
-    isTitleDialogOpen,
-    handleEditTitle,
-    setDescriptionProject,
-    setIsDescriptionDialogOpen,
-    descriptionProject,
-    refetch,
-    isBulkDeleteDialogOpen,
     handleBulkDeleteClick,
     handleBulkDeleteProject,
+    handleDialogOpenChange,
+    handleEditTitle,
+    handleSaveTitle,
+    handleAddDescriptionClick,
+    handleSaveDescription,
     handleGenerateDescription,
-    aiGenerationStatus,
-    isAiLoading,
+    handleNavigateToProject,
+    refetch,
+    resetForm,
   };
 };

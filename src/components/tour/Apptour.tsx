@@ -1,27 +1,42 @@
 import { useEffect, useState } from 'react';
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
+import { useUser } from '@clerk/clerk-react';
 
 export const AppTour = () => {
     const [hasStarted, setHasStarted] = useState(false);
+    const { user, isLoaded } = useUser();
 
     useEffect(() => {
-        // Check if user has completed tour
-        const completed = localStorage.getItem('hasCompletedTour');
+        // Wait for Clerk to load
+        if (!isLoaded || !user) return;
 
-        if (!completed && !hasStarted) {
+        // Check if this is a new user (created in last 5 minutes)
+        const userCreatedAt = user.createdAt ? new Date(user.createdAt).getTime() : 0;
+        const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+        const isNewUser = userCreatedAt > fiveMinutesAgo;
+
+        // Check if user has completed tour
+        const completedKey = `hasCompletedTour_${user.id}`;
+        const completed = localStorage.getItem(completedKey);
+
+        // Start tour for new users who haven't completed it
+        if ((isNewUser || !completed) && !hasStarted) {
             setHasStarted(true);
-            // Inject custom styles for driver.js
             injectCustomStyles();
             // Start tour after delay for DOM to load
             setTimeout(() => {
-                startTour();
+                startTour(user.id);
             }, 1500);
         }
-    }, [hasStarted]);
+    }, [hasStarted, user, isLoaded]);
 
     const injectCustomStyles = () => {
+        // Check if styles already injected
+        if (document.getElementById('driver-custom-styles')) return;
+
         const style = document.createElement('style');
+        style.id = 'driver-custom-styles';
         style.innerHTML = `
             .driver-popover {
                 background: white !important;
@@ -196,7 +211,8 @@ export const AppTour = () => {
         };
         return icons[iconName] || '';
     };
-    const startTour = () => {
+
+    const startTour = (userId: string) => {
         const driverObj = driver({
             showProgress: true,
             showButtons: ['next', 'previous', 'close'],
@@ -325,7 +341,8 @@ export const AppTour = () => {
                 }
             ],
             onDestroyed: () => {
-                localStorage.setItem('hasCompletedTour', 'true');
+                // Save completion per user
+                localStorage.setItem(`hasCompletedTour_${userId}`, 'true');
             }
         });
 

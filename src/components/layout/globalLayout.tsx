@@ -1,39 +1,27 @@
 import { ProfileTop } from "@/pages/settings/profileTop/profileTop";
 import { LogOut } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Outlet, useNavigate } from "react-router";
+import logo from '../../../public/Screenshot_2025-12-27_164922-removebg-preview.png';
 import { CommonDialog } from "../common/commonDialog";
 import { CommonDialogFooter } from "../common/commonDialogFooter";
 import { Sidebar } from "./sideBar";
-import logo from '../../../public/Screenshot_2025-12-27_164922-removebg-preview.png'
-import { AnimatePresence } from "framer-motion";
-import { PageLoader } from "../common/pageLoader";
 
 
 export const GlobalLayout = () => {
     const navigate = useNavigate();
-    const [isLoading, setIsLoading] = useState(true);
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
     const handleLogoutConfirm = () => {
         localStorage.clear();
         setShowLogoutDialog(false);
         navigate("/login", { replace: true });
     };
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 1000);
 
-        return () => clearTimeout(timer);
-    }, []);
     const handleLogoutCancel = () => {
         setShowLogoutDialog(false);
     };
     return (
         <>
-            <AnimatePresence mode="wait">
-                {isLoading && <PageLoader key="loader" />}
-            </AnimatePresence>
             <div className="items-center justify-center min-h-screen   flex-col w-full relative   dark:bg-[#141414] ">
                 <div className="flex justify-center gap-5   pt-28   overflow-hidden bg-background  dark:bg-[#141414]  max-w-7xl m-auto">
                     {/* Sidebar */}
