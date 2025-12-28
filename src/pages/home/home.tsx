@@ -19,11 +19,37 @@ import {
     TrendingUp,
     Users
 } from "lucide-react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 export const Home = () => {
     const navigate = useNavigate();
-    const { data, isLoading, isError, refetch } = useGetDashboardDataQuery();
+    const { data, isLoading, isError, error, refetch, isFetching } = useGetDashboardDataQuery(undefined, {
+        // Skip initial fetch if not authenticated
+        skip: false,
+        // Refetch on mount and focus
+        refetchOnMountOrArgChange: true,
+        refetchOnFocus: false,
+        refetchOnReconnect: true,
+    });
+
+    // Auto-retry on mount if there's an error and it's the first load
+    useEffect(() => {
+        if (isError && !isLoading && !isFetching) {
+            // Check if it's an authentication error (401) or similar
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const errorStatus = (error as any)?.status;
+
+            // Retry once after a short delay for authentication issues
+            if (errorStatus === 401 || errorStatus === 403 || !data) {
+                const timer = setTimeout(() => {
+                    refetch();
+                }, 500);
+
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [isError, isLoading, isFetching, error, data, refetch]);
 
     const getPriorityColor = (priority: string) => {
         switch (priority.toLowerCase()) {
@@ -62,8 +88,8 @@ export const Home = () => {
         }
     };
 
-    // Loading State
-    if (isLoading) {
+    // Loading State - show during initial load or refetch
+    if ((isLoading || isFetching) && !data) {
         return (
             <div className="bg-transparent text-gray-900 dark:text-white ">
                 <div className="min-h-[500px]">
@@ -73,8 +99,8 @@ export const Home = () => {
         );
     }
 
-    // Error State
-    if (isError) {
+    // Error State - only show if we've tried and there's still an error
+    if (isError && !data && !isFetching) {
         return (
             <div className="bg-transparent text-gray-900 dark:text-white">
                 <div className="max-w-7xl mx-auto">

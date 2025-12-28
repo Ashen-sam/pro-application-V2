@@ -11,17 +11,20 @@ export const AppTour = () => {
         // Wait for Clerk to load
         if (!isLoaded || !user) return;
 
+        // Check if user has completed tour - this is the primary check
+        const completedKey = `hasCompletedTour_${user.id}`;
+        const completed = localStorage.getItem(completedKey);
+
+        // If tour is already completed, don't show it again
+        if (completed) return;
+
         // Check if this is a new user (created in last 5 minutes)
         const userCreatedAt = user.createdAt ? new Date(user.createdAt).getTime() : 0;
         const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
         const isNewUser = userCreatedAt > fiveMinutesAgo;
 
-        // Check if user has completed tour
-        const completedKey = `hasCompletedTour_${user.id}`;
-        const completed = localStorage.getItem(completedKey);
-
-        // Start tour for new users who haven't completed it
-        if ((isNewUser || !completed) && !hasStarted) {
+        // Only start tour for new users who haven't completed it and haven't started yet
+        if (isNewUser && !hasStarted) {
             setHasStarted(true);
             injectCustomStyles();
             // Start tour after delay for DOM to load

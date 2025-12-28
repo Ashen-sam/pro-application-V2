@@ -8,11 +8,11 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useSignUp } from "@clerk/clerk-react";
-import { ArrowRight, CheckCircle2, Loader2, Lock, Mail, User } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import logo from '../../../../public/Screenshot_2025-12-27_164922-removebg-preview.png';
 
 export const Register = () => {
@@ -142,237 +142,198 @@ export const Register = () => {
 
     if (pendingVerification) {
         return (
-            <Card className="w-full min-w-[400px] max-w-md border-0 shadow-none bg-transparent">
-                <CardHeader className="space-y-1 pb-4">
-                    <div className="flex items-center justify-center mx-auto rounded-lg bg-transparent border-slate-200 dark:border-slate-800">
-                        <CheckCircle2 className="w-12 h-12 text-slate-900 dark:text-slate-50" />
-                    </div>
-                    <CardTitle className="text-2xl font-semibold text-center text-slate-900 dark:text-slate-50">
-                        Verify your email
-                    </CardTitle>
-                    <CardDescription className="text-center text-sm text-slate-600 dark:text-slate-400">
-                        We've sent a verification code to {formData.email}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <form onSubmit={handleVerification} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label
-                                htmlFor="code"
-                                className="text-sm font-medium text-slate-700 dark:text-slate-300"
-                            >
-                                Verification code
-                            </Label>
-                            <Input
-                                id="code"
-                                type="text"
-                                placeholder="Enter 6-digit code"
-                                value={code}
-                                onChange={(e) => setCode(e.target.value)}
-                                disabled={isLoading}
-                                required
-                                maxLength={6}
-                                className="h-10 text-center text-lg tracking-widest border border-slate-200 bg-transparent focus:border-slate-900 focus:ring-1 focus:ring-slate-900 dark:border-slate-800 dark:bg-transparent dark:focus:border-slate-50 dark:focus:ring-slate-50"
-                            />
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: "easeIn" }}
+            >
+                <Card className="w-full min-w-[400px] max-w-md border-0 shadow-none bg-transparent">
+                    <CardHeader className="space-y-1 pb-4">
+                        <div className="flex items-center justify-center mx-auto rounded-lg bg-transparent border-slate-200 dark:border-slate-800">
+                            <CheckCircle2 className="w-12 h-12 text-slate-900 dark:text-slate-50" />
                         </div>
-                        <Button
-                            type="submit"
-                            className="w-full h-10 mt-2 text-sm font-medium bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-slate-200 transition-colors"
-                            disabled={isLoading || !code}
-                        >
-                            {isLoading ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Verifying...
-                                </>
-                            ) : (
-                                "Verify email"
-                            )}
-                        </Button>
-                        <div className="text-center text-xs text-slate-600 dark:text-slate-400">
-                            Didn't receive the code?{" "}
-                            <button
-                                type="button"
-                                onClick={() => signUp?.prepareEmailAddressVerification({ strategy: "email_code" })}
-                                className="font-medium text-slate-900 hover:text-slate-700 dark:text-slate-50 dark:hover:text-slate-300"
+                        <CardTitle className="text-2xl font-semibold text-center text-slate-900 dark:text-slate-50">
+                            Verify your email
+                        </CardTitle>
+                        <CardDescription className="text-center text-sm text-slate-600 dark:text-slate-400">
+                            We've sent a verification code to {formData.email}
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <form onSubmit={handleVerification} className="space-y-4">
+                            <div className="space-y-1">
+                                <Input
+                                    id="code"
+                                    type="text"
+                                    placeholder="Enter 6-digit code"
+                                    value={code}
+                                    onChange={(e) => setCode(e.target.value)}
+                                    disabled={isLoading}
+                                    required
+                                    maxLength={6}
+                                    className="h-12 text-center text-lg tracking-widest"
+                                />
+                            </div>
+                            <Button
+                                type="submit"
+                                className="w-full h-10 mt-2 text-sm font-medium bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-slate-200 transition-colors"
+                                disabled={isLoading || !code}
                             >
-                                Resend
-                            </button>
-                        </div>
-                    </form>
-                </CardContent>
-            </Card>
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Verifying...
+                                    </>
+                                ) : (
+                                    "Verify email"
+                                )}
+                            </Button>
+                            <div className="text-center text-xs text-slate-600 dark:text-slate-400">
+                                Didn't receive the code?{" "}
+                                <button
+                                    type="button"
+                                    onClick={() => signUp?.prepareEmailAddressVerification({ strategy: "email_code" })}
+                                    className="font-medium text-slate-900 hover:text-slate-700 dark:text-slate-50 dark:hover:text-slate-300"
+                                >
+                                    Resend
+                                </button>
+                            </div>
+                        </form>
+                    </CardContent>
+                </Card>
+            </motion.div>
         );
     }
 
     return (
-        <Card className="w-full min-w-[400px] max-w-md border-0 shadow-none bg-transparent">
-            <CardHeader className="space-y-1 pb-4">
-                <div className="flex items-center justify-center mx-auto rounded-lg bg-transparent border-slate-200 dark:border-slate-800">
-                    <img src={logo} width={60} height={100} alt="boardy" />
-                </div>
-                <CardTitle className="text-2xl font-semibold text-center text-slate-900 dark:text-slate-50">
-                    Create account
-                </CardTitle>
-                <CardDescription className="text-center text-sm text-slate-600 dark:text-zinc-400">
-                    Sign up to get started with your account
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <form onSubmit={handleRegister} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label
-                                htmlFor="firstName"
-                                className="text-sm font-medium text-slate-700 dark:text-slate-200"
-                            >
-                                First name
-                            </Label>
-                            <div className="relative">
-                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-200" />
+        <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "linear" }}
+        >
+            <Card className="w-full min-w-[400px] max-w-md border-0 shadow-none bg-transparent">
+                <CardHeader className="space-y-1 pb-4">
+                    <div className="flex items-center justify-center mx-auto rounded-lg bg-transparent border-slate-200 dark:border-slate-800">
+                        <img src={logo} width={60} height={100} alt="boardy" />
+                    </div>
+                    <CardTitle className="text-2xl font-semibold text-center text-slate-900 dark:text-slate-50">
+                        Create account
+                    </CardTitle>
+                    <CardDescription className="text-center text-sm text-slate-600 dark:text-zinc-400">
+                        Sign up to get started with your account
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <form onSubmit={handleRegister} className="space-y-2">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
                                 <Input
                                     id="firstName"
                                     name="firstName"
                                     type="text"
-                                    placeholder="John"
+                                    placeholder="First name"
                                     value={formData.firstName}
                                     onChange={handleChange}
                                     disabled={isLoading}
                                     required
-                                    className="h-10 pl-10 "
+                                    className="h-12"
                                 />
                             </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label
-                                htmlFor="lastName"
-                                className="text-sm font-medium text-slate-700 dark:text-slate-200"
-                            >
-                                Last name
-                            </Label>
-                            <div className="relative">
-                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-200" />
+                            <div className="space-y-1">
                                 <Input
                                     id="lastName"
                                     name="lastName"
                                     type="text"
-                                    placeholder="Doe"
+                                    placeholder="Last name"
                                     value={formData.lastName}
                                     onChange={handleChange}
                                     disabled={isLoading}
                                     required
-                                    className="h-10 pl-10 "
+                                    className="h-12"
                                 />
                             </div>
                         </div>
-                    </div>
 
-                    <div className="space-y-2">
-                        <Label
-                            htmlFor="email"
-                            className="text-sm font-medium text-slate-700 dark:text-slate-200"
-                        >
-                            Email address
-                        </Label>
-                        <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-200" />
+                        <div className="space-y-1">
                             <Input
                                 id="email"
                                 name="email"
                                 type="email"
-                                placeholder="name@company.com"
+                                placeholder="Enter your email address..."
                                 value={formData.email}
                                 onChange={handleChange}
                                 disabled={isLoading}
                                 required
-                                className="h-10 pl-10 "
+                                className="h-12"
                             />
                         </div>
-                    </div>
 
-                    <div className="space-y-2">
-                        <Label
-                            htmlFor="password"
-                            className="text-sm font-medium text-slate-700 dark:text-slate-200"
-                        >
-                            Password
-                        </Label>
-                        <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-200" />
+                        <div className="space-y-1">
                             <Input
                                 id="password"
                                 name="password"
                                 type="password"
-                                placeholder="At least 8 characters"
+                                placeholder="Enter your password..."
                                 value={formData.password}
                                 onChange={handleChange}
                                 disabled={isLoading}
                                 required
-                                className="h-10 pl-10 "
+                                className="h-12"
                             />
                         </div>
-                    </div>
 
-                    <div className="space-y-2">
-                        <Label
-                            htmlFor="confirmPassword"
-                            className="text-sm font-medium text-slate-700 dark:text-slate-200"
-                        >
-                            Confirm password
-                        </Label>
-                        <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-200" />
+                        <div className="space-y-1">
                             <Input
                                 id="confirmPassword"
                                 name="confirmPassword"
                                 type="password"
-                                placeholder="Confirm your password"
+                                placeholder="Confirm your password..."
                                 value={formData.confirmPassword}
                                 onChange={handleChange}
                                 disabled={isLoading}
                                 required
-                                className="h-10 pl-10 "
+                                className="h-12"
                             />
+                        </div>
+
+                        <Button
+                            type="submit"
+                            className="w-full h-10 mt-2 text-sm font-medium bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-slate-200 transition-colors"
+                            disabled={isLoading || !isLoaded}
+                        >
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Creating account...
+                                </>
+                            ) : (
+                                "Create account"
+                            )}
+                        </Button>
+                    </form>
+
+                    <div className="relative my-6">
+                        <div className="absolute inset-0 flex items-center">
+                            <span className="w-full border-t border-slate-200 dark:border-zinc-800" />
+                        </div>
+                        <div className="relative flex justify-center text-xs">
+                            <span className="bg-transparent px-2 text-slate-500 dark:text-slate-200">
+                                Already have an account?
+                            </span>
                         </div>
                     </div>
 
-                    <Button
-                        type="submit"
-                        className="w-full h-10 mt-2 text-sm font-medium bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-slate-200 transition-colors"
-                        disabled={isLoading || !isLoaded}
-                    >
-                        {isLoading ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Creating account...
-                            </>
-                        ) : (
-                            "Create account"
-                        )}
-                    </Button>
-                </form>
-
-                <div className="relative my-6">
-                    <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t border-slate-200 dark:border-zinc-800" />
+                    <div className="text-center">
+                        <Link
+                            to="/login"
+                            className="inline-flex items-center gap-1 text-sm font-medium text-slate-900 hover:text-slate-700 dark:text-slate-50 dark:hover:text-slate-300 transition-colors"
+                        >
+                            Sign in instead
+                            <ArrowRight className="w-4 h-4" />
+                        </Link>
                     </div>
-                    <div className="relative flex justify-center text-xs">
-                        <span className="bg-transparent px-2 text-slate-500 dark:text-slate-200">
-                            Already have an account?
-                        </span>
-                    </div>
-                </div>
-
-                <div className="text-center">
-                    <Link
-                        to="/login"
-                        className="inline-flex items-center gap-1 text-sm font-medium text-slate-900 hover:text-slate-700 dark:text-slate-50 dark:hover:text-slate-300 transition-colors"
-                    >
-                        Sign in instead
-                        <ArrowRight className="w-4 h-4" />
-                    </Link>
-                </div>
-            </CardContent>
-        </Card>
+                </CardContent>
+            </Card>
+        </motion.div>
     );
 };
