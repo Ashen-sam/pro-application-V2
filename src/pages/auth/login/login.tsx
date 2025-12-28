@@ -120,7 +120,7 @@ export const Login = () => {
                 <CardTitle className="text-2xl font-semibold text-center text-slate-900 dark:text-slate-50">
                     Welcome back
                 </CardTitle>
-                <CardDescription className="text-center text-sm text-slate-600 dark:text-slate-400">
+                <CardDescription className="text-center text-sm text-slate-600 dark:text-zinc-400">
                     Sign in to continue to your account
                 </CardDescription>
             </CardHeader>
@@ -131,7 +131,7 @@ export const Login = () => {
                         variant="outline"
                         onClick={() => handleOAuthSignIn("oauth_google")}
                         disabled={isGoogleLoading || isGithubLoading || isLoading}
-                        className="h-10 text-sm border border-slate-200 bg-transparent hover:bg-slate-50 dark:border-slate-800 dark:bg-transparent dark:hover:bg-slate-900"
+                        className="h-10 "
                     >
                         {isGoogleLoading ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -162,7 +162,7 @@ export const Login = () => {
                         variant="outline"
                         onClick={() => handleOAuthSignIn("oauth_github")}
                         disabled={isGoogleLoading || isGithubLoading || isLoading}
-                        className="h-10 text-sm border border-slate-200 bg-transparent hover:bg-slate-50 dark:border-slate-800 dark:bg-transparent dark:hover:bg-slate-900"
+                        className="h-10 text-sm "
                     >
                         {isGithubLoading ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -175,10 +175,10 @@ export const Login = () => {
 
                 <div className="relative">
                     <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t border-slate-200 dark:border-slate-800" />
+                        <span className="w-full border-t border-slate-200 dark:border-zinc-800" />
                     </div>
                     <div className="relative flex justify-center text-xs">
-                        <span className="bg-transparent px-2 text-slate-500 dark:text-slate-400">
+                        <span className="bg-transparent px-2 text-slate-500 dark:text-slate-200">
                             Or continue with email
                         </span>
                     </div>
@@ -188,12 +188,12 @@ export const Login = () => {
                     <div className="space-y-2">
                         <Label
                             htmlFor="email"
-                            className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                            className="text-sm font-medium text-slate-700 dark:text-slate-200"
                         >
                             Email address
                         </Label>
                         <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-200" />
                             <Input
                                 id="email"
                                 type="email"
@@ -202,7 +202,7 @@ export const Login = () => {
                                 onChange={(e) => setEmail(e.target.value)}
                                 disabled={isLoading || isGoogleLoading || isGithubLoading}
                                 required
-                                className="h-10 pl-10 text-sm border border-slate-200 bg-transparent focus:border-slate-900 focus:ring-1 focus:ring-slate-900 dark:border-slate-800 dark:bg-transparent dark:focus:border-slate-50 dark:focus:ring-slate-50"
+                                className="h-10 pl-10 "
                             />
                         </div>
                     </div>
@@ -210,19 +210,19 @@ export const Login = () => {
                         <div className="flex items-center justify-between">
                             <Label
                                 htmlFor="password"
-                                className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                                className="text-sm font-medium text-slate-700 dark:text-slate-200"
                             >
                                 Password
                             </Label>
                             <Link
                                 to="/forgot-password"
-                                className="text-xs font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-50 transition-colors"
+                                className="text-xs font-medium text-slate-600 hover:text-slate-900 dark:text-slate-200 dark:hover:text-slate-50 transition-colors"
                             >
                                 Forgot password?
                             </Link>
                         </div>
                         <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-200" />
                             <Input
                                 id="password"
                                 type="password"
@@ -231,7 +231,7 @@ export const Login = () => {
                                 onChange={(e) => setPassword(e.target.value)}
                                 disabled={isLoading || isGoogleLoading || isGithubLoading}
                                 required
-                                className="h-10 pl-10 text-sm border border-slate-200 bg-transparent focus:border-slate-900 focus:ring-1 focus:ring-slate-900 dark:border-slate-800 dark:bg-transparent dark:focus:border-slate-50 dark:focus:ring-slate-50"
+                                className="h-10 pl-10 "
                             />
                         </div>
                     </div>
@@ -253,10 +253,10 @@ export const Login = () => {
 
                 <div className="relative my-6">
                     <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t border-slate-200 dark:border-slate-800" />
+                        <span className="w-full border-t border-slate-200 dark:border-zinc-800" />
                     </div>
                     <div className="relative flex justify-center text-xs">
-                        <span className="bg-transparent px-2 text-slate-500 dark:text-slate-400">
+                        <span className="bg-transparent px-2 text-slate-500 dark:text-slate-200">
                             Don't have an account?
                         </span>
                     </div>

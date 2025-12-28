@@ -214,7 +214,7 @@ export const Register = () => {
                 <CardTitle className="text-2xl font-semibold text-center text-slate-900 dark:text-slate-50">
                     Create account
                 </CardTitle>
-                <CardDescription className="text-center text-sm text-slate-600 dark:text-slate-400">
+                <CardDescription className="text-center text-sm text-slate-600 dark:text-zinc-400">
                     Sign up to get started with your account
                 </CardDescription>
             </CardHeader>
@@ -224,12 +224,12 @@ export const Register = () => {
                         <div className="space-y-2">
                             <Label
                                 htmlFor="firstName"
-                                className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                                className="text-sm font-medium text-slate-700 dark:text-slate-200"
                             >
                                 First name
                             </Label>
                             <div className="relative">
-                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
+                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-200" />
                                 <Input
                                     id="firstName"
                                     name="firstName"
@@ -239,19 +239,19 @@ export const Register = () => {
                                     onChange={handleChange}
                                     disabled={isLoading}
                                     required
-                                    className="h-10 pl-10 text-sm border border-slate-200 bg-transparent focus:border-slate-900 focus:ring-1 focus:ring-slate-900 dark:border-slate-800 dark:bg-transparent dark:focus:border-slate-50 dark:focus:ring-slate-50"
+                                    className="h-10 pl-10 "
                                 />
                             </div>
                         </div>
                         <div className="space-y-2">
                             <Label
                                 htmlFor="lastName"
-                                className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                                className="text-sm font-medium text-slate-700 dark:text-slate-200"
                             >
                                 Last name
                             </Label>
                             <div className="relative">
-                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
+                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-200" />
                                 <Input
                                     id="lastName"
                                     name="lastName"
@@ -261,7 +261,7 @@ export const Register = () => {
                                     onChange={handleChange}
                                     disabled={isLoading}
                                     required
-                                    className="h-10 pl-10 text-sm border border-slate-200 bg-transparent focus:border-slate-900 focus:ring-1 focus:ring-slate-900 dark:border-slate-800 dark:bg-transparent dark:focus:border-slate-50 dark:focus:ring-slate-50"
+                                    className="h-10 pl-10 "
                                 />
                             </div>
                         </div>
@@ -270,12 +270,12 @@ export const Register = () => {
                     <div className="space-y-2">
                         <Label
                             htmlFor="email"
-                            className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                            className="text-sm font-medium text-slate-700 dark:text-slate-200"
                         >
                             Email address
                         </Label>
                         <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-200" />
                             <Input
                                 id="email"
                                 name="email"
@@ -285,7 +285,7 @@ export const Register = () => {
                                 onChange={handleChange}
                                 disabled={isLoading}
                                 required
-                                className="h-10 pl-10 text-sm border border-slate-200 bg-transparent focus:border-slate-900 focus:ring-1 focus:ring-slate-900 dark:border-slate-800 dark:bg-transparent dark:focus:border-slate-50 dark:focus:ring-slate-50"
+                                className="h-10 pl-10 "
                             />
                         </div>
                     </div>
@@ -293,12 +293,12 @@ export const Register = () => {
                     <div className="space-y-2">
                         <Label
                             htmlFor="password"
-                            className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                            className="text-sm font-medium text-slate-700 dark:text-slate-200"
                         >
                             Password
                         </Label>
                         <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-200" />
                             <Input
                                 id="password"
                                 name="password"
@@ -308,7 +308,7 @@ export const Register = () => {
                                 onChange={handleChange}
                                 disabled={isLoading}
                                 required
-                                className="h-10 pl-10 text-sm border border-slate-200 bg-transparent focus:border-slate-900 focus:ring-1 focus:ring-slate-900 dark:border-slate-800 dark:bg-transparent dark:focus:border-slate-50 dark:focus:ring-slate-50"
+                                className="h-10 pl-10 "
                             />
                         </div>
                     </div>
@@ -316,12 +316,12 @@ export const Register = () => {
                     <div className="space-y-2">
                         <Label
                             htmlFor="confirmPassword"
-                            className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                            className="text-sm font-medium text-slate-700 dark:text-slate-200"
                         >
                             Confirm password
                         </Label>
                         <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-200" />
                             <Input
                                 id="confirmPassword"
                                 name="confirmPassword"
@@ -331,7 +331,7 @@ export const Register = () => {
                                 onChange={handleChange}
                                 disabled={isLoading}
                                 required
-                                className="h-10 pl-10 text-sm border border-slate-200 bg-transparent focus:border-slate-900 focus:ring-1 focus:ring-slate-900 dark:border-slate-800 dark:bg-transparent dark:focus:border-slate-50 dark:focus:ring-slate-50"
+                                className="h-10 pl-10 "
                             />
                         </div>
                     </div>
@@ -354,10 +354,10 @@ export const Register = () => {
 
                 <div className="relative my-6">
                     <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t border-slate-200 dark:border-slate-800" />
+                        <span className="w-full border-t border-slate-200 dark:border-zinc-800" />
                     </div>
                     <div className="relative flex justify-center text-xs">
-                        <span className="bg-transparent px-2 text-slate-500 dark:text-slate-400">
+                        <span className="bg-transparent px-2 text-slate-500 dark:text-slate-200">
                             Already have an account?
                         </span>
                     </div>
