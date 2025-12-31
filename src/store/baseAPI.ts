@@ -6,8 +6,7 @@ import type {
 } from "@reduxjs/toolkit/query";
 import { Clerk } from "@clerk/clerk-js";
 
-const BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Initialize Clerk instance
 const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;

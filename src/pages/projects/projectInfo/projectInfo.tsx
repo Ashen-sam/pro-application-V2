@@ -1,4 +1,4 @@
-import { Bolt, CalendarDays, Folders } from "lucide-react";
+import { Bolt, CalendarDays, ChartPie, Folders } from "lucide-react";
 import { useState, useRef } from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 
@@ -15,7 +15,7 @@ export const ProjectInfo = () => {
     }>({});
     const tabsListRef = useRef<HTMLDivElement>(null);
 
-    const tabs = ["overview", "tasks", "calendar"] as const;
+    const tabs = ["overview", "tasks", "calendar", "insights"] as const;
     type TabValue = typeof tabs[number];
 
     // Determine active tab based on current route
@@ -23,6 +23,8 @@ export const ProjectInfo = () => {
         const path = location.pathname;
         if (path.includes("/tasks")) return "tasks";
         if (path.includes("/calendar")) return "calendar";
+        if (path.includes("/insights")) return "insights";
+
         return "overview";
     };
 
@@ -40,6 +42,9 @@ export const ProjectInfo = () => {
                 break;
             case "calendar":
                 navigate(`/projects/${projectId}/calendar`);
+                break;
+            case "insights":
+                navigate(`/projects/${projectId}/insights`);
                 break;
         }
     };
@@ -67,7 +72,9 @@ export const ProjectInfo = () => {
     const tabsConfig: Array<{ value: TabValue; icon: typeof Bolt; label: string }> = [
         { value: "overview", icon: Bolt, label: "Overview" },
         { value: "tasks", icon: Folders, label: "Tasks" },
-        { value: "calendar", icon: CalendarDays, label: "Calendar" }
+        { value: "calendar", icon: CalendarDays, label: "Calendar" },
+        { value: "insights", icon: ChartPie, label: "Insights" }
+
     ];
 
     return (

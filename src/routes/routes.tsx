@@ -3,6 +3,7 @@ import TitleProvider from "@/components/common/TitleProvider";
 import {
     Calendar as CalendarNew,
     Home,
+    Insights,
     Overview,
     ProjectFlow,
     ProjectInfo,
@@ -97,6 +98,8 @@ export const router = createBrowserRouter([
                             { index: true, element: <Overview /> },
                             { path: "tasks", element: <Task /> },
                             { path: "calendar", element: <CalendarNew /> },
+                            { path: "insights", element: <Insights /> },
+
                         ],
                     },
                 ],

@@ -42,7 +42,7 @@ export const Sidebar = ({ className }: SidebarProps) => {
         <div
             id="sidebar-navigation"
             className={cn(
-                "relative flex flex-col bg-transparent dark:bg-transparent transition-all duration-300",
+                "relative flex flex-col  bg-transparent transition-all duration-300",
                 "text-gray-700 dark:text-muted-foreground",
                 isCollapsed ? "w-16" : "w-[300px]",
                 className

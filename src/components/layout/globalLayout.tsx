@@ -23,7 +23,7 @@ export const GlobalLayout = () => {
     return (
         <>
             <div className="items-center justify-center min-h-screen   flex-col w-full relative   dark:bg-[#141414] ">
-                <div className="flex justify-center gap-5   pt-28   overflow-hidden bg-background  dark:bg-[#141414]  max-w-7xl m-auto">
+                <div className="flex justify-center gap-5   pt-28   overflow-hidden bg-background  dark:bg-transparent  max-w-7xl m-auto">
                     {/* Sidebar */}
                     <Sidebar />
                     <div className="absolute right-0 top-2" >
